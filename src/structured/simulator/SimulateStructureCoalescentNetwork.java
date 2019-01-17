@@ -1,11 +1,6 @@
 package structured.simulator;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import beast.core.Input;
@@ -23,7 +18,7 @@ import coalre.network.NetworkNode;
 //TODO figure out number of unique states like in Dynamics.java
 
 
-public class SimulateStructureCoalescentNetwork extends Network{
+public class SimulateStructureCoalescentNetwork extends Network {
 	
 	// array of reassortment rates for each state
     public Input<RealParameter> reassortmentRatesInput = new Input<>("reassortmentRate",
@@ -40,7 +35,7 @@ public class SimulateStructureCoalescentNetwork extends Network{
     public Input<TraitSet> typeTraitInput = new Input<>("typeTrait", "Type trait set. ", Validate.REQUIRED);
     
     public Input<String> typesInput = new Input<>(
-    		"types", "input of the different types, can be helpful for multilocus data", Validate.OPTIONAL);
+    		"types", "input of the different types, can be helpful for multilocus data");
     
     public Input<List<Tree>> segmentTreesInput = new Input<>("segmentTree",
             "One or more segment trees to initialize.", new ArrayList<>());
@@ -51,9 +46,6 @@ public class SimulateStructureCoalescentNetwork extends Network{
     public Input<TraitSet> traitSetInput = new Input<>("traitSet",
             "Trait set used to assign leaf ages.");
 
-    public Input<TaxonSet> taxonSetInput = new Input<>("taxonSet",
-            "Taxon set used to define leaves");
-
     public Input<Boolean> enableSegTreeUpdateInput = new Input<>("enableSegmentTreeUpdate",
             "If false, segment tree objects won't be updated to agree with simulated " +
                     "network. (Default true.)", true);
@@ -61,7 +53,7 @@ public class SimulateStructureCoalescentNetwork extends Network{
     public Input<String> fileNameInput = new Input<>("fileName",
             "Name of file to write simulated network to.");
     
-    public Input<RealParameter> NeImput = new Input<>("Ne", "input of effective population sizes"); 
+    public Input<RealParameter> NeInput = new Input<>("Ne", "input of effective population sizes");
     
     public Input<Double> ploidyInput = new Input<>("ploidy", "Ploidy (copy number) for this gene,"
     		+ "typically a whole number or half (default is 1).", 1.0);
@@ -70,15 +62,16 @@ public class SimulateStructureCoalescentNetwork extends Network{
     private RealParameter reassortmentRates;
     private RealParameter migrationRates;
     private RealParameter Ne;
-    private HashMap<String, Integer> traitToType = new HashMap<>(); 
-    private HashMap<Integer, String> reverseTraitToType = new HashMap<>();
-    private ArrayList<String> uniqueStates = new ArrayList<>();
+    private HashMap<String, Integer> typeNameToIndex = new HashMap<>();
+    private HashMap<Integer, String> typeIndexToName = new HashMap<>();
+
+    private ArrayList<String> uniqueTypes;
     
 	private enum MigrationType {
 	    symmetric, asymmetric 
 	}
-	
-	MigrationType migrationType;
+
+    private MigrationType migrationType;
     
     
 
@@ -86,7 +79,7 @@ public class SimulateStructureCoalescentNetwork extends Network{
     
     public void initAndValidate() {
     	
-    	Ne = NeImput.get();    	
+    	Ne = NeInput.get();
         if (nSegmentsInput.get() != null)
             nSegments = nSegmentsInput.get();
         else
@@ -112,38 +105,28 @@ public class SimulateStructureCoalescentNetwork extends Network{
     		System.err.println("the dimension of " + migrationRates.getID() + " is set to " + migDim);
     		migrationRates.setDimension(migDim);       		
 		}
-        System.out.println(migrationType);
+//        System.out.println(migrationType);
         // Set up sample nodes:
         
         List<NetworkNode> sampleNodes = new ArrayList<>();
         
-        TraitSet leafAgeSet = traitSetInput.get();
-        TraitSet stateSet = typeTraitInput.get();
+        TraitSet leafAgeTraitSet = traitSetInput.get();
+        TraitSet typeTraitSet = typeTraitInput.get();
         TaxonSet taxonSet;
-        if (leafAgeSet != null)
-            taxonSet = leafAgeSet.taxaInput.get();
-        else if (stateSet != null)
-        	taxonSet = stateSet.taxaInput.get();
+        if (leafAgeTraitSet != null)
+            taxonSet = leafAgeTraitSet.taxaInput.get();
         else
-            taxonSet = taxonSetInput.get();
+        	taxonSet = typeTraitSet.taxaInput.get();
 
         if (taxonSet == null)
                 throw new IllegalArgumentException("Must define either a " +
                         "trait set, type set or a taxon set.");
-    	
-		List<String> taxa = stateSet.taxaInput.get().asStringList();
-		for (int i = 0; i < taxa.size(); i++)
-			uniqueStates.add(stateSet.getStringValue(taxa.get(i)));
-		
-		Collections.sort(uniqueStates);
-		for (int i = uniqueStates.size()-2; i > -1; i--)
-			if(uniqueStates.get(i+1).equals(uniqueStates.get(i)))
-				uniqueStates.remove(i+1);
-		
-		for (int i = 0; i < uniqueStates.size(); i++)
-			traitToType.put(uniqueStates.get(i), i);
-		for (int i = 0; i < uniqueStates.size(); i++) {
-			reverseTraitToType.put(i, uniqueStates.get(i)); 
+
+        uniqueTypes = new ArrayList<>(new TreeSet<>(taxonSet.asStringList()));
+
+		for (int i = 0; i < uniqueTypes.size(); i++) {
+			typeNameToIndex.put(uniqueTypes.get(i), i);
+			typeIndexToName.put(i, uniqueTypes.get(i));
 		}
 			
         for (int taxonIndex=0; taxonIndex<taxonSet.getTaxonCount(); taxonIndex++) {
@@ -153,14 +136,14 @@ public class SimulateStructureCoalescentNetwork extends Network{
             sampleNode.setTaxonLabel(taxonName);
             sampleNode.setTaxonIndex(taxonIndex);
 
-            if (leafAgeSet != null)
-                sampleNode.setHeight(leafAgeSet.getValue(taxonName));
+            if (leafAgeTraitSet != null)
+                sampleNode.setHeight(leafAgeTraitSet.getValue(taxonName));
             else
                 sampleNode.setHeight(0.0);
             
-            String stateName = stateSet.getStringValue(taxonName);
-            sampleNode.setStateLabel(stateName);
-            sampleNode.setStateIndex(traitToType.get(stateSet.getStringValue(taxonName)));
+            String typeName = typeTraitSet.getStringValue(taxonName);
+            sampleNode.setTypeLabel(typeName);
+            sampleNode.setTypeIndex(typeNameToIndex.get(typeTraitSet.getStringValue(taxonName)));
 
             sampleNodes.add(sampleNode);
         }
@@ -183,8 +166,8 @@ public class SimulateStructureCoalescentNetwork extends Network{
 //        extant lineages have to be sorted by state id
 //        #####################################
         
-        HashMap<Integer, List<NetworkEdge>> extantLineages = new HashMap<Integer, List<NetworkEdge>>(uniqueStates.size());
-        for (int i=0; i < uniqueStates.size(); i++ ) {
+        HashMap<Integer, List<NetworkEdge>> extantLineages = new HashMap<Integer, List<NetworkEdge>>(uniqueTypes.size());
+        for (int i = 0; i < uniqueTypes.size(); i++ ) {
         	extantLineages.put(i, new ArrayList<>());        	
         }
 
@@ -213,12 +196,11 @@ public class SimulateStructureCoalescentNetwork extends Network{
             double minCoal = Double.POSITIVE_INFINITY;
             double minReassort = Double.POSITIVE_INFINITY;
             double minMigration = Double.POSITIVE_INFINITY;
-            Integer stateIdCoal = null;
-            Integer stateIdReassortment = null;
-            Integer stateIdMigrationFrom = null;
-            Integer stateIdMigrationTo = null;
+
+            int typeIndexCoal = -1, typeIndexReassortment = -1, typeIndexMigrationFrom = -1, typeIndexMigrationTo = -1;
+
             int c = 0;
-            for (int i = 0; i < uniqueStates.size(); i++) {
+            for (int i = 0; i < uniqueTypes.size(); i++) {
             	//how many lineages are in this state
             	int k_ = extantLineages.get(i).size();
             	
@@ -226,7 +208,7 @@ public class SimulateStructureCoalescentNetwork extends Network{
             		double timeToNextCoal = Randomizer.nextExponential(0.5*k_*(k_-1));
             		if (timeToNextCoal < minCoal) {
             			minCoal = timeToNextCoal;
-            			stateIdCoal = i;
+            			typeIndexCoal = i;
             		}
             	}
             	
@@ -234,12 +216,12 @@ public class SimulateStructureCoalescentNetwork extends Network{
             		double timeToNextReass = Randomizer.nextExponential(k_*reassortmentRates.getArrayValue(i));
                 	if (timeToNextReass < minReassort) {
                 		minReassort = timeToNextReass;
-                		stateIdReassortment = i;
+                		typeIndexReassortment = i;
                 	}
 
 
 //                	if (migrationType == MigrationType.asymmetric) {
-                      	for (int j=0; j<uniqueStates.size(); j++) {
+                      	for (int j = 0; j< uniqueTypes.size(); j++) {
                     		if (i!=j) {
                     			double timeToNextMigration = Randomizer.nextExponential(k_*migrationRates.getArrayValue(c));
                     			c++;
@@ -247,8 +229,8 @@ public class SimulateStructureCoalescentNetwork extends Network{
                     				c %= migrationRates.getDimension();
                             	if (timeToNextMigration < minMigration) {
                             		minMigration = timeToNextMigration;
-                            		stateIdMigrationFrom = i;
-                            		stateIdMigrationTo = j;
+                            		typeIndexMigrationFrom = i;
+                            		typeIndexMigrationTo = j;
                             	}
                     		}
                       	}
@@ -276,11 +258,12 @@ public class SimulateStructureCoalescentNetwork extends Network{
             if (timeUntilNextEvent < timeUntilNextSample) {
                 currentTime += timeUntilNextEvent;
                 if (timeUntilNextEvent == minCoal)
-                    coalesce(currentTime, extantLineages, stateIdCoal);
+                    coalesce(currentTime, extantLineages, typeIndexCoal);
                 else if (timeUntilNextEvent == minReassort)
-                    reassort(currentTime, extantLineages, stateIdReassortment);
+                    reassort(currentTime, extantLineages, typeIndexReassortment);
                 else
-                	migrate(currentTime, extantLineages, stateIdMigrationFrom, stateIdMigrationTo);
+                	migrate(currentTime, extantLineages,
+                            typeIndexMigrationFrom, typeIndexMigrationTo);
             } else {
                 currentTime += timeUntilNextSample;
                 sample(remainingSampleNodes, extantLineages);
@@ -310,7 +293,7 @@ public class SimulateStructureCoalescentNetwork extends Network{
         BitSet hasSegs = new BitSet();
         hasSegs.set(0, nSegments);
         NetworkEdge lineage = new NetworkEdge(null, n, hasSegs);
-        int id = n.getStateIndex();
+        int id = n.getTypeIndex();
         extantLineages.get(id).add(lineage);
         n.addParentEdge(lineage);
 
@@ -332,8 +315,8 @@ public class SimulateStructureCoalescentNetwork extends Network{
         coalescentNode.setHeight(coalescentTime)
                 .addChildEdge(lineage1)
                 .addChildEdge(lineage2);
-        coalescentNode.setStateIndex(stateIdCoal);
-        coalescentNode.setStateLabel(uniqueStates.get(stateIdCoal));
+        coalescentNode.setTypeIndex(stateIdCoal);
+        coalescentNode.setTypeLabel(uniqueTypes.get(stateIdCoal));
         lineage1.parentNode = coalescentNode;
         lineage2.parentNode = coalescentNode;
 
@@ -374,8 +357,8 @@ public class SimulateStructureCoalescentNetwork extends Network{
         // Create reassortment node
         NetworkNode node = new NetworkNode();
         node.setHeight(reassortmentTime).addChildEdge(lineage);
-        node.setStateIndex(lineage.childNode.getStateIndex());
-        node.setStateLabel(lineage.childNode.getStateLabel());
+        node.setTypeIndex(lineage.childNode.getTypeIndex());
+        node.setTypeLabel(lineage.childNode.getTypeLabel());
 
         // Create reassortment lineages
         NetworkEdge leftLineage = new NetworkEdge(null, node, hasSegs_left);
@@ -404,8 +387,8 @@ public class SimulateStructureCoalescentNetwork extends Network{
 //        newParentNode.removeChildEdge(lineage);
         migrationPoint.addChildEdge(lineage);
         
-        migrationPoint.setStateIndex(stateIdMigrationTo);
-        migrationPoint.setStateLabel(uniqueStates.get(stateIdMigrationTo));
+        migrationPoint.setTypeIndex(stateIdMigrationTo);
+        migrationPoint.setTypeLabel(uniqueTypes.get(stateIdMigrationTo));
         
         extantLineages.get(stateIdMigrationFrom).remove(lineage);
         extantLineages.get(stateIdMigrationTo).add(newParentEdge);
