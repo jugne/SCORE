@@ -122,7 +122,10 @@ public class SimulateStructureCoalescentNetwork extends Network {
                 throw new IllegalArgumentException("Must define either a " +
                         "trait set, type set or a taxon set.");
 
-        uniqueTypes = new ArrayList<>(new TreeSet<>(taxonSet.asStringList()));
+
+        SortedSet<String> typeNameSet = new TreeSet<>();
+        taxonSet.asStringList().forEach(n->typeNameSet.add(typeTraitSet.getStringValue(n)));
+        uniqueTypes = new ArrayList<>(typeNameSet);
 
 		for (int i = 0; i < uniqueTypes.size(); i++) {
 			typeNameToIndex.put(uniqueTypes.get(i), i);
