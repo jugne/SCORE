@@ -36,9 +36,9 @@
         </traitSet>
 
         <typeTrait spec="TraitSet" traitname="type" id="typeTrait">
-            <taxa spec="TaxonSet" idref="taxonSet"/>
+            <taxa idref="taxonSet"/>
 
-            t1=0, t2=0.1, t3=0.2, t4=0.3, t5=0.4
+            t1=0, t2=1, t3=2, t4=3, t5=4
         </typeTrait>
 
         <segmentTree id="segment1" spec="Tree" trait="@traitSet"/>
