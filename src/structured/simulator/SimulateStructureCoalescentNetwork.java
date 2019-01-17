@@ -75,7 +75,7 @@ public class SimulateStructureCoalescentNetwork extends Network{
     private ArrayList<String> uniqueStates = new ArrayList<>();
     
 	private enum MigrationType {
-	    symmetric, asymmetric 
+	    symmetric, asymmetric
 	}
 	
 	MigrationType migrationType;
@@ -112,9 +112,10 @@ public class SimulateStructureCoalescentNetwork extends Network{
     		System.err.println("the dimension of " + migrationRates.getID() + " is set to " + migDim);
     		migrationRates.setDimension(migDim);       		
 		}
-        System.out.println(migrationType);
-        // Set up sample nodes:
         
+        
+        
+        // Set up sample nodes:
         List<NetworkNode> sampleNodes = new ArrayList<>();
         
         TraitSet leafAgeSet = traitSetInput.get();
@@ -192,7 +193,6 @@ public class SimulateStructureCoalescentNetwork extends Network{
 
         double currentTime = 0;
         double timeUntilNextSample;
-        boolean allEmpty;
         List<List <NetworkEdge>> remaining;
         do {
             // get the timing of the next sampling event
@@ -229,7 +229,7 @@ public class SimulateStructureCoalescentNetwork extends Network{
             			stateIdCoal = i;
             		}
             	}
-            	
+
             	if (k_ >= 1) {
             		double timeToNextReass = Randomizer.nextExponential(k_*reassortmentRates.getArrayValue(i));
                 	if (timeToNextReass < minReassort) {
@@ -238,35 +238,19 @@ public class SimulateStructureCoalescentNetwork extends Network{
                 	}
 
 
-//                	if (migrationType == MigrationType.asymmetric) {
-                      	for (int j=0; j<uniqueStates.size(); j++) {
-                    		if (i!=j) {
-                    			double timeToNextMigration = Randomizer.nextExponential(k_*migrationRates.getArrayValue(c));
-                    			c++;
-                    			if (migrationType == MigrationType.symmetric)
-                    				c %= migrationRates.getDimension();
-                            	if (timeToNextMigration < minMigration) {
-                            		minMigration = timeToNextMigration;
-                            		stateIdMigrationFrom = i;
-                            		stateIdMigrationTo = j;
-                            	}
-                    		}
-                      	}
-//                	}else {
-//                      	for (int j=0; j<uniqueStates.size(); j++) {
-//                        		if (i!=j) {
-//                        			double timeToNextMigration = Randomizer.nextExponential(k_*migrationRates.getArrayValue(c));
-//                              		c++;
-//                              		c %= migrationRates.getDimension();
-////                        					.getArrayValue(i*uniqueStates.size()+j));
-//                                	if (timeToNextMigration < minMigration) {
-//                                		minMigration = timeToNextMigration;
-//                                		stateIdMigrationFrom = i;
-//                                		stateIdMigrationTo = j;
-//                                	}
-//                        		}
-//                      		}
-//                      	}
+                    for (int j=0; j<uniqueStates.size(); j++) {
+                    	if (i!=j) {
+                    		double timeToNextMigration = Randomizer.nextExponential(k_*migrationRates.getArrayValue(c));
+                    		c++;
+                    		if (migrationType == MigrationType.symmetric)
+                    			c %= migrationRates.getDimension();
+                    		if (timeToNextMigration < minMigration) {
+                    			minMigration = timeToNextMigration;
+                    			stateIdMigrationFrom = i;
+                    			stateIdMigrationTo = j;
+                            }
+                    	}
+                    }
                 }
             }
 
@@ -285,10 +269,9 @@ public class SimulateStructureCoalescentNetwork extends Network{
                 currentTime += timeUntilNextSample;
                 sample(remainingSampleNodes, extantLineages);
             }
-        
-//            allEmpty = extantLineages.values().stream().allMatch(l -> l == null || l.size() <= 1);
+
             remaining = extantLineages.values().stream().filter(l -> l.size() >= 1).collect(Collectors.toList());
-            
+
 
         }
         while ((remaining.size() > 1 || remaining.get(0).size() >1) || !remainingSampleNodes.isEmpty());
