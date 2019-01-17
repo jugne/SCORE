@@ -21,7 +21,7 @@
          <Ne spec="RealParameter" id="Ne" dimension="5" value="1.0"/>
    
         <reassortmentRate spec="RealParameter" id="reassortmentRate" dimension="5" value="1.0"/>
-	<migrationRate spec="RealParameter" id="migrationRate" dimension="10" value="1.0"/>
+	<migrationRate spec="RealParameter" id="migrationRate" dimension="1" value="0.0"/>
 
         <traitSet spec="TraitSet" traitname="date-backward" id="traitSet">
             <taxa spec="TaxonSet" id="taxonSet">
@@ -36,9 +36,9 @@
         </traitSet>
 
         <typeTrait spec="TraitSet" traitname="type" id="typeTrait">
-            <taxa idref="taxonSet"/>
+            <taxa spec="TaxonSet" idref="taxonSet"/>
 
-            t1=0, t2=1, t3=2, t4=3, t5=4
+            t1=0, t2=0, t3=0, t4=0, t5=0
         </typeTrait>
 
         <segmentTree id="segment1" spec="Tree" trait="@traitSet"/>
@@ -51,7 +51,7 @@
         <segmentTree id="segment8" spec="Tree" trait="@traitSet"/>
     </network>
 
-    <run spec="GPSimulator" nSims="1000000">
+    <run spec="GPSimulator" nSims="100000">
 
         <simulationObject idref="network"/>
 
@@ -62,5 +62,6 @@
         <logger spec="Logger" logEvery="1" fileName="$(filebase).log">
             <log spec="NetworkStatsLogger" network="@network"/>
         </logger>
+
     </run>
 </beast>
