@@ -70,10 +70,7 @@ public class SimulateStructureCoalescentNetwork extends Network {
 	private enum MigrationType {
 	    symmetric, asymmetric 
 	}
-
     private MigrationType migrationType;
-    
-    
 
     private int nSegments;
     
@@ -178,7 +175,6 @@ public class SimulateStructureCoalescentNetwork extends Network {
 
         double currentTime = 0;
         double timeUntilNextSample;
-        boolean allEmpty;
         List<List <NetworkEdge>> remaining;
         do {
             // get the timing of the next sampling event
@@ -222,36 +218,19 @@ public class SimulateStructureCoalescentNetwork extends Network {
                 		typeIndexReassortment = i;
                 	}
 
-
-//                	if (migrationType == MigrationType.asymmetric) {
-                      	for (int j = 0; j< uniqueTypes.size(); j++) {
-                    		if (i!=j) {
-                    			double timeToNextMigration = Randomizer.nextExponential(k_*migrationRates.getArrayValue(c));
-                    			c++;
-                    			if (migrationType == MigrationType.symmetric)
-                    				c %= migrationRates.getDimension();
-                            	if (timeToNextMigration < minMigration) {
-                            		minMigration = timeToNextMigration;
-                            		typeIndexMigrationFrom = i;
-                            		typeIndexMigrationTo = j;
-                            	}
-                    		}
-                      	}
-//                	}else {
-//                      	for (int j=0; j<uniqueStates.size(); j++) {
-//                        		if (i!=j) {
-//                        			double timeToNextMigration = Randomizer.nextExponential(k_*migrationRates.getArrayValue(c));
-//                              		c++;
-//                              		c %= migrationRates.getDimension();
-////                        					.getArrayValue(i*uniqueStates.size()+j));
-//                                	if (timeToNextMigration < minMigration) {
-//                                		minMigration = timeToNextMigration;
-//                                		stateIdMigrationFrom = i;
-//                                		stateIdMigrationTo = j;
-//                                	}
-//                        		}
-//                      		}
-//                      	}
+                	for (int j = 0; j< uniqueTypes.size(); j++) {
+                		if (i!=j) {
+                			double timeToNextMigration = Randomizer.nextExponential(k_*migrationRates.getArrayValue(c));
+                			c++;
+                			if (migrationType == MigrationType.symmetric)
+                				c %= migrationRates.getDimension();
+                			if (timeToNextMigration < minMigration) {
+                				minMigration = timeToNextMigration;
+                				typeIndexMigrationFrom = i;
+                				typeIndexMigrationTo = j;
+                			}
+                		}
+                	}
                 }
             }
 
@@ -271,8 +250,7 @@ public class SimulateStructureCoalescentNetwork extends Network {
                 currentTime += timeUntilNextSample;
                 sample(remainingSampleNodes, extantLineages);
             }
-        
-//            allEmpty = extantLineages.values().stream().allMatch(l -> l == null || l.size() <= 1);
+
             remaining = extantLineages.values().stream().filter(l -> l.size() >= 1).collect(Collectors.toList());
             
 
@@ -374,20 +352,20 @@ public class SimulateStructureCoalescentNetwork extends Network {
         extantLineages.get(stateIdReassortment).add(rightLineage);
     }
     
-    private void migrate(double migrationTime, HashMap<Integer, List<NetworkEdge>> extantLineages, int stateIdMigrationFrom, int stateIdMigrationTo) {
+    private void migrate(double migrationTime, HashMap<Integer, List<NetworkEdge>> extantLineages,
+    		int stateIdMigrationFrom, int stateIdMigrationTo) {
         // Sample the lineage for migration:
         NetworkEdge lineage = extantLineages.get(stateIdMigrationFrom).
         		get(Randomizer.nextInt(extantLineages.get(stateIdMigrationFrom).size()));
 
         NetworkNode migrationPoint = new NetworkNode();
-//        NetworkNode newParentNode = lineage.parentNode;
-        NetworkEdge newParentEdge = lineage.getCopy();
+        NetworkEdge newParentEdge = new NetworkEdge();
+//        NetworkEdge newParentEdge = lineage.getCopy();
+        newParentEdge.hasSegments = lineage.hasSegments;
         
         migrationPoint.setHeight(migrationTime);
-        migrationPoint.addParentEdge(newParentEdge);
-//        newParentNode.addChildEdge(newParentEdge);
-//        
-//        newParentNode.removeChildEdge(lineage);
+        migrationPoint.addParentEdge(newParentEdge); 
+
         migrationPoint.addChildEdge(lineage);
         
         migrationPoint.setTypeIndex(stateIdMigrationTo);
