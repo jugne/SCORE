@@ -1,0 +1,378 @@
+package structuredCoalescentNetwork.simulator;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import beast.core.Input;
+import beast.core.Input.Validate;
+import beast.core.parameter.RealParameter;
+import beast.evolution.alignment.TaxonSet;
+import beast.evolution.tree.TraitSet;
+import beast.evolution.tree.Tree;
+import beast.util.Randomizer;
+import coalre.network.Network;
+import coalre.network.NetworkEdge;
+import coalre.network.NetworkNode;
+
+//TODO check length for rate of reassort and migrattion rates to be the same as number of states
+//TODO figure out number of unique states like in Dynamics.java
+
+
+public class SimulateStructureCoalescentNetwork extends Network {
+
+	// array of reassortment rates for each state
+	public Input<RealParameter> reassortmentRatesInput = new Input<>("reassortmentRate",
+			"Rate of reassortment for each state (per lineage per unit time)", Validate.REQUIRED);
+
+	// array of migration rates for each state
+	public Input<RealParameter> migrationRatesInput = new Input<>("migrationRate",
+			"Rate of migration for each state (per lineage per unit time)", Validate.REQUIRED);
+
+
+	public Input<Integer> dimensionInput = new Input<>("dimension", "the number of different states." +
+			" if -1, it will use the number of different types ", -1);
+
+	public Input<TraitSet> typeTraitInput = new Input<>("typeTrait", "Type trait set. ", Validate.REQUIRED);
+
+	public Input<String> typesInput = new Input<>(
+			"types", "input of the different types, can be helpful for multilocus data");
+
+	public Input<List<Tree>> segmentTreesInput = new Input<>("segmentTree",
+			"One or more segment trees to initialize.", new ArrayList<>());
+
+	public Input<Integer> nSegmentsInput = new Input<>("nSegments",
+			"Number of segments. Used if no segment trees are supplied.");
+
+	public Input<TraitSet> traitSetInput = new Input<>("traitSet",
+			"Trait set used to assign leaf ages.");
+
+	public Input<Boolean> enableSegTreeUpdateInput = new Input<>("enableSegmentTreeUpdate",
+			"If false, segment tree objects won't be updated to agree with simulated " +
+					"network. (Default true.)", true);
+
+	public Input<String> fileNameInput = new Input<>("fileName",
+			"Name of file to write simulated network to.");
+
+	public Input<RealParameter> NeInput = new Input<>("Ne", "input of effective population sizes");
+
+	public Input<Double> ploidyInput = new Input<>("ploidy", "Ploidy (copy number) for this gene,"
+			+ "typically a whole number or half (default is 1).", 1.0);
+
+
+	private RealParameter reassortmentRates;
+	private RealParameter migrationRates;
+	private RealParameter Ne;
+	private final HashMap<String, Integer> typeNameToIndex = new HashMap<>();
+	private final HashMap<Integer, String> typeIndexToName = new HashMap<>();
+
+	private ArrayList<String> uniqueTypes;
+
+	private enum MigrationType {
+		symmetric, asymmetric
+	}
+	private MigrationType migrationType;
+
+	private int nSegments;
+
+	@Override
+	public void initAndValidate() {
+
+		Ne = NeInput.get();
+		if (nSegmentsInput.get() != null)
+			nSegments = nSegmentsInput.get();
+		else
+			nSegments = segmentTreesInput.get().size();
+
+		//        populationFunction = populationFunctionInput.get();
+		reassortmentRates = reassortmentRatesInput.get();
+		migrationRates = migrationRatesInput.get();
+
+		if (nSegments==0) {
+			throw new IllegalArgumentException("Need at least one segment!");
+		}
+
+		final int migDim = Ne.getDimension()*(Ne.getDimension()-1);
+
+		if (migDim == migrationRates.getDimension()){
+			migrationType = MigrationType.asymmetric;
+		}else if (migDim/2 == migrationRates.getDimension()){
+			migrationType = MigrationType.symmetric;
+		}else{
+			migrationType = MigrationType.asymmetric;
+			System.err.println("Wrong number of migration elements, assume asymmetric migration:");
+			System.err.println("the dimension of " + migrationRates.getID() + " is set to " + migDim);
+			migrationRates.setDimension(migDim);
+		}
+		// Set up sample nodes:
+
+		final List<NetworkNode> sampleNodes = new ArrayList<>();
+
+		final TraitSet leafAgeTraitSet = traitSetInput.get();
+		final TraitSet typeTraitSet = typeTraitInput.get();
+		TaxonSet taxonSet;
+		if (leafAgeTraitSet != null)
+			taxonSet = leafAgeTraitSet.taxaInput.get();
+		else
+			taxonSet = typeTraitSet.taxaInput.get();
+
+		if (taxonSet == null)
+			throw new IllegalArgumentException("Must define either a " +
+					"trait set, type set or a taxon set.");
+
+
+		final SortedSet<String> typeNameSet = new TreeSet<>();
+		taxonSet.asStringList().forEach(n->typeNameSet.add(typeTraitSet.getStringValue(n)));
+		uniqueTypes = new ArrayList<>(typeNameSet);
+
+		for (int i = 0; i < uniqueTypes.size(); i++) {
+			typeNameToIndex.put(uniqueTypes.get(i), i);
+			typeIndexToName.put(i, uniqueTypes.get(i));
+		}
+
+		for (int taxonIndex=0; taxonIndex<taxonSet.getTaxonCount(); taxonIndex++) {
+			final String taxonName = taxonSet.getTaxonId(taxonIndex);
+
+			final NetworkNode sampleNode = new NetworkNode();
+			sampleNode.setTaxonLabel(taxonName);
+			sampleNode.setTaxonIndex(taxonIndex);
+
+			if (leafAgeTraitSet != null)
+				sampleNode.setHeight(leafAgeTraitSet.getValue(taxonName));
+			else
+				sampleNode.setHeight(0.0);
+
+			final String typeName = typeTraitSet.getStringValue(taxonName);
+			sampleNode.setTypeLabel(typeName);
+			sampleNode.setTypeIndex(typeNameToIndex.get(typeTraitSet.getStringValue(taxonName)));
+
+			sampleNodes.add(sampleNode);
+		}
+
+		// Perform network simulation:
+		simulateNetwork(sampleNodes);
+	}
+
+
+
+	/**
+	 * Simulate network under structured coalescent with reassortment model.
+	 * @param sampleNodes network nodes corresponding to samples.
+	 */
+	public void simulateNetwork(List<NetworkNode> sampleNodes) {
+
+		final List<NetworkNode> remainingSampleNodes = new ArrayList<>(sampleNodes);
+
+		//        #####################################
+		//        extant lineages have to be sorted by state id
+		//        #####################################
+
+		final HashMap<Integer, List<NetworkEdge>> extantLineages = new HashMap<Integer, List<NetworkEdge>>(uniqueTypes.size());
+		for (int i = 0; i < uniqueTypes.size(); i++ ) {
+			extantLineages.put(i, new ArrayList<>());
+		}
+
+		remainingSampleNodes.sort(Comparator.comparingDouble(NetworkNode::getHeight));
+
+		double currentTime = 0;
+		double timeUntilNextSample;
+		List<List <NetworkEdge>> remaining;
+		do {
+			// get the timing of the next sampling event
+			if (!remainingSampleNodes.isEmpty()) {
+				timeUntilNextSample = remainingSampleNodes.get(0).getHeight() - currentTime;
+			} else {
+				timeUntilNextSample = Double.POSITIVE_INFINITY;
+			}
+
+
+			//          TODO make work for different pop models
+			//            assume fixed population for now, so transformation like this not needed:
+			//            double currentTransformedTime = populationFunction.getIntensity(currentTime);
+			//            double transformedTimeToNextCoal = k>=2 ? Randomizer.nextExponential(0.5*k*(k-1)) : Double.POSITIVE_INFINITY;
+			//            double timeToNextCoal = populationFunction.getInverseIntensity(
+			//                    transformedTimeToNextCoal + currentTransformedTime) - currentTime;
+
+			double minCoal = Double.POSITIVE_INFINITY;
+			double minReassort = Double.POSITIVE_INFINITY;
+			double minMigration = Double.POSITIVE_INFINITY;
+
+			int typeIndexCoal = -1, typeIndexReassortment = -1, typeIndexMigrationFrom = -1, typeIndexMigrationTo = -1;
+
+			int c = 0;
+			for (int i = 0; i < uniqueTypes.size(); i++) {
+				//how many lineages are in this state
+				final int k_ = extantLineages.get(i).size();
+
+				if (k_ >= 2) {
+					final double timeToNextCoal = Randomizer.nextExponential(0.5*k_*(k_-1));
+					if (timeToNextCoal < minCoal) {
+						minCoal = timeToNextCoal;
+						typeIndexCoal = i;
+					}
+				}
+
+				if (k_ >= 1) {
+					final double timeToNextReass = Randomizer.nextExponential(k_*reassortmentRates.getArrayValue(i));
+					if (timeToNextReass < minReassort) {
+						minReassort = timeToNextReass;
+						typeIndexReassortment = i;
+					}
+
+					for (int j = 0; j< uniqueTypes.size(); j++) {
+						if (i!=j) {
+							final double timeToNextMigration = Randomizer.nextExponential(k_*migrationRates.getArrayValue(c));
+							c++;
+							if (migrationType == MigrationType.symmetric)
+								c %= migrationRates.getDimension();
+							if (timeToNextMigration < minMigration) {
+								minMigration = timeToNextMigration;
+								typeIndexMigrationFrom = i;
+								typeIndexMigrationTo = j;
+							}
+						}
+					}
+				}
+			}
+
+			// next event time
+			double timeUntilNextEvent = Math.min(minCoal, minReassort);
+			timeUntilNextEvent = Math.min(timeUntilNextEvent, minMigration);
+			if (timeUntilNextEvent < timeUntilNextSample) {
+				currentTime += timeUntilNextEvent;
+				if (timeUntilNextEvent == minCoal)
+					coalesce(currentTime, extantLineages, typeIndexCoal);
+				else if (timeUntilNextEvent == minReassort)
+					reassort(currentTime, extantLineages, typeIndexReassortment);
+				else
+					migrate(currentTime, extantLineages,
+							typeIndexMigrationFrom, typeIndexMigrationTo);
+			} else {
+				currentTime += timeUntilNextSample;
+				sample(remainingSampleNodes, extantLineages);
+			}
+
+			remaining = extantLineages.values().stream().filter(l -> l.size() >= 1).collect(Collectors.toList());
+
+
+		}
+		while ((remaining.size() > 1 || remaining.get(0).size() >1) || !remainingSampleNodes.isEmpty());
+
+
+
+		final List<List <NetworkEdge>> root = extantLineages.values().stream().filter(l -> l.size()==1).collect(Collectors.toList());
+		if (root.size() > 1)
+			System.err.println("More than one root edge");
+		setRootEdge(root.get(0).get(0));
+	}
+
+
+	private void sample(List<NetworkNode> remainingSampleNodes, HashMap<Integer, List<NetworkEdge>> extantLineages) {
+		// sample the network node
+		final NetworkNode n = remainingSampleNodes.get(0);
+
+		// Create corresponding lineage
+		final BitSet hasSegs = new BitSet();
+		hasSegs.set(0, nSegments);
+		final NetworkEdge lineage = new NetworkEdge(null, n, hasSegs);
+		final int id = n.getTypeIndex();
+		extantLineages.get(id).add(lineage);
+		n.addParentEdge(lineage);
+
+		remainingSampleNodes.remove(0);
+	}
+
+	private void coalesce(double coalescentTime, HashMap<Integer, List<NetworkEdge>> extantLineages, int stateIdCoal) {
+		// Sample the pair of lineages that are coalescing:
+		final NetworkEdge lineage1 = extantLineages.get(stateIdCoal).
+				get(Randomizer.nextInt(extantLineages.get(stateIdCoal).size()));
+		NetworkEdge lineage2;
+		do {
+			lineage2 = extantLineages.get(stateIdCoal).
+					get(Randomizer.nextInt(extantLineages.get(stateIdCoal).size()));
+		} while (lineage1 == lineage2);
+
+		// Create coalescent node
+		final NetworkNode coalescentNode = new NetworkNode();
+		coalescentNode.setHeight(coalescentTime)
+		.addChildEdge(lineage1)
+		.addChildEdge(lineage2);
+		coalescentNode.setTypeIndex(stateIdCoal);
+		coalescentNode.setTypeLabel(uniqueTypes.get(stateIdCoal));
+		lineage1.parentNode = coalescentNode;
+		lineage2.parentNode = coalescentNode;
+
+		// Merge segment flags:
+		final BitSet hasSegments = new BitSet();
+		hasSegments.or(lineage1.hasSegments);
+		hasSegments.or(lineage2.hasSegments);
+
+		// Create new lineage
+		final NetworkEdge lineage = new NetworkEdge(null, coalescentNode, hasSegments);
+		coalescentNode.addParentEdge(lineage);
+
+		extantLineages.get(stateIdCoal).remove(lineage1);
+		extantLineages.get(stateIdCoal).remove(lineage2);
+		extantLineages.get(stateIdCoal).add(lineage);
+	}
+
+	private void reassort(double reassortmentTime, HashMap<Integer, List<NetworkEdge>> extantLineages, int stateIdReassortment) {
+		final NetworkEdge lineage = extantLineages.get(stateIdReassortment).
+				get(Randomizer.nextInt(extantLineages.get(stateIdReassortment).size()));
+
+		final BitSet hasSegs_left = new BitSet();
+		final BitSet hasSegs_right = new BitSet();
+
+		for (int segIdx = lineage.hasSegments.nextSetBit(0);
+				segIdx != -1; segIdx = lineage.hasSegments.nextSetBit(segIdx+1)) {
+			if (Randomizer.nextBoolean()) {
+				hasSegs_left.set(segIdx);
+			} else {
+				hasSegs_right.set(segIdx);
+			}
+		}
+
+		// Stop here if reassortment event is unobservable
+		if (hasSegs_left.cardinality() == 0 || hasSegs_right.cardinality() == 0)
+			return;
+
+		// Create reassortment node
+		final NetworkNode node = new NetworkNode();
+		node.setHeight(reassortmentTime).addChildEdge(lineage);
+		node.setTypeIndex(lineage.childNode.getTypeIndex());
+		node.setTypeLabel(lineage.childNode.getTypeLabel());
+
+		// Create reassortment lineages
+		final NetworkEdge leftLineage = new NetworkEdge(null, node, hasSegs_left);
+		final NetworkEdge rightLineage = new NetworkEdge(null, node, hasSegs_right);
+		node.addParentEdge(leftLineage);
+		node.addParentEdge(rightLineage);
+
+		extantLineages.get(stateIdReassortment).remove(lineage);
+		extantLineages.get(stateIdReassortment).add(leftLineage);
+		extantLineages.get(stateIdReassortment).add(rightLineage);
+	}
+
+	private void migrate(double migrationTime, HashMap<Integer, List<NetworkEdge>> extantLineages,
+			int stateIdMigrationFrom, int stateIdMigrationTo) {
+		// Sample the lineage for migration:
+		final NetworkEdge lineage = extantLineages.get(stateIdMigrationFrom).
+				get(Randomizer.nextInt(extantLineages.get(stateIdMigrationFrom).size()));
+
+		final NetworkNode migrationPoint = new NetworkNode();
+		final NetworkEdge newParentEdge = new NetworkEdge();
+		//        NetworkEdge newParentEdge = lineage.getCopy();
+		newParentEdge.hasSegments = lineage.hasSegments;
+
+		migrationPoint.setHeight(migrationTime);
+		migrationPoint.addParentEdge(newParentEdge);
+
+		migrationPoint.addChildEdge(lineage);
+
+		migrationPoint.setTypeIndex(stateIdMigrationTo);
+		migrationPoint.setTypeLabel(uniqueTypes.get(stateIdMigrationTo));
+
+		extantLineages.get(stateIdMigrationFrom).remove(lineage);
+		extantLineages.get(stateIdMigrationTo).add(newParentEdge);
+	}
+
+}

@@ -14,7 +14,7 @@
                  :coalre.network
                  :coalre.statistics
                  :coalre.simulator
-		 :structured.simulator">
+		 :structuredCoalescent.simulator">
 
     <network id="network" spec="SimulateStructureCoalescentNetwork" enableSegmentTreeUpdate="false">
 
