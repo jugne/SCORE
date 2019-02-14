@@ -61,9 +61,6 @@ public class StructuredNetworkIntervals extends CalculationNode {
                     break;
 
                 case 1:
-                	System.out.println(event.node.getParentCount());
-                	System.out.println(network.getExtendedNewick());
-                	System.out.println(event.node.getHeight());
                     event.type = StructuredNetworkEvent.NetworkEventType.REASSORTMENT;
                     break;
 
