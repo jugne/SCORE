@@ -1,5 +1,9 @@
 package structuredCoalescentNetwork.math;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
@@ -19,14 +23,14 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
     int dimension;
     Integer[][] connectivity;
     Integer[][] sums;
-    Integer[][] lineage_type;
-    Integer[] n_segs;
+    ArrayList<ArrayList<Integer>> lineage_type;
+    ArrayList<Integer> n_segs;
     
     boolean belowzero = false;
 
     // constructor
     public ode_integrator_reassort(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
-    		int types, Integer[][] connectivity, Integer[][] sums, Integer[][] lineage_type, Integer[] n_segs){
+    		int types, Integer[][] connectivity, Integer[][] sums, ArrayList<ArrayList<Integer>> lineage_type, ArrayList<Integer> n_segs){
         this.migration_rates = migration_rates;
         this.coalescent_rates = coalescent_rates;
         this.reassortment_rates = reassortment_rates;
@@ -75,8 +79,8 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
     	for (int i=0; i < p.length; i++) {
     		for (int s = 0; s < types; s++) {
     			for (int j=0; j <lineages; j++) {
-    				if (lineage_type[i][j] == s) {
-    					pDot[i] -= (1-Math.pow(0.5, n_segs[j]-1))*reassortment_rates[s]*p[i];
+    				if (lineage_type.get(i).get(j) == s) {
+    					pDot[i] -= (1-Math.pow(0.5, n_segs.get(j)-1))*reassortment_rates[s]*p[i];
     				}
     			}
     		}
@@ -99,8 +103,13 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
          */
         Integer[][] con = {{null,0,0,null},{1,null,null,0},{1,null,null,0},{null,1,1,null}};
         Integer[][] sums = {{2,0},{1,1},{1,1},{0,2}};
-        Integer[][] lineage_type = {{0,0},{0,1},{1,0},{1,1}};
-        Integer[] n_segs = {1,2};
+        ArrayList<ArrayList<Integer>> lineage_type = new ArrayList<ArrayList<Integer>>();
+        lineage_type.add(new ArrayList<Integer>(Arrays.asList(0,0)));
+        lineage_type.add(new ArrayList<Integer>(Arrays.asList(1,0)));
+        lineage_type.add(new ArrayList<Integer>(Arrays.asList(0,1)));
+        lineage_type.add(new ArrayList<Integer>(Arrays.asList(1,1)));
+        
+        ArrayList<Integer> n_segs = new ArrayList<Integer>(Arrays.asList(1, 2));
 
         FirstOrderIntegrator integrator = new ClassicalRungeKuttaIntegrator(0.01);
         FirstOrderDifferentialEquations ode = new ode_integrator_reassort(migration_rates, coalescent_rates, reassortment_rates, lineages , types, con, sums, lineage_type, n_segs);

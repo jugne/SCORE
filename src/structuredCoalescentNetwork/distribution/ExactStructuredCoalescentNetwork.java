@@ -36,7 +36,7 @@ import beast.evolution.tree.Node;
 import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.coalescent.IntervalType;
 import structuredCoalescentNetwork.math.ode_integrator;
-
+import structuredCoalescentNetwork.math.ode_integrator_reassort;
 import coalre.distribution.NetworkDistribution;
 import coalre.distribution.NetworkEvent;
 import coalre.distribution.NetworkEvent.NetworkEventType;
@@ -149,9 +149,6 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
     }
 
     public double calculateLogP() {
-    	// TODO below is not needed as we have networkEventList ????
-    	// Calculate the tree intervals (time between events, which nodes participate at a event etc.)    	
-//    	treeIntervalsInput.get().calculateIntervals();
     	
     	networkEventList = intervals.getNetworkEventList();
     	nodes = new ArrayList<NetworkNode>(intervals.networkInput.get().getInternalNodes());
@@ -209,6 +206,11 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
         	if (duration > 0) {
         		p = new double[jointStateProbabilities.size()];		// Captures the probabilities of lineages being in a state
         		
+        		ArrayList<Integer> n_segs = new ArrayList<Integer>();
+        		for (NetworkEdge l : activeLineages) {
+        			n_segs.add(l.hasSegments.cardinality());
+        		}
+        		
         		// convert the array list to double[]
         		for (int i = 0; i<jointStateProbabilities.size(); i++)
                 	p[i] = jointStateProbabilities.get(i);
@@ -222,8 +224,10 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
                 // initialize integrator
                 FirstOrderIntegrator integrator = new ClassicalRungeKuttaIntegrator(ts);
                 // set the odes
-                FirstOrderDifferentialEquations ode = new ode_integrator(migration_rates, coalescent_rates, 
-                		nr_lineages , states, connectivity, sums);
+//                FirstOrderDifferentialEquations ode = new ode_integrator(migration_rates, coalescent_rates, 
+//                		nr_lineages , states, connectivity, sums);
+                FirstOrderDifferentialEquations ode = new ode_integrator_reassort(migration_rates, coalescent_rates, reassortment_rates,
+                		nr_lineages , states, connectivity, sums, combination, n_segs) ;
                 // integrate              
                 integrator.integrate(ode, start, p, duration, p_for_ode);
                 
@@ -237,7 +241,6 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
                 
                 // set the probabilities of the system being in a configuration again
                 for (int i = 0; i<p_for_ode.length; i++) {
-//                	System.out.println(p_for_ode[i]);
                 	jointStateProbabilities.set(i, p_for_ode[i]);
                 }
         	}
@@ -385,32 +388,13 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		combination = newCombination;	
 		jointStateProbabilities = newJointStateProbabilities;
 		
-		// newly build the connectivity matrix (how to transition between configurations
-		connectivity = new Integer[combination.size()][combination.size()];
-		// build the connectivity matrix
-		for (int a = 0; a < combination.size(); a++){
-			for (int b = 0; b < combination.size(); b++){
-				int diff = 0;
-				int[] directs = new int[2];
-				ArrayList<Integer> comb1 = combination.get(a);
-				ArrayList<Integer> comb2 = combination.get(b);
-
-				for (int i = 0; i < comb1.size(); i++){
-					int d = comb1.get(i) - comb2.get(i);
-					if (d != 0){
-						diff++;
-						directs[0] = comb1.get(i);
-						directs[1] = comb2.get(i);
-					}
-				}
-				if (diff == 1){
-					connectivity[a][b] = migration_map[directs[0]][directs[1]];
-				}
-			}
-		}
+		updateConnectivityMatrix();
+		
 		sums = newSums;
 		sumsTot = newSumsTot;
     }
+    
+
 
 
     private double coalesce(StructuredNetworkEvent event) {
@@ -487,36 +471,14 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 				newProbability.add(coalescent_rates[combination.get(i).get(daughterIndex1)]*jointStateProbabilities.get(i));
 				pairwiseCoalRate[combination.get(i).get(daughterIndex1)] +=
 						2*coalescent_rates[combination.get(i).get(daughterIndex1)]*jointStateProbabilities.get(i);
-//				System.out.println(pairwiseCoalRate[combination.get(i).get(daughterIndex1)]);
 			}
 		}
 
 		combination = newCombination;
-		jointStateProbabilities = newProbability;
+		jointStateProbabilities = newProbability;		
 
-		connectivity = new Integer[combination.size()][combination.size()];
-		// build the connectivity matrix
-		for (int a = 0; a < combination.size(); a++){
-			for (int b = 0; b < combination.size(); b++){
-				int diff = 0;
-				int[] directs = new int[2];
-				ArrayList<Integer> comb1 = combination.get(a);
-				ArrayList<Integer> comb2 = combination.get(b);
+		updateConnectivityMatrix();
 
-				for (int i = 0; i < comb1.size(); i++){
-					int d = comb1.get(i) - comb2.get(i);
-					if (d != 0){
-						diff++;
-						directs[0] = comb1.get(i);
-						directs[1] = comb2.get(i);
-					}
-				}
-				if (diff == 1){
-					connectivity[a][b] = migration_map[directs[0]][directs[1]];
-				}
-			}
-		}		
-		
 		for (int i = 0; i < nrs; i++){
 			int news = 0;				
 			for (int j = 0; j < states; j++){
@@ -549,6 +511,119 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		// return the normlization constant as a probability (in log space)
     	return Math.log(prob);
     }
+    
+    private double reassortment(StructuredNetworkEvent event) {
+    	List<NetworkEdge> reassortLines = event.lineagesAdded;
+    	if (reassortLines.size() > 2) {
+    		System.out.println();
+			System.err.println("WARNING: More than two parent lineages at reassortment event!");
+    		System.out.println();
+    		return Double.NaN;
+		}
+    	if (reassortLines.size() < 2) {
+    		System.out.println();
+    		System.err.println("WARNING: Less than two parent lineages at reassortment event!");
+    		System.out.println();
+    		return Double.NaN;
+		}
+    	
+    	
+		if (event.lineagesRemoved.size() > 1) {
+			System.out.println("More than one daughter lineage at reassortment event");
+			return Double.NaN;
+		}    	
+    	// get the indices of the daughter lineage
+    	final int daughterIndex = activeLineages.indexOf(event.lineagesRemoved.get(0));
+		if (daughterIndex == -1) {
+			System.out.println("Daughter lineage at reassortment event not found");
+			return Double.NaN;
+		}
+		int n_segs = event.lineagesRemoved.get(0).hasSegments.cardinality();
+
+		// remove daughter lineage from active lineages
+		activeLineages.remove(daughterIndex);
+
+		// add two new parent lineages as an active lineages
+		activeLineages.add(event.lineagesAdded.get(0));
+		activeLineages.add(event.lineagesAdded.get(1));
+				
+		// calculate the number of combinations after the reassortment event
+		int nrs = combination.size()*states;
+		
+		// newly initialize the number of lineages per configuration
+		Integer[][] newSums = new Integer[nrs][states];
+		Integer[] newSumsTot = new Integer[nrs];
+    	
+		
+		
+		// probability update for reassortment event
+		ArrayList<Double> newProbability = new ArrayList<Double>();
+		ArrayList<ArrayList<Integer>> newCombination = new ArrayList<ArrayList<Integer>>();
+		int futureState = 0;
+		for (int i = 0; i < jointStateProbabilities.size(); i++){
+			ArrayList<Integer> coalLoc = new ArrayList<Integer>(combination.get(i));
+			
+			newSums[futureState] = sums[i];	
+			newSums[futureState][combination.get(i).get(daughterIndex)]++;
+			futureState++;
+			
+			coalLoc.remove(daughterIndex);
+			coalLoc.add(combination.get(i).get(daughterIndex));
+			coalLoc.add(combination.get(i).get(daughterIndex));
+			newCombination.add(coalLoc);
+			
+			newProbability.add(reassortment_rates[combination.get(i).get(daughterIndex)]*(1-Math.pow(0.5, n_segs))
+					*jointStateProbabilities.get(i));
+			
+		}
+		
+		
+		combination = newCombination;
+		jointStateProbabilities = newProbability;
+		
+		updateConnectivityMatrix();
+		
+		for (int i = 0; i < nrs; i++){
+			int news = 0;				
+			for (int j = 0; j < states; j++){
+				int add = newSums[i][j]-1;
+				if (add>0)
+					news += add;
+			}
+			newSumsTot[i] = news;
+		}
+		
+		// find all joint probabilities where the two lineages are in the same deme
+    	
+    }
+    
+    
+    private void updateConnectivityMatrix(){
+		// newly build the connectivity matrix (how to transition between configurations
+		connectivity = new Integer[combination.size()][combination.size()];
+		// build the connectivity matrix
+		for (int a = 0; a < combination.size(); a++){
+			for (int b = 0; b < combination.size(); b++){
+				int diff = 0;
+				int[] directs = new int[2];
+				ArrayList<Integer> comb1 = combination.get(a);
+				ArrayList<Integer> comb2 = combination.get(b);
+
+				for (int i = 0; i < comb1.size(); i++){
+					int d = comb1.get(i) - comb2.get(i);
+					if (d != 0){
+						diff++;
+						directs[0] = comb1.get(i);
+						directs[1] = comb2.get(i);
+					}
+				}
+				if (diff == 1){
+					connectivity[a][b] = migration_map[directs[0]][directs[1]];
+				}
+			}
+		}
+    }
+    
     
     //TODO  adapt to network case if implementing logger
 //    public DoubleMatrix getStateProb(int nr){
