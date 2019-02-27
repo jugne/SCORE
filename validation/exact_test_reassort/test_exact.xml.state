@@ -1,0 +1,15 @@
+<itsabeastystatewerein version='2.0' sample='0'>
+<statenode id='network'>(#H0[&amp;segments={0, 3, 4},segsCarried=3]:1.080828841313449,((t4[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:1.508987506148007,(t2[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.23329019860616199,t3[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.13329019860616198)[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:1.475697307541845)[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.009146577797107147,((t5[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.2189784764414595,t1[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.6189784764414595)[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:1.0612103367554147)#H0[&amp;segments={1, 2, 5, 6, 7},segsCarried=5]:0.13794527074824003)[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.942883570565209)[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.0;</statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"AddRemoveReassortment","p":"NaN","accept":0,"reject":0,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"DivertSegmentOperator","p":"NaN","accept":0,"reject":0,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"UniformNetworkNodeHeightOperator","p":"NaN","accept":0,"reject":1,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"SubNetworkSlide","p":1,"accept":0,"reject":0,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"NetworkScale","p":"NaN","accept":0,"reject":0,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"NetworkScaleRootOnly","p":"NaN","accept":0,"reject":0,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":"NaN","accept":0,"reject":0,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":"NaN","accept":0,"reject":0,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0}
+]}
+-->
