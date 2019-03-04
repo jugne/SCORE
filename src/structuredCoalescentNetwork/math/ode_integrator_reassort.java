@@ -23,14 +23,14 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
     int dimension;
     Integer[][] connectivity;
     Integer[][] sums;
-    ArrayList<ArrayList<Integer>> lineage_type;
-    ArrayList<Integer> n_segs;
+    List<List<Integer>> lineage_type;
+    List<Integer> n_segs;
     
     boolean belowzero = false;
 
     // constructor
     public ode_integrator_reassort(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
-    		int types, Integer[][] connectivity, Integer[][] sums, ArrayList<ArrayList<Integer>> lineage_type, ArrayList<Integer> n_segs){
+    		int types, Integer[][] connectivity, Integer[][] sums, List<List<Integer>> lineage_type, List<Integer> n_segs){
         this.migration_rates = migration_rates;
         this.coalescent_rates = coalescent_rates;
         this.reassortment_rates = reassortment_rates;
@@ -103,13 +103,13 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
          */
         Integer[][] con = {{null,0,0,null},{1,null,null,0},{1,null,null,0},{null,1,1,null}};
         Integer[][] sums = {{2,0},{1,1},{1,1},{0,2}};
-        ArrayList<ArrayList<Integer>> lineage_type = new ArrayList<ArrayList<Integer>>();
-        lineage_type.add(new ArrayList<Integer>(Arrays.asList(0,0)));
-        lineage_type.add(new ArrayList<Integer>(Arrays.asList(1,0)));
-        lineage_type.add(new ArrayList<Integer>(Arrays.asList(0,1)));
-        lineage_type.add(new ArrayList<Integer>(Arrays.asList(1,1)));
+        List<List<Integer>> lineage_type = new ArrayList<>();
+        lineage_type.add(new ArrayList<>(Arrays.asList(0, 0)));
+        lineage_type.add(new ArrayList<>(Arrays.asList(1, 0)));
+        lineage_type.add(new ArrayList<>(Arrays.asList(0, 1)));
+        lineage_type.add(new ArrayList<>(Arrays.asList(1, 1)));
         
-        ArrayList<Integer> n_segs = new ArrayList<Integer>(Arrays.asList(1, 2));
+        List<Integer> n_segs = new ArrayList<>(Arrays.asList(1, 2));
 
         FirstOrderIntegrator integrator = new ClassicalRungeKuttaIntegrator(0.01);
         FirstOrderDifferentialEquations ode = new ode_integrator_reassort(migration_rates, coalescent_rates, reassortment_rates, lineages , types, con, sums, lineage_type, n_segs);
