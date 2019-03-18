@@ -132,7 +132,9 @@ public class StructuredNetworkIntervals extends CalculationNode {
         List<StructuredNetworkEvent> tmp = networkEventList;
         networkEventList = storedNetworkEventList;
         storedNetworkEventList = tmp;
-
+        
+        eventListDirty = true;
+        
         super.restore();
     }
 

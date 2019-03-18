@@ -31,7 +31,7 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
     // constructor
     public ode_integrator_reassort(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
     		int types, Integer[][] connectivity, Integer[][] sums, List<List<Integer>> lineage_type, List<Integer> n_segs){
-        this.migration_rates = migration_rates;
+    	this.migration_rates = migration_rates;
         this.coalescent_rates = coalescent_rates;
         this.reassortment_rates = reassortment_rates;
         this.lineages = lineages;
@@ -42,6 +42,7 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
         this.sums = sums;
         this.n_segs = n_segs;
         this.lineage_type = lineage_type;
+
     }
 
     public int getDimension() {
@@ -54,7 +55,7 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
     	for (int i = 0; i < p.length; i++){
     		pDot[i] = 0.0;
     		for (int s = 0; s < types; s++)
-    			pDot[i] -= (sums[i][s]-1)*sums[i][s]*coalescent_rates[s];
+    			pDot[i] -= 0.5*(sums[i][s]-1)*sums[i][s]*coalescent_rates[s];
     		
     		pDot[i] *= p[i];
     		// Stop the run if any configuration has a probability of lower than 0 of still existing
@@ -75,16 +76,17 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
     		}
     	}
     
-    	
     	for (int i=0; i < p.length; i++) {
+    		
     		for (int s = 0; s < types; s++) {
     			for (int j=0; j <lineages; j++) {
     				if (lineage_type.get(i).get(j) == s) {
-    					pDot[i] -= (1-Math.pow(0.5, n_segs.get(j)-1))*reassortment_rates[s]*p[i];
+    					pDot[i] += -(1-Math.pow(0.5, n_segs.get(j)-1))*reassortment_rates[s]*p[i]; // add factor of 2 and remove -1 from seg count
     				}
     			}
     		}
     	}
+//    	System.out.println(pDot);
     }
         
     public static void main(String[] args) throws Exception{
@@ -115,7 +117,7 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
         FirstOrderDifferentialEquations ode = new ode_integrator_reassort(migration_rates, coalescent_rates, reassortment_rates, lineages , types, con, sums, lineage_type, n_segs);
         double[] y0 = new double[]{0,1,0,0};
         double[] y = new double[4];
-    	integrator.integrate(ode, 0, y0, 30, y);
+    	integrator.integrate(ode, 0, y0, 50, y);
 
         System.out.println("Solution: " +y[0]+" "+y[1] + " " +y[2] + " " +y[3]);
     }

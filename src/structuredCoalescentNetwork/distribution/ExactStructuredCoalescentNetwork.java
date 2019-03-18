@@ -106,21 +106,14 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
     
     // Set up for lineage state probabilities
     List<NetworkEdge> activeLineages;
-    List<Double> lineStateProbs;
     
     @Override
     public void initAndValidate(){
     	// Calculate the tree intervals (time between events, which nodes participate at a event etc.)
     	intervals = networkIntervalsInput.get();
-//    	networkEventList = intervals.getNetworkEventList();
-       
-    	// TODO need to test; might need sorting
-//    	nodes.addAll(intervals.networkInput.get().getInternalNodes());
-
     	
         nodeStateProbabilities = new DoubleMatrix[intervals.networkInput.get().getInternalNodes().size()];    
         nrSamples = intervals.networkInput.get().getLeafNodes().size();
-//        nodes = new ArrayList<NetworkNode>(intervals.networkInput.get().getInternalNodes());
         
         // direct conversion to integer didn't seem to work, so take rout via double
         double types_tmp = dim.get().getValue();
@@ -136,21 +129,18 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
         reassortment_rates = new double[types];
         
         // Calculate the marginal likelihood
-//        calculateLogP();
+        calculateLogP();
     }
 
     public double calculateLogP() {
+    	intervals = networkIntervalsInput.get();
     	networkEventList = intervals.getNetworkEventList();
         nodeStateProbabilities = new DoubleMatrix[intervals.networkInput.get().getInternalNodes().size()];    
-    	nodes = new ArrayList<NetworkNode>(intervals.networkInput.get().getInternalNodes());
-
         nrSamples = intervals.networkInput.get().getLeafNodes().size();
     	nodes = new ArrayList<>(intervals.networkInput.get().getInternalNodes());
-//    	System.out.println(nodes.size());
 
         // Set up for lineage state probabilities
         activeLineages = new ArrayList<>();
-        lineStateProbs = new ArrayList<>();
         
         // Compute likelihood at each integration time and tree event starting at final sampling time and moving backwards
         logP = 0;          
@@ -171,7 +161,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 					c++;
 				}
 				else{
-					coalescent_rates[k] = coalescentRatesInput.get().getArrayValue(k)/2; // why the factor of 1/2?
+					coalescent_rates[k] = coalescentRatesInput.get().getArrayValue(k);
 					reassortment_rates[k] = reassortmentRateInput.get().getArrayValue(k);
 				}
 				
@@ -191,6 +181,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
         	
         	// if the current interval has a length greater than 0, integrate
         	if (duration > 0) {
+//        		System.out.println("Duration: "+duration);
         		p = new double[jointStateProbabilities.size()];		// Captures the probabilities of lineages being in a state
         		
         		List<Integer> n_segs = new ArrayList<>();
@@ -210,6 +201,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
                 // initialize integrator
                 FirstOrderIntegrator integrator = new ClassicalRungeKuttaIntegrator(ts);
                 // set the odes
+//                System.out.println("Sums: "+sums[0][0]);
                 FirstOrderDifferentialEquations ode = new ode_integrator_reassort(migration_rates, coalescent_rates, reassortment_rates,
                 		nr_lineages , types, connectivity, sums, combination, n_segs) ;
                 // integrate              
@@ -226,19 +218,26 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
                 for (int i = 0; i<p_for_ode.length; i++) {
                 	jointStateProbabilities.set(i, p_for_ode[i]);
                 }
+                
+//                System.out.println("Interval: "+ Math.log(jointStateProbabilities.get(0)));
         	}
 
         	switch (event.type) {
 				case COALESCENCE:
 					nr_lineages--;
-	        		logP += coalesce(event);
+					double n = coalesce(event);
+//					System.out.println("Coal: "+n);
+	        		logP += n;
 					break;
 
 				case SAMPLE:
 					nr_lineages++;
-	       			addLineages(event, first);
+	       			double k = addLineages(event, first);
+	       			logP +=k;
 	       			first = false;
-					break;
+//	       			System.out.println("LogP: "+logP);
+//	       			System.out.println("Join state: "+ jointStateProbabilities);
+	       			break;
 
 				case REASSORTMENT:
 					logP += reassortment(event);
@@ -252,23 +251,24 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
         
 
         
-        //Compute likelihood of remaining tree intervals (coal events occuring before origin)
-        if (Double.isInfinite(logP))logP = Double.NEGATIVE_INFINITY;
-        if (max_posterior<logP && logP<0){
-        	max_posterior=logP;
-        	max_mig = new double[types*(types-1)];
-        	max_coal = new double[types];
-        	for (int i = 0 ; i < 1;i++)
-        		max_mig[i] = migrationRatesInput.get().getArrayValue(i);
-        	for (int i = 0; i < 1; i++)
-        		max_coal[i] = coalescentRatesInput.get().getArrayValue(i);
-        }
+//        //Compute likelihood of remaining tree intervals (coal events occuring before origin)
+//        if (Double.isInfinite(logP))logP = Double.NEGATIVE_INFINITY;
+//        if (max_posterior<logP && logP<0){
+//        	max_posterior=logP;
+//        	max_mig = new double[types*(types-1)];
+//        	max_coal = new double[types];
+//        	for (int i = 0 ; i < 1;i++)
+//        		max_mig[i] = migrationRatesInput.get().getArrayValue(i);
+//        	for (int i = 0; i < 1; i++)
+//        		max_coal[i] = coalescentRatesInput.get().getArrayValue(i);
+//        }
+//        System.out.println(logP);
         return logP;   	
     }
 
         
     
-    private void addLineages(StructuredNetworkEvent event, boolean first) {
+    private double addLineages(StructuredNetworkEvent event, boolean first) {
 		List<NetworkEdge> incomingLines = event.lineagesAdded;
 		int sampleState=0;
 		if(traitInput){
@@ -326,7 +326,6 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 						newSums[i][j] = 1;
 					else
 						newSums[i][j] = 0;
-
 				}
 			}
 		}
@@ -370,10 +369,24 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		combination = newCombination;	
 		jointStateProbabilities = newJointStateProbabilities;
 		
+		// do normalization
+		double prob = 0.0;
+		for (int i = 0; i < jointStateProbabilities.size(); i++)
+			prob += jointStateProbabilities.get(i);
+		
+//		System.out.println("Joint state prob: "+ jointStateProbabilities);
+//		System.out.println(prob);
+		for (int i = 0; i < jointStateProbabilities.size(); i++)
+			jointStateProbabilities.set(i,jointStateProbabilities.get(i)/prob);
+//		System.out.println("After sample:" + Math.log(jointStateProbabilities.get(0)));
+		
 		updateConnectivityMatrix();
 		
 		sums = newSums;
 		sumsTot = newSumsTot;
+		
+		return Math.log(prob);
+//		return Math.log(1.0);
     }
     
 
@@ -436,7 +449,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 			if (combination.get(i).get(daughterIndex1) == combination.get(i).get(daughterIndex2)){
 				ArrayList<Integer> coalLoc = new ArrayList<>(combination.get(i));
 				
-				newSums[futureState] = sums[i].clone();	
+				newSums[futureState] = sums[i].clone();
 				newSums[futureState][combination.get(i).get(daughterIndex1)]--;
 				futureState++;
 				
@@ -452,7 +465,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 				
 				newProbability.add(coalescent_rates[combination.get(i).get(daughterIndex1)]*jointStateProbabilities.get(i));
 				pairwiseCoalRate[combination.get(i).get(daughterIndex1)] +=
-						2*coalescent_rates[combination.get(i).get(daughterIndex1)]*jointStateProbabilities.get(i);
+						coalescent_rates[combination.get(i).get(daughterIndex1)]*jointStateProbabilities.get(i);
 			}
 		}
 
@@ -477,6 +490,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		for (int i = 0; i < pairwiseCoalRate.length; i++)
 			prob += pairwiseCoalRate[i];
 		
+		// TODO multiply here by 0.5 if want to match StructuredCoal, do nothing to match with CoalRe
 		for (int i = 0; i < jointStateProbabilities.size(); i++)
 			jointStateProbabilities.set(i,jointStateProbabilities.get(i)/prob);
 		
@@ -491,6 +505,8 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		sumsTot = newSumsTot;
 		
 		// return the normlization constant as a probability (in log space)
+//		System.out.println("Coal: " +Math.log(prob));
+//		System.out.println("Nomalized: "+jointStateProbabilities.get(0));
     	return Math.log(prob);
     }
     
@@ -522,7 +538,6 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 			System.out.println("Daughter lineage at reassortment event not found");
 			return Double.NaN;
 		}
-		int n_segs = event.lineagesRemoved.get(0).hasSegments.cardinality();
 
 		// remove daughter lineage from active lineages
 		activeLineages.remove(daughterIndex);
@@ -557,9 +572,9 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 					reassortLoc.add(s);
 					newCombination.add(reassortLoc);
 					
-					
-					double tmp = reassortment_rates[s]*(1-Math.pow(0.5, (n_segs-1)))
-							*jointStateProbabilities.get(i);
+					double tmp = reassortment_rates[s] * Math.pow(0.5, event.segsSortedLeft)
+							* Math.pow(0.5, (event.segsToSort-event.segsSortedLeft))
+							* jointStateProbabilities.get(i)*2.0;
 					
 					newProbability.add(tmp);
 					typeProb[s] += tmp;
@@ -613,7 +628,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		sums = newSums;
 		sumsTot = newSumsTot;
 		
-//		System.out.println(pVec);
+//		System.out.println("Reassort: "+Math.log(prob));
 		// return the normlization constant as a probability (in log space)
     	return Math.log(prob);
 
