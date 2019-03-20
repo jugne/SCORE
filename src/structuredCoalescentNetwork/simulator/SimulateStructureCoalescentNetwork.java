@@ -59,6 +59,8 @@ public class SimulateStructureCoalescentNetwork extends Network {
 
 	public Input<Double> ploidyInput = new Input<>("ploidy", "Ploidy (copy number) for this gene,"
 			+ "typically a whole number or half (default is 1).", 1.0);
+	
+    final public Input<Boolean> ignoreMigrationNodes = new Input<>("ignoreMigrationNodes", "Do not include migration nodes in network output", false);
 
 
 	private RealParameter reassortmentRates;
@@ -154,6 +156,8 @@ public class SimulateStructureCoalescentNetwork extends Network {
 
 		// Perform network simulation:
 		simulateNetwork(sampleNodes);
+		
+		if (ignoreMigrationNodes.get()) removeMigrationNodes();
 	}
 
 
@@ -377,6 +381,39 @@ public class SimulateStructureCoalescentNetwork extends Network {
 
 		extantLineages.get(stateIdMigrationFrom).remove(lineage);
 		extantLineages.get(stateIdMigrationTo).add(newParentEdge);
+	}
+	
+	private void removeMigrationNodes() {
+		
+		List<NetworkNode> migrationNodes = this.getNodes().stream()
+				.filter(n -> n.getParentCount() == 1)
+				.filter(n -> n.getChildCount() == 1)
+				.sorted(Comparator.comparing(NetworkNode::getHeight))
+				.collect(Collectors.toList());
+		
+		Collections.sort(migrationNodes, Collections.reverseOrder());
+
+		for (NetworkNode m : migrationNodes) {
+			NetworkEdge parentEdge = m.getParentEdges().get(0);
+			NetworkEdge childEdge = m.getChildEdges().get(0);
+			
+			
+			NetworkNode newChildNode = null;
+			while (newChildNode == null) {
+				if (childEdge.childNode.getChildCount() > 1 || childEdge.childNode.getParentCount() > 1) {
+					newChildNode = childEdge.childNode;
+					newChildNode.addParentEdge(parentEdge);
+					
+				} else {
+					childEdge = childEdge.childNode.getChildEdges().get(0);
+					childEdge.parentNode.removeParentEdge(childEdge.parentNode.getParentEdges().get(0));
+				}
+			}
+			
+		}
+		
+		
+		
 	}
 
 }
