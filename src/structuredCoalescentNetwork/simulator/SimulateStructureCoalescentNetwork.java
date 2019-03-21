@@ -391,7 +391,7 @@ public class SimulateStructureCoalescentNetwork extends Network {
 				.sorted(Comparator.comparing(NetworkNode::getHeight))
 				.collect(Collectors.toList());
 		
-		Collections.sort(migrationNodes, Collections.reverseOrder());
+		Collections.reverse(migrationNodes);
 
 		for (NetworkNode m : migrationNodes) {
 			NetworkEdge parentEdge = m.getParentEdges().get(0);
@@ -399,16 +399,28 @@ public class SimulateStructureCoalescentNetwork extends Network {
 			
 			
 			NetworkNode newChildNode = null;
-			while (newChildNode == null) {
-				if (childEdge.childNode.getChildCount() > 1 || childEdge.childNode.getParentCount() > 1) {
+//			while (newChildNode == null) {
+				if (childEdge.childNode.getChildCount() > 1 || 
+						childEdge.childNode.getParentCount() > 1 || 
+						childEdge.childNode.isLeaf()) {
 					newChildNode = childEdge.childNode;
+					m.removeChildEdge(childEdge);
+					m.removeParentEdge(parentEdge);
 					newChildNode.addParentEdge(parentEdge);
+					newChildNode.removeParentEdge(childEdge);
+
 					
 				} else {
+					
 					childEdge = childEdge.childNode.getChildEdges().get(0);
+					m.removeChildEdge(childEdge.parentNode.getParentEdges().get(0));
+					m.removeParentEdge(parentEdge);
 					childEdge.parentNode.removeParentEdge(childEdge.parentNode.getParentEdges().get(0));
+					childEdge.parentNode.addParentEdge(parentEdge);
+					m = childEdge.parentNode;
+					parentEdge = m.getParentEdges().get(0);
 				}
-			}
+//			}
 			
 		}
 		
