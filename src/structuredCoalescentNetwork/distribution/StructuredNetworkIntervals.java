@@ -36,6 +36,7 @@ public class StructuredNetworkIntervals extends CalculationNode {
     }
 
     List<StructuredNetworkEvent> getNetworkEventList() {
+    	network = networkInput.get();
         update();
 
         return networkEventList;
@@ -48,8 +49,8 @@ public class StructuredNetworkIntervals extends CalculationNode {
     }
 
     void update() {
-        if (!eventListDirty)
-            return;
+//        if (!eventListDirty)
+//            return;
 
         networkEventList = network.getNodes().stream().map(n -> {
             StructuredNetworkEvent event = new StructuredNetworkEvent();
@@ -117,7 +118,7 @@ public class StructuredNetworkIntervals extends CalculationNode {
             event.totalReassortmentObsProb = totalReassortmentObsProb;
         }
 
-        eventListDirty = false;
+//        eventListDirty = false;
     }
 
     @Override
