@@ -1,6 +1,7 @@
 package structuredCoalescentNetwork.math;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -24,6 +25,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     double[] sumTypes;
     double[] tCR;
     double[] sumDotTypes;
+    List<Integer> n_segs;
 
     int iterations;
 
@@ -31,7 +33,8 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     };
 
     @Override
-    public void init(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages) {
+    public void init(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
+	    List<Integer> n_segs) {
 	this.migration_rates = migration_rates;
 	n = (int) (Math.sqrt(migration_rates.length) + 0.5);
 	this.coalescent_rates = coalescent_rates;
@@ -41,6 +44,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	sumTypes = new double[types];
 	tCR = new double[types];
 	sumDotTypes = new double[types];
+	this.n_segs = n_segs;
 
 	iterations = 0;
     }
@@ -77,7 +81,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     }
 
     public Euler2ndOrder(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
-	    int states, double epsilon, double max_step) {
+	    int states, double epsilon, double max_step, List<Integer> n_segs) {
 	this.max_step = max_step;
 	this.epsilon = epsilon;
 	this.migration_rates = migration_rates;
@@ -90,12 +94,14 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	sumTypes = new double[states];
 	tCR = new double[states];
 	sumDotTypes = new double[states];
+	this.n_segs = n_segs;
 
 	iterations = 0;
     }
 
     @Override
-    public void initAndcalculateValues(int ratesInterval, int lineages, double duration, double[] p, int length) {
+    public void initAndcalculateValues(int ratesInterval, int lineages, double duration, double[] p, int length,
+	    List<Integer> n_segs) {
 	double nextRateShiftTime = ratesInterval == nextRateShift.length ? Double.POSITIVE_INFINITY
 		: nextRateShift[ratesInterval];
 	if (ratesInterval >= nextRateShift.length) {
@@ -109,6 +115,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	n = (int) (Math.sqrt(migration_rates.length) + 0.5);
 	this.lineages = lineages;
 	this.dimension = this.lineages * this.types;
+	this.n_segs = n_segs;
 
 	sumTypes = new double[types];
 	tCR = new double[types];
@@ -306,6 +313,27 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 
 	pDot[length - 1] /= 2;
 
+	currlin = 0;
+	double sumReassort = 0;
+	double[] reassort = new double[types];
+	for (int i = 0; i < lineages; i++) {
+	    k = currlin;
+	    for (j = 0; j < types; j++) {
+		reassort[j] = reassortment_rates[j] * (1 - Math.pow(0.5, n_segs.get(i) - 1));
+		sumReassort += p[k] * reassort[j];
+		k++;
+	    }
+
+	    k = currlin;
+	    for (j = 0; j < types; j++) {
+		double r = sumReassort - reassort[j];
+		pDot[k] += p[k] * r;
+		pDotDot[k] = r;
+		k++;
+	    }
+	    currlin += types;
+	}
+
     }
 
     private void calcSumStates(final double[] sumStates, final double[] p) {
@@ -367,6 +395,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	} // lineages
 
 	pDotDot[length - 1] /= 2;
+
     }
 
     public void approximateThirdDerivate(double[] pDotDot, double[] pDotDotDot, int length) {
