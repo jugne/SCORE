@@ -231,8 +231,8 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		break;
 
 	    case REASSORTMENT:
-		logP += reassortment(event);
 		nr_lineages++;
+		logP += reassortment(event);
 		break;
 	    }
 

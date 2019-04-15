@@ -54,7 +54,6 @@ public class MascotE extends StructuredNetworkDistribution {
 
     boolean useCache;
 
-    double[] linProbs_for_ode;
     double[] linProbs_tmp;
     int[] parents;
 
@@ -78,13 +77,12 @@ public class MascotE extends StructuredNetworkDistribution {
 	activeLineages = new ArrayList<>();
 
 	int MAX_SIZE = intCount * types;
-	linProbs_for_ode = new double[MAX_SIZE];
 	linProbs_tmp = new double[MAX_SIZE];
 	linProbs = new double[MAX_SIZE];
 	linProbsNew = new double[MAX_SIZE];
 
-	euler.setup(MAX_SIZE, types, epsilonInput.get(), maxStepInput.get());
 	euler = new Euler2ndOrder();
+	euler.setup(MAX_SIZE, types, epsilonInput.get(), maxStepInput.get());
     }
 
     public double calculateLogP() {
@@ -116,7 +114,8 @@ public class MascotE extends StructuredNetworkDistribution {
 	}
 
 	coalescentRates = dynamics.getCoalescentRate(ratesInterval);
-	// migrationRates = dynamics.getBackwardsMigration(ratesInterval);
+	reassortmentRates = dynamics.getReassortmentRate(ratesInterval);
+//	 migrationRates = dynamics.getBackwardsMigration(ratesInterval);
 	// indicators = dynamics.getIndicators(ratesInterval);
 	nrLineages = activeLineages.size();
 	linProbsLength = nrLineages * types;
@@ -149,8 +148,8 @@ public class MascotE extends StructuredNetworkDistribution {
 		    break;
 
 		case REASSORTMENT:
-		    logP += reassortment(nextNetworkEvent);
 		    nrLineages++;
+		    logP += reassortment(nextNetworkEvent);
 		    break;
 		}
 
@@ -395,9 +394,13 @@ public class MascotE extends StructuredNetworkDistribution {
 	    }
 	}
 	// add the parent lineage
-	for (int j = 0; j < types; j++) {
-	    linProbsNew[linCount * types + j] = pVec.get(j);
+	for (int l = 0; l < event.lineagesAdded.size(); l++) {
+	    for (int j = 0; j < types; j++) {
+		linProbsNew[linCount * types + j] = pVec.get(j);
+	    }
+	    linCount++;
 	}
+
 	// set p to pnew
 	linProbs = linProbsNew;
 	linProbsNew = linProbs;

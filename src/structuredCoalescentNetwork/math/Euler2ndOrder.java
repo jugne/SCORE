@@ -54,14 +54,14 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     double[] linProbs_tmpdddt;
 
     @Override
-    public void setup(int maxSize, int states, double epsilon, double max_step) {
+    public void setup(int maxSize, int types, double epsilon, double max_step) {
 	linProbs_tmpdt = new double[maxSize];
 	linProbs_tmpddt = new double[maxSize];
 	linProbs_tmpdddt = new double[maxSize];
 
 	this.max_step = max_step;
 	this.epsilon = epsilon;
-	this.types = states;
+	this.types = types;
     }
 
     public double[][] coalescentRates;
