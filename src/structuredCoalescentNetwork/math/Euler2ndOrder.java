@@ -155,7 +155,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	    clearArray(pDot, length);
 	    computeDerivatives(p, pDot, pDotDot, pDotDotDot, length);
 	    computeSecondDerivate(p, pDot, pDotDot, length);
-	    approximateThirdDerivate(pDotDot, pDotDotDot, length);
+	    approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot, length);
 	    duration = updateP(duration, p, pDot, pDotDot, pDotDotDot, length - 1);
 
 	    if (iterations > 10000) {
@@ -328,7 +328,8 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	    for (j = 0; j < types; j++) {
 		double r = sumReassort - reassort[j];
 		pDot[k] += p[k] * r;
-		pDotDot[k] = r;
+		pDotDot[k] += r;
+		pDotDotDot[k] += r;
 		k++;
 	    }
 	    currlin += types;
@@ -396,9 +397,28 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 
 	pDotDot[length - 1] /= 2;
 
+	currlin = 0;
+	double sumReassort = 0;
+	double[] reassort = new double[types];
+	for (int i = 0; i < lineages; i++) {
+	    int k = currlin;
+	    for (j = 0; j < types; j++) {
+		reassort[j] = reassortment_rates[j] * (1 - Math.pow(0.5, n_segs.get(i) - 1));
+		sumReassort += pDot[k] * reassort[j];
+		k++;
+	    }
+
+	    k = currlin;
+	    for (j = 0; j < types; j++) {
+		pDotDot[k] += p[k] * sumReassort;
+		k++;
+	    }
+	    currlin += types;
+	}
+
     }
 
-    public void approximateThirdDerivate(double[] pDotDot, double[] pDotDotDot, int length) {
+    public void approximateThirdDerivate(double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length) {
 	double migrates;
 
 	// Calculate the change in the lineage state probabilities for every lineage in
@@ -424,6 +444,27 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		} // XXX
 
 	    }
+	}
+
+	int currlin = 0, j;
+	double sumReassort_1 = 0;
+	double sumReassort_2 = 0;
+	double[] reassort = new double[types];
+	for (int i = 0; i < lineages; i++) {
+	    k = currlin;
+	    for (j = 0; j < types; j++) {
+		reassort[j] = reassortment_rates[j] * (1 - Math.pow(0.5, n_segs.get(i) - 1));
+		sumReassort_1 += pDot[k] * reassort[j];
+		sumReassort_2 += pDotDot[k] * reassort[j];
+		k++;
+	    }
+
+	    k = currlin;
+	    for (j = 0; j < types; j++) {
+		pDotDotDot[k] += (2 * pDotDot[k] * sumReassort_1) + (p[k] * sumReassort_2);
+		k++;
+	    }
+	    currlin += types;
 	}
     }
 }

@@ -132,6 +132,7 @@ public class MascotE extends StructuredNetworkDistribution {
 		    System.exit(0);
 		    return calculateLogP();
 		}
+
 		logP += doEuler(nextEventTime, ratesInterval);
 	    }
 
@@ -442,7 +443,13 @@ public class MascotE extends StructuredNetworkDistribution {
 
 	linProbs[linProbsLength - 1] = 0;
 
-	euler.initAndcalculateValues(ratesInterval, nrLineages, nextEventTime, linProbs_tmp, linProbsLength + 1);
+	List<Integer> n_segs = new ArrayList<>();
+	for (NetworkEdge l : activeLineages) {
+	    n_segs.add(l.hasSegments.cardinality());
+	}
+
+	euler.initAndcalculateValues(ratesInterval, nrLineages, nextEventTime, linProbs_tmp, linProbsLength + 1,
+		n_segs);
 
 	System.arraycopy(linProbs_tmp, 0, linProbs, 0, linProbsLength);
 	return linProbs_tmp[linProbsLength];
