@@ -1,0 +1,15 @@
+<itsabeastystatewerein version='2.0' sample='1000000'>
+<statenode id='Tree'>(0:2.1494696638686674,1:2.0494696638686674)2:0.0</statenode>
+<statenode id='Ne'>Ne[2 1] (-Infinity,Infinity): 1.0 1.0 </statenode>
+<statenode id='migration'>migration[2 1] (-Infinity,Infinity): 1.0 1.0 </statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"TreeScaler","p":0.9999743513784334,"accept":44693,"reject":0,"acceptFC":43073,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"RootScaler","p":0.9999889628990158,"accept":14818,"reject":0,"acceptFC":14321,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"Uniform","p":"NaN","accept":0,"reject":447495,"acceptFC":0,"rejectFC":431484,"rejectIv":447495,"rejectOp":447495},
+{"id":"SubtreeSlide","p":17.40018876778669,"accept":28692,"reject":195495,"acceptFC":23037,"rejectFC":193266,"rejectIv":97424,"rejectOp":97424},
+{"id":"Narrow","p":"NaN","accept":0,"reject":224220,"acceptFC":0,"rejectFC":216191,"rejectIv":224220,"rejectOp":224220},
+{"id":"WilsonBalding","p":"NaN","accept":0,"reject":44588,"acceptFC":0,"rejectFC":43074,"rejectIv":44588,"rejectOp":44588}
+]}
+-->

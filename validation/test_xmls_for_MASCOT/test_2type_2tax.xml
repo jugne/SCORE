@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Mascot' beautistatus='' namespace="beast.core
+                 :beast.core.util
+                 :beast.core.parameter
+                 :beast.evolution.alignment
+                 :beast.evolution.likelihood
+                 :beast.evolution.tree
+                 :beast.evolution.tree.coalescent
+                 :beast.evolution.sitemodel
+                 :beast.evolution.substitutionmodel
+                 :beast.evolution.operators
+                 :beast.math.distributions
+		 :beast.core:beast.evolution.alignment
+		 :beast.evolution.tree.coalescent
+		 :beast.evolution.tree:beast.core.util
+		 :beast.evolution.nuc:beast.evolution.operators
+		 :beast.evolution.sitemodel
+ 		 :beast.evolution.substitutionmodel
+		 :beast.evolution.likelihood
+		 :feast.simulation
+:beast.evolution.alignment:beast.core:beast.core.parameter:beast.evolution.tree:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood:beast.evolution.migrationmodel:beast.math.distributions:multitypetree.distributions:multitypetree.operators:multitypetree.util"
+required="BEAST v2.5.0:Mascot v1.0.1" version="2.5">
+    
+	<data id="sequences" name="alignment">
+		<sequence id="t1" taxon="t1" totalcount="1" value="??"/>
+		<sequence id="t2" taxon="t2" totalcount="1" value="??"/>
+	</data>
+
+<run id="mcmc" spec="MCMC" chainLength="1000000">
+
+
+
+    <state id="state" storeEvery="5000">
+        <stateNode id="Tree" spec="beast.app.mascot.beauti.TreeWithTrait">
+
+
+        	<typeTrait spec="TraitSet" traitname="type" id="typeTrait">
+				t1=0, t2=1
+
+            		            		<taxa id="TaxonSet" spec="TaxonSet">
+                    		<alignment idref="sequences"/>
+                	</taxa>
+        		</typeTrait>
+
+            	<trait spec="TraitSet" traitname="date-backward" id="traitSet" taxa="@TaxonSet">
+                    t1=0, t2=0.1
+                </trait>
+
+		<taxonset idref="TaxonSet"/>
+
+
+	</stateNode>
+
+        <parameter id="Ne" dimension="2" name="stateNode">1.0</parameter>
+        <parameter id="migration" dimension="2" name="stateNode">1.0</parameter>
+    </state>
+
+	<init spec="beast.util.TreeParser" id="NewickTree:Species" adjustTipHeights="false"
+			initial="@Tree" taxa="@sequences"
+			IsLabelledNewick="true"
+			newick="(t1:0.299824451147046,t2:0.19982445114704597):0.0;"/>
+
+    <distribution id="posterior" spec="util.CompoundDistribution">
+            <distribution id="structuredCoalescent" spec="beast.mascot.distribution.Mascot">
+                <dynamics id="constant" spec="beast.mascot.dynamics.Constant" Ne="@Ne" backwardsMigration="@migration" dimension="0" typeTrait="@typeTrait"/>
+                <structuredTreeIntervals id="TreeIntervals" spec="beast.mascot.distribution.StructuredTreeIntervals" tree="@Tree"/>
+            </distribution>
+        
+    </distribution>
+
+    <operator id="TreeScaler" spec="ScaleOperator" tree="@Tree" weight="3.0"/>
+
+    <operator id="RootScaler" spec="ScaleOperator" tree="@Tree" weight="1.0"/>
+
+    <operator id="Uniform" spec="Uniform" tree="@Tree" weight="30.0"/>
+
+    <operator id="SubtreeSlide" spec="SubtreeSlide" tree="@Tree" weight="15.0"/>
+
+    <operator id="Narrow" spec="Exchange" tree="@Tree" weight="15.0"/>
+
+    <operator id="WilsonBalding" spec="WilsonBalding" tree="@Tree" weight="3.0"/>
+
+
+    <logger id="tracelog" fileName="$(filebase).log" logEvery="100">
+        <log spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree"/>
+    </logger>
+
+
+    <logger id="treelog" fileName="$(filebase).trees" logEvery="100" mode="tree">
+        <log id="structuredTreelog" spec="beast.mascot.logger.StructuredTreeLogger" mascot="@structuredCoalescent"/>
+    </logger>
+
+</run>
+
+</beast>
+

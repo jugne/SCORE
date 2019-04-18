@@ -32,7 +32,6 @@ doCompare <- function(dsFileName, mcmcFileName) {
     
     maxCount <- max(df$network.reassortmentNodeCount, dfs$network.reassortmentNodeCount)+1
     l<-length(df$network.reassortmentNodeCount)
-    print(l)
     h <- hist(df$network.reassortmentNodeCount, plot=F,
               breaks=seq(-0.5,maxCount+0.5,by=1))
     hs <- hist(dfs$network.reassortmentNodeCount, plot=F,
@@ -51,31 +50,31 @@ doCompare <- function(dsFileName, mcmcFileName) {
     
     # Kolmogorov-Smirnov test for network statistics
     
-    H <- c()
-    L <- c()
-    R <- c()
-    l <- length(df$network.height)
-    # For comparison to run faster, calculations need to be done at fewer ponts.
-    # It can be achieved by taking a fraction smaller than 0.001 below.
-    step <- 0.001
-    nPoints <- round(l*0.001)
-    by <- as.integer(l/nPoints)
+    # H <- c()
+    # L <- c()
+    # R <- c()
+    # l <- length(df$network.height)
+    # # For comparison to run faster, calculations need to be done at fewer ponts.
+    # # It can be achieved by taking a fraction smaller than 0.001 below.
+    # step <- 0.001
+    # nPoints <- round(l*0.001)
+    # by <- as.integer(l/nPoints)
+    # 
+    # for (i in seq(l, 0, by=-by)){
+    #     H <- append(H, log(ks.test(df$network.height[1:(l-i)], dfs$network.height)$statistic))
+    #     L <- append(L, log(ks.test(df$network.totalLength[1:(l-i)], dfs$network.totalLength)$statistic))
+    #     R <- append(L, log(ks.test(df$network.reassortmentNodeCount[1:(l-i)], dfs$network.reassortmentNodeCount)$statistic))
+    # }
+    # 
+    # p3 <- ggplot() + geom_line(aes(x=seq(1, length(H)), y=H, colour="Network height"), data.frame(H))
+    # p3 <- p3 + geom_line(aes(x=seq(1, length(L)), y=L, colour="Network length"), data.frame(L), linetype="dotted")
+    # p3 <- p3 + geom_line(aes(x=seq(1, length(R)), y=R, colour="Rassortment count"), data.frame(R), linetype = "dashed")
+    # p3 <- p3 + theme_minimal(base_size = textSize) + labs(colour = "", linetype="", x=paste("Number of logged iterations (minus burnin) / ", (by)), y="Kolmogorov-Smirnov stat. (log scale)")
 
-    for (i in seq(l, 0, by=-by)){
-        H <- append(H, log(ks.test(df$network.height[1:(l-i)], dfs$network.height)$statistic))
-        L <- append(L, log(ks.test(df$network.totalLength[1:(l-i)], dfs$network.totalLength)$statistic))
-        R <- append(L, log(ks.test(df$network.reassortmentNodeCount[1:(l-i)], dfs$network.reassortmentNodeCount)$statistic))
-    }
 
-    p3 <- ggplot() + geom_line(aes(x=seq(1, length(H)), y=H, colour="Network height"), data.frame(H))
-    p3 <- p3 + geom_line(aes(x=seq(1, length(L)), y=L, colour="Network length"), data.frame(L), linetype="dotted")
-    p3 <- p3 + geom_line(aes(x=seq(1, length(R)), y=R, colour="Rassortment count"), data.frame(R), linetype = "dashed")
-    p3 <- p3 + theme_minimal(base_size = textSize) + labs(colour = "", linetype="", x=paste("Number of logged iterations (minus burnin) / ", (by)), y="Kolmogorov-Smirnov stat. (log scale)")
-
-
-    grid.arrange(p1, p2, p3)
+    # grid.arrange(p1, p2, p3)
     
-    # grid.arrange(p1, p2)
+    grid.arrange(p1, p2)
     
     dev.off()
 }

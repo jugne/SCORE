@@ -29,7 +29,7 @@
 
 
 
-    <run spec="MCMC" chainLength="100000000"> 
+    <run spec="MCMC" chainLength="1000000"> 
 
         <state>
             <stateNode id="network" spec="SimulatedCoalescentNetwork" nSegments="2" enableSegmentTreeUpdate="false">
