@@ -1,0 +1,8 @@
+<itsabeastystatewerein version='2.0' sample='1'>
+<statenode id='network'>((#H0[&amp;segments={0},segsCarried=1]:0.3578164793585479,t1[&amp;segments={0, 1, 2},segsCarried=3]:0.9423823995114183)[&amp;segments={0, 1, 2},segsCarried=3]:0.5845848478122716,(t2[&amp;segments={0, 1, 2},segsCarried=3]:0.5845659201528705)#H0[&amp;segments={1, 2},segsCarried=2]:0.9424013271708195)[&amp;segments={0, 1, 2},segsCarried=3]:0.0;</statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"AddRemoveReassortment","p":"NaN","accept":0,"reject":2,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0}
+]}
+-->

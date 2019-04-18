@@ -16,42 +16,33 @@
                  :coalre.simulator
 		 :structuredCoalescentNetwork.simulator">
 
-    <network id="network" spec="SimulateStructureCoalescentNetwork" nSegments="8" enableSegmentTreeUpdate="false">
+    <network id="network" spec="SimulateStructureCoalescentNetwork" nSegments="3" enableSegmentTreeUpdate="false">
 
-         <Ne spec="RealParameter" id="Ne" dimension="5" value="1.0"/>
+         <Ne spec="RealParameter" id="Ne" dimension="2" value="1.0"/>
    
-        <reassortmentRate spec="RealParameter" id="reassortmentRate" dimension="5" value="0.0"/>
-	<migrationRate spec="RealParameter" id="migrationRate" dimension="5" value="1.0"/>
-	<coalescentRate spec="RealParameter" id="coalescentRate" dimension="5" value="1.0"/>
+        <reassortmentRate spec="RealParameter" id="reassortmentRate" dimension="2" value="0.1"/>
+	<migrationRate spec="RealParameter" id="migrationRate" dimension="2" value="0.1"/>
+	<coalescentRate spec="RealParameter" id="coalescentRate" dimension="2" value="1.0"/>
 
         <traitSet spec="TraitSet" traitname="date-backward" id="traitSet">
             <taxa spec="TaxonSet" id="taxonSet">
                 <taxon spec="Taxon" id="t1"/>
                 <taxon spec="Taxon" id="t2"/>
-                <taxon spec="Taxon" id="t3"/>
-                <taxon spec="Taxon" id="t4"/>
-                <taxon spec="Taxon" id="t5"/>
             </taxa>
 
-            t1=0, t2=0, t3=0, t4=0, t5=0
+            t1=0, t2=0.1
         </traitSet>
 
         <typeTrait spec="TraitSet" traitname="type" id="typeTrait">
             <taxa idref="taxonSet"/>
-            t1=1, t2=0, t3=1, t4=0, t5=1
+            t1=0, t2=1
         </typeTrait>
 
         <segmentTree id="segment1" spec="Tree" trait="@traitSet"/>
         <segmentTree id="segment2" spec="Tree" trait="@traitSet"/>
-        <segmentTree id="segment3" spec="Tree" trait="@traitSet"/>
-        <segmentTree id="segment4" spec="Tree" trait="@traitSet"/>
-        <segmentTree id="segment5" spec="Tree" trait="@traitSet"/>
-        <segmentTree id="segment6" spec="Tree" trait="@traitSet"/>
-        <segmentTree id="segment7" spec="Tree" trait="@traitSet"/>
-        <segmentTree id="segment8" spec="Tree" trait="@traitSet"/>
     </network>
 
-    <run spec="GPSimulator" nSims="100000">
+    <run spec="GPSimulator" nSims="10000000">
 
         <simulationObject idref="network"/>
 
@@ -59,7 +50,7 @@
             <log idref="network"/>
         </logger>
 
-        <logger spec="Logger" logEvery="1" fileName="$(filebase).log">
+        <logger spec="Logger" logEvery="100" fileName="$(filebase).log">
             <log spec="NetworkStatsLogger" network="@network"/>
         </logger>
 

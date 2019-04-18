@@ -1,0 +1,16 @@
+<itsabeastystatewerein version='2.0' sample='10000000'>
+<statenode id='network'>(#H0[&amp;segments={1, 2},segsCarried=2]:1.2076006263240278,(((t2[&amp;segments={0, 1, 2},segsCarried=3]:0.829998708104925)#H0[&amp;segments={0},segsCarried=1]:0.19732894528200062,#H1[&amp;segments={0, 2},segsCarried=2]:0.04204551370896503)[&amp;segments={0, 2},segsCarried=2]:0.2863122322810341,(t1[&amp;segments={0, 1, 2},segsCarried=3]:1.0852821396779606)#H1[&amp;segments={1},segsCarried=1]:0.3283577459899991)[&amp;segments={0, 1, 2},segsCarried=3]:0.723959448760993)[&amp;segments={0, 1, 2},segsCarried=3]:0.0;</statenode>
+<statenode id='reassortmentRate'>reassortmentRate[1 1] (-Infinity,Infinity): 1.0 </statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"AddRemoveReassortment","p":"NaN","accept":367892,"reject":882693,"acceptFC":364962,"rejectFC":875492,"rejectIv":368744,"rejectOp":368744},
+{"id":"DivertSegmentOperator","p":"NaN","accept":576677,"reject":674891,"acceptFC":571881,"rejectFC":669563,"rejectIv":441762,"rejectOp":441762},
+{"id":"UniformNetworkNodeHeightOperator","p":"NaN","accept":650664,"reject":599266,"acceptFC":645202,"rejectFC":594662,"rejectIv":414497,"rejectOp":414497},
+{"id":"SubNetworkSlide","p":16.432514124501957,"accept":29307,"reject":1219988,"acceptFC":26568,"rejectFC":1212726,"rejectIv":622365,"rejectOp":622365},
+{"id":"NetworkScale","p":"NaN","accept":1073816,"reject":174958,"acceptFC":1065175,"rejectFC":173584,"rejectIv":11168,"rejectOp":11168},
+{"id":"NetworkScaleRootOnly","p":"NaN","accept":909278,"reject":341571,"acceptFC":902006,"rejectFC":338866,"rejectIv":102773,"rejectOp":102773},
+{"id":"unknown","p":"NaN","accept":663819,"reject":585889,"acceptFC":658331,"rejectFC":581334,"rejectIv":474440,"rejectOp":474440},
+{"id":"unknown","p":"NaN","accept":191100,"reject":1058192,"acceptFC":189540,"rejectFC":1049750,"rejectIv":1018579,"rejectOp":1018579}
+]}
+-->

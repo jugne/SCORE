@@ -17,7 +17,7 @@ public class MascotE extends StructuredNetworkDistribution {
 
     public Input<ConstantReassortment> dynamicsInput = new Input<>("dynamics", "Input of rates",
 	    Input.Validate.REQUIRED);
-    public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration", 0.001);
+    public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration", 0.00001);
     public Input<Double> maxStepInput = new Input<>("maxStep", "max step for the RK4 integration",
 	    Double.POSITIVE_INFINITY);
 
@@ -92,6 +92,17 @@ public class MascotE extends StructuredNetworkDistribution {
 	nrSamples = networkIntervals.networkInput.get().getLeafNodes().size();
 	nodes = new ArrayList<>(networkIntervals.networkInput.get().getInternalNodes());
 
+	int intCount = networkEventList.size();
+
+	parents = new int[intCount];
+
+	int MAX_SIZE = intCount * types;
+	linProbs_tmp = new double[MAX_SIZE];
+	linProbs = new double[MAX_SIZE];
+	linProbsNew = new double[MAX_SIZE];
+
+	euler.setup(MAX_SIZE, types, epsilonInput.get(), maxStepInput.get());
+
 	// Set up for lineage state probabilities
 	activeLineages.clear();
 
@@ -124,14 +135,6 @@ public class MascotE extends StructuredNetworkDistribution {
 	do {
 	    nextEventTime = Math.min(nextNetworkEventTime, nextRateShift);
 	    if (nextEventTime > 0) { // if true, calculate the interval contribution
-		if (recalculateLogP) {
-		    System.err.println("ode calculation stuck, reducing tolerance, new tolerance= " + maxTolerance);
-		    maxTolerance *= 0.9;
-		    recalculateLogP = false;
-		    System.exit(0);
-		    return calculateLogP();
-		}
-
 		logP += doEuler(nextEventTime, ratesInterval);
 	    }
 
@@ -157,6 +160,7 @@ public class MascotE extends StructuredNetworkDistribution {
 		nextRateShift -= nextNetworkEventTime;
 		try {
 		    nextNetworkEvent = networkEventList.get(networkInterval);
+		    nextNetworkEventTime = nextNetworkEvent.time;
 		} catch (Exception e) {
 		    break;
 		}
@@ -388,7 +392,11 @@ public class MascotE extends StructuredNetworkDistribution {
 	for (int i = 0; i <= nrLineages; i++) {
 	    if (i != daughterIndex) {
 		for (int j = 0; j < types; j++) {
-		    linProbsNew[linCount * types + j] = linProbs[i * types + j];
+		    try {
+			linProbsNew[linCount * types + j] = linProbs[i * types + j];
+		    } catch (Exception e) {
+			System.out.println(network.getExtendedNewick());
+		    }
 		}
 		linCount++;
 	    }

@@ -1,0 +1,14 @@
+<itsabeastystatewerein version='2.0' sample='1000000'>
+<statenode id='network'>(((t2[&amp;segments={0},segsCarried=1]:0.7026975688970772,(t3[&amp;segments={0},segsCarried=1]:0.4377917820109643,t1[&amp;segments={0},segsCarried=1]:0.6377917820109643)[&amp;segments={0},segsCarried=1]:0.1649057868861129)[&amp;segments={0},segsCarried=1]:1.7855304559040261,t4[&amp;segments={0},segsCarried=1]:2.2882280248011035)[&amp;segments={0},segsCarried=1]:45.12780869343812,t5[&amp;segments={0},segsCarried=1]:47.316036718239225)[&amp;segments={0},segsCarried=1]:0.0;</statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"unknown","p":"NaN","accept":0,"reject":142789,"acceptFC":0,"rejectFC":133171,"rejectIv":142789,"rejectOp":142789},
+{"id":"unknown","p":"NaN","accept":82836,"reject":59712,"acceptFC":77081,"rejectFC":55657,"rejectIv":0,"rejectOp":0},
+{"id":"unknown","p":67.17582639695732,"accept":23291,"reject":120232,"acceptFC":15453,"rejectFC":118068,"rejectIv":62141,"rejectOp":62141},
+{"id":"NetworkScale","p":"NaN","accept":121487,"reject":21166,"acceptFC":113186,"rejectFC":19694,"rejectIv":2254,"rejectOp":2254},
+{"id":"NetworkScaleRootOnly","p":"NaN","accept":120961,"reject":21480,"acceptFC":112719,"rejectFC":19912,"rejectIv":2990,"rejectOp":2990},
+{"id":"unknown","p":"NaN","accept":124467,"reject":18558,"acceptFC":115854,"rejectFC":17275,"rejectIv":7396,"rejectOp":7396},
+{"id":"unknown","p":"NaN","accept":55041,"reject":87981,"acceptFC":51333,"rejectFC":82068,"rejectIv":86102,"rejectOp":86102}
+]}
+-->

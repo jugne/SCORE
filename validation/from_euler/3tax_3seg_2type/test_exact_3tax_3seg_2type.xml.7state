@@ -1,0 +1,15 @@
+<itsabeastystatewerein version='2.0' sample='999999'>
+<statenode id='network'>(((#H0[&amp;segments={2},segsCarried=1]:0.9867394910186285,(#H1[&amp;segments={0, 2},segsCarried=2]:3.798225092756308)#H0[&amp;segments={0},segsCarried=1]:0.9867394910186285)[&amp;segments={0, 2},segsCarried=2]:2.564618759672406,#H2[&amp;segments={0, 2},segsCarried=2]:3.1083019543028385)[&amp;segments={0, 2},segsCarried=2]:4.233463642178219,(((((t2[&amp;segments={0, 1, 2},segsCarried=3]:0.9228934983256302,t1[&amp;segments={0, 1, 2},segsCarried=3]:1.0228934983256301)[&amp;segments={0, 1, 2},segsCarried=3]:7.273994481806384,#H3[&amp;segments={1},segsCarried=1]:1.5243126159180154)[&amp;segments={0, 1, 2},segsCarried=3]:8.027051959353047)#H1[&amp;segments={1},segsCarried=1]:0.9300842825220741,((#H4[&amp;segments={0, 1},segsCarried=2]:0.3922319600237367,(t3[&amp;segments={0, 1, 2},segsCarried=3]:4.471264561165321)#H4[&amp;segments={2},segsCarried=1]:0.3922319600237367)[&amp;segments={0, 1, 2},segsCarried=3]:1.7090788430249413)#H3[&amp;segments={0, 2},segsCarried=2]:10.481448857793136)[&amp;segments={0, 1, 2},segsCarried=3]:3.31119710662243)#H2[&amp;segments={1},segsCarried=1]:7.341765596481057)[&amp;segments={0, 1, 2},segsCarried=3]:0.0;</statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"AddRemoveReassortment","p":"NaN","accept":21642,"reject":103470,"acceptFC":20599,"rejectFC":94556,"rejectIv":36624,"rejectOp":36624},
+{"id":"DivertSegmentOperator","p":"NaN","accept":82589,"reject":42187,"acceptFC":75037,"rejectFC":39982,"rejectIv":31086,"rejectOp":31086},
+{"id":"UniformNetworkNodeHeightOperator","p":"NaN","accept":63092,"reject":62276,"acceptFC":58219,"rejectFC":57404,"rejectIv":0,"rejectOp":0},
+{"id":"SubNetworkSlide","p":11.664519955614523,"accept":19320,"reject":105731,"acceptFC":14052,"rejectFC":100997,"rejectIv":54668,"rejectOp":54668},
+{"id":"NetworkScale","p":"NaN","accept":105875,"reject":19060,"acceptFC":97760,"rejectFC":17220,"rejectIv":744,"rejectOp":744},
+{"id":"NetworkScaleRootOnly","p":"NaN","accept":82102,"reject":42393,"acceptFC":77331,"rejectFC":37256,"rejectIv":14246,"rejectOp":14246},
+{"id":"NetworkExchange","p":"NaN","accept":48433,"reject":76604,"acceptFC":44424,"rejectFC":70632,"rejectIv":21123,"rejectOp":21123},
+{"id":"NetworkExchange1","p":"NaN","accept":9355,"reject":115871,"acceptFC":8898,"rejectFC":106187,"rejectIv":102972,"rejectOp":102972}
+]}
+-->

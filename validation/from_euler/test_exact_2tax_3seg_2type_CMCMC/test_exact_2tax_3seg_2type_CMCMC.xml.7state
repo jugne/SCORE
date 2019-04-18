@@ -1,0 +1,15 @@
+<itsabeastystatewerein version='2.0' sample='999999'>
+<statenode id='network'>((#H0[&amp;segments={0, 1},segsCarried=2]:1.4238440855006136,((#H1[&amp;segments={0, 1},segsCarried=2]:0.7381738762100074,((#H2[&amp;segments={1, 2},segsCarried=2]:1.234205967131281,t1[&amp;segments={0, 1, 2},segsCarried=3]:12.819824429819679)[&amp;segments={0, 1, 2},segsCarried=3]:2.2093371129617285)#H1[&amp;segments={2},segsCarried=1]:0.7381738762100074)[&amp;segments={0, 1, 2},segsCarried=3]:0.15293872097092454)#H0[&amp;segments={2},segsCarried=1]:1.4238440855006136)[&amp;segments={0, 1, 2},segsCarried=3]:5.631625317372265,((#H3[&amp;segments={1},segsCarried=1]:1.2424617423530684,(t2[&amp;segments={0, 1, 2},segsCarried=3]:6.120350773129586)#H3[&amp;segments={0, 2},segsCarried=2]:1.2424617423530684)[&amp;segments={0, 1, 2},segsCarried=3]:4.122805947205744)#H2[&amp;segments={0},segsCarried=1]:11.39012508014682)[&amp;segments={0, 1, 2},segsCarried=3]:0.0;</statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"AddRemoveReassortment","p":"NaN","accept":9178,"reject":115804,"acceptFC":8195,"rejectFC":106802,"rejectIv":34430,"rejectOp":34430},
+{"id":"DivertSegmentOperator","p":"NaN","accept":95119,"reject":29739,"acceptFC":87703,"rejectFC":27200,"rejectIv":9139,"rejectOp":9139},
+{"id":"UniformNetworkNodeHeightOperator","p":"NaN","accept":59959,"reject":65721,"acceptFC":55032,"rejectFC":60615,"rejectIv":2237,"rejectOp":2237},
+{"id":"SubNetworkSlide","p":11.470591659208665,"accept":17761,"reject":107000,"acceptFC":12239,"rejectFC":102521,"rejectIv":56456,"rejectOp":56456},
+{"id":"NetworkScale","p":"NaN","accept":95896,"reject":29044,"acceptFC":87832,"rejectFC":27047,"rejectIv":108,"rejectOp":108},
+{"id":"NetworkScaleRootOnly","p":"NaN","accept":44265,"reject":80519,"acceptFC":40053,"rejectFC":74747,"rejectIv":33235,"rejectOp":33235},
+{"id":"NetworkExchange","p":"NaN","accept":42476,"reject":82377,"acceptFC":39057,"rejectFC":75794,"rejectIv":33258,"rejectOp":33258},
+{"id":"NetworkExchange1","p":"NaN","accept":3617,"reject":121525,"acceptFC":3223,"rejectFC":111968,"rejectIv":116548,"rejectOp":116548}
+]}
+-->

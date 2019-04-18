@@ -1,0 +1,19 @@
+<itsabeastystatewerein version='2.0' sample='100000000'>
+<statenode id='tree'>(((((((((4[&amp;type=1]:0.037620155449045664)13[&amp;type=0]:0.03381663548021867,(0[&amp;type=1]:0.04451305971698486)9[&amp;type=0]:0.02692373121227947)7[&amp;type=0]:0.15016454320658254)24[&amp;type=1]:0.7325871517452682)25[&amp;type=0]:0.414485454718715,(2[&amp;type=1]:0.06236854754566492)10[&amp;type=0]:1.306305393054165)6[&amp;type=0]:2.6059179984943617)21[&amp;type=1]:0.04472205471225399)22[&amp;type=0]:1.3481801377274172)23[&amp;type=1]:0.10401226909513195,((((((((1[&amp;type=0]:0.42890503970153626,((3[&amp;type=0]:0.11735273289680306)11[&amp;type=1]:0.21384976075696135)12[&amp;type=0]:0.09770254604777184)5[&amp;type=0]:0.12388111431468085)14[&amp;type=1]:0.27600694309898355)15[&amp;type=0]:0.798974503117651)16[&amp;type=1]:1.5540407925930644)17[&amp;type=0]:0.5737823053472586)18[&amp;type=1]:1.161645336422406)19[&amp;type=0]:0.021324378849744363)20[&amp;type=1]:0.5329459871836697)8[&amp;type=1]:0.0</statenode>
+<statenode id='rateMatrix'>rateMatrix[2 1] (0.0,Infinity): 1.0 1.0 </statenode>
+<statenode id='popSizes'>popSizes[2 1] (0.0,Infinity): 1.0 1.0 </statenode>
+<statenode id='mutationRate'>mutationRate[1 1] (0.0,Infinity): 1.0 </statenode>
+<statenode id='hky.kappa'>hky.kappa[1 1] (0.0,Infinity): 1.0 </statenode>
+<statenode id='hky.freq'>hky.freq[4 1] (-Infinity,Infinity): 0.25 0.25 0.25 0.25 </statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"STX","p":"NaN","accept":6429117,"reject":7857425,"acceptFC":0,"rejectFC":0,"rejectIv":3298188,"rejectOp":3298188},
+{"id":"TWB","p":"NaN","accept":4273907,"reject":10011455,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"NR","p":"NaN","accept":8180899,"reject":6105306,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"NSR1","p":"NaN","accept":8877474,"reject":5407936,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"NSR2","p":"NaN","accept":5854152,"reject":8428781,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"MTU","p":"NaN","accept":11737744,"reject":2549522,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0},
+{"id":"MTTS2","p":"NaN","accept":14057217,"reject":229066,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0}
+]}
+-->

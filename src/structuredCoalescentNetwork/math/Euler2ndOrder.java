@@ -109,6 +109,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	}
 	migration_rates = migrationRates[ratesInterval];
 	coalescent_rates = coalescentRates[ratesInterval];
+	reassortment_rates = reassortmentRates[ratesInterval];
 	indicators = indicators_[ratesInterval];
 
 	iterations = 0;

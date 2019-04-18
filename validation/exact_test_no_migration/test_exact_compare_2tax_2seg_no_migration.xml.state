@@ -1,0 +1,9 @@
+<itsabeastystatewerein version='2.0' sample='1'>
+<statenode id='network'>(((t2[&amp;segments={0, 1, 2},segsCarried=3]:0.9445937028189563,t3[&amp;segments={0, 1, 2},segsCarried=3]:0.8445937028189563)[&amp;segments={0, 1, 2},segsCarried=3]:0.19275542000778723,#H0[&amp;segments={1, 2},segsCarried=2]:0.05750814005484961)[&amp;segments={0, 1, 2},segsCarried=3]:0.4956775561626656,((#H1[&amp;segments={0, 1},segsCarried=2]:0.1312053262966174,(t1[&amp;segments={0, 1, 2},segsCarried=3]:0.704535170891613)#H1[&amp;segments={2},segsCarried=1]:0.1312053262966174)[&amp;segments={0, 1, 2},segsCarried=3]:0.34410048558366346)#H0[&amp;segments={0},segsCarried=1]:0.5531856962175152)[&amp;segments={0, 1, 2},segsCarried=3]:0.0;</statenode>
+<statenode id='reassortmentRate'>reassortmentRate[1 1] (-Infinity,Infinity): 1.0 </statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"AddRemoveReassortment","p":"NaN","accept":0,"reject":2,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0}
+]}
+-->

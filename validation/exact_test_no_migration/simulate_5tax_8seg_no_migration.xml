@@ -20,8 +20,8 @@
 
          <Ne spec="RealParameter" id="Ne" dimension="5" value="1.0"/>
    
-        <reassortmentRate spec="RealParameter" id="reassortmentRate" dimension="5" value="0.0"/>
-	<migrationRate spec="RealParameter" id="migrationRate" dimension="5" value="1.0"/>
+        <reassortmentRate spec="RealParameter" id="reassortmentRate" dimension="5" value="0.01"/>
+	<migrationRate spec="RealParameter" id="migrationRate" dimension="5" value="0.0"/>
 	<coalescentRate spec="RealParameter" id="coalescentRate" dimension="5" value="1.0"/>
 
         <traitSet spec="TraitSet" traitname="date-backward" id="traitSet">
@@ -33,12 +33,12 @@
                 <taxon spec="Taxon" id="t5"/>
             </taxa>
 
-            t1=0, t2=0, t3=0, t4=0, t5=0
+            t1=0, t2=0.1, t3=0.2, t4=0.3, t5=0.4
         </traitSet>
 
         <typeTrait spec="TraitSet" traitname="type" id="typeTrait">
             <taxa idref="taxonSet"/>
-            t1=1, t2=0, t3=1, t4=0, t5=1
+            t1=0, t2=0, t3=0, t4=0, t5=0
         </typeTrait>
 
         <segmentTree id="segment1" spec="Tree" trait="@traitSet"/>
