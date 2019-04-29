@@ -36,7 +36,7 @@
                 <populationModel spec="ConstantPopulation">
                     <popSize spec="RealParameter" value="1.0"/>
                 </populationModel>
-                <reassortmentRate spec="RealParameter" value="0.5"/>
+                <reassortmentRate spec="RealParameter" value="0.0"/>
 
 	<traitSet spec="TraitSet" traitname="date-backward" id="traitSet">
                     <taxa spec="TaxonSet" id="taxonSet">
@@ -62,7 +62,7 @@
             				t1=0, t2=1
         			</typeTrait>
 		</structuredCoalescentDynamics>
-		<reassortmentRates spec="RealParameter" id="reassortmentRates" dimension="2" value="0.5"/>
+		<reassortmentRates spec="RealParameter" id="reassortmentRates" dimension="2" value="0.0"/>
 		</dynamics>
 	</distribution>
 
@@ -71,10 +71,10 @@
 
 
 
-        <operator id="AddRemoveReassortment" spec="AddRemoveReassortment" network="@network" alpha="1.0" weight="1.0">
-        </operator>
+<!--        <operator id="AddRemoveReassortment" spec="AddRemoveReassortment" network="@network" alpha="1.0" weight="1.0">-->
+<!--        </operator>-->
 
-  <operator id="DivertSegmentOperator" spec="DivertSegmentOperator" network="@network" weight="1.0"/>
+<!--	<operator id="DivertSegmentOperator" spec="DivertSegmentOperator" network="@network" weight="1.0"/>-->
 
 	<operator id="UniformNetworkNodeHeightOperator" spec="UniformNetworkNodeHeightOperator" network="@network" weight="1.0"/>
 

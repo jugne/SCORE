@@ -151,8 +151,8 @@ public class MascotE extends StructuredNetworkDistribution {
 		    break;
 
 		case REASSORTMENT:
-		    nrLineages++;
 		    logP += reassortment(nextNetworkEvent);
+		    nrLineages++;
 		    break;
 		}
 
@@ -356,10 +356,6 @@ public class MascotE extends StructuredNetworkDistribution {
 
 	DoubleMatrix lambda = DoubleMatrix.zeros(types);
 
-	/*
-	 * Calculate the overall probability for two strains to coalesce independent of
-	 * the state at which this coalescent event is supposed to happen
-	 */
 	// TODO not sure if this will work with different indexing of network lineages
 	for (int k = 0; k < types; k++) {
 	    Double typeProb = reassortmentRates[k] * linProbs[daughterIndex * types + k]
@@ -389,7 +385,7 @@ public class MascotE extends StructuredNetworkDistribution {
 
 	int linCount = 0;
 	// add all lineages execpt the daughter lineage to the new p array
-	for (int i = 0; i <= nrLineages; i++) {
+	for (int i = 0; i < nrLineages; i++) {
 	    if (i != daughterIndex) {
 		for (int j = 0; j < types; j++) {
 		    try {
@@ -412,7 +408,7 @@ public class MascotE extends StructuredNetworkDistribution {
 	// set p to pnew
 	linProbs = linProbsNew;
 	linProbsNew = linProbs;
-	linProbsLength = linProbsLength - types;
+	linProbsLength = linProbsLength + types;
 
 	if (lambda.min() < 0.0) {
 	    System.err.println("Reassortment probability is: " + lambda.min());

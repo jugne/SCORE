@@ -51,7 +51,7 @@ required="BEAST v2.5.0:Mascot v1.0.1" version="2.5">
 	</stateNode>
 
         <parameter id="Ne" dimension="2" name="stateNode">1.0</parameter>
-        <parameter id="migration" dimension="2" name="stateNode">1.0</parameter>
+        <parameter id="migration" dimension="2" name="stateNode">0.5</parameter>
     </state>
 
 	<init spec="beast.util.TreeParser" id="NewickTree:Species" adjustTipHeights="false"

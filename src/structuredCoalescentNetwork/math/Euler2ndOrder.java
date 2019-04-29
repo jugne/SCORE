@@ -315,15 +315,18 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	pDot[length - 1] /= 2;
 
 	currlin = 0;
-	double sumReassort = 0;
+	
 	double[] reassort = new double[types];
 	for (int i = 0; i < lineages; i++) {
+		double sumReassort = 0;
 	    k = currlin;
 	    for (j = 0; j < types; j++) {
 		reassort[j] = reassortment_rates[j] * (1 - Math.pow(0.5, n_segs.get(i) - 1));
 		sumReassort += p[k] * reassort[j];
 		k++;
 	    }
+	    
+	    pDot[length-1] -= sumReassort;
 
 	    k = currlin;
 	    for (j = 0; j < types; j++) {
@@ -399,15 +402,18 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	pDotDot[length - 1] /= 2;
 
 	currlin = 0;
-	double sumReassort = 0;
+	
 	double[] reassort = new double[types];
 	for (int i = 0; i < lineages; i++) {
+		double sumReassort = 0;
 	    int k = currlin;
 	    for (j = 0; j < types; j++) {
 		reassort[j] = reassortment_rates[j] * (1 - Math.pow(0.5, n_segs.get(i) - 1));
 		sumReassort += pDot[k] * reassort[j];
 		k++;
 	    }
+	    
+	    pDotDot[length-1] -= sumReassort;
 
 	    k = currlin;
 	    for (j = 0; j < types; j++) {
@@ -448,10 +454,10 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	}
 
 	int currlin = 0, j;
-	double sumReassort_1 = 0;
-	double sumReassort_2 = 0;
 	double[] reassort = new double[types];
 	for (int i = 0; i < lineages; i++) {
+		double sumReassort_1 = 0;
+		double sumReassort_2 = 0;
 	    k = currlin;
 	    for (j = 0; j < types; j++) {
 		reassort[j] = reassortment_rates[j] * (1 - Math.pow(0.5, n_segs.get(i) - 1));
@@ -462,7 +468,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 
 	    k = currlin;
 	    for (j = 0; j < types; j++) {
-		pDotDotDot[k] += (2 * pDotDot[k] * sumReassort_1) + (p[k] * sumReassort_2);
+		pDotDotDot[k] += (2 * pDot[k] * sumReassort_1) + (p[k] * sumReassort_2);
 		k++;
 	    }
 	    currlin += types;

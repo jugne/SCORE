@@ -167,7 +167,10 @@ doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/
 ## Approximation 
 
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/approximation/simulate_2tax_2seg_no_reassort_approx.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/approximation/test_approx_2tax_2seg_2type.log")
+doCompare("/Users/ugne/Documents/MascotExtended/validation/approximation/simulate_2tax_2type_no_reassort_approx.log",
+          "/Users/ugne/Documents/MascotExtended/validation/approximation/test_approx_2tax_2type_no_reassort.log")
+
+
+
 
 

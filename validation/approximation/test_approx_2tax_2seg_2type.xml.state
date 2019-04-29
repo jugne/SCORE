@@ -1,13 +1,15 @@
 <itsabeastystatewerein version='2.0' sample='1000000'>
-<statenode id='network'>(t1[&amp;segments={0, 1},segsCarried=2]:2.3445874552963266,t2[&amp;segments={0, 1},segsCarried=2]:2.2445874552963265)[&amp;segments={0, 1},segsCarried=2]:0.0;</statenode>
+<statenode id='network'>(t1[&amp;segments={0, 1},segsCarried=2]:0.8682340234236463,t2[&amp;segments={0, 1},segsCarried=2]:0.7682340234236463)[&amp;segments={0, 1},segsCarried=2]:0.0;</statenode>
 </itsabeastystatewerein>
 <!--
 {"operators":[
-{"id":"UniformNetworkNodeHeightOperator","p":"NaN","accept":0,"reject":166698,"acceptFC":0,"rejectFC":156674,"rejectIv":166698,"rejectOp":166698},
-{"id":"SubNetworkSlide","p":33.70722287401909,"accept":17015,"reject":149535,"acceptFC":9666,"rejectFC":146882,"rejectIv":74452,"rejectOp":74452},
-{"id":"NetworkScale","p":"NaN","accept":147963,"reject":18643,"acceptFC":138976,"rejectFC":17549,"rejectIv":125,"rejectOp":125},
-{"id":"NetworkScaleRootOnly","p":"NaN","accept":147676,"reject":18638,"acceptFC":138831,"rejectFC":17506,"rejectIv":119,"rejectOp":119},
-{"id":"unknown","p":"NaN","accept":9548,"reject":156883,"acceptFC":8959,"rejectFC":147393,"rejectIv":150849,"rejectOp":150849},
-{"id":"unknown","p":"NaN","accept":3206,"reject":164196,"acceptFC":3041,"rejectFC":154444,"rejectIv":162120,"rejectOp":162120}
+{"id":"AddRemoveReassortment","p":"NaN","accept":14105,"reject":110604,"acceptFC":12978,"rejectFC":101945,"rejectIv":54572,"rejectOp":54572},
+{"id":"DivertSegmentOperator","p":"NaN","accept":0,"reject":124757,"acceptFC":0,"rejectFC":114945,"rejectIv":114059,"rejectOp":114059},
+{"id":"UniformNetworkNodeHeightOperator","p":"NaN","accept":8232,"reject":116972,"acceptFC":7513,"rejectFC":107675,"rejectIv":114249,"rejectOp":114249},
+{"id":"SubNetworkSlide","p":11.630377602857044,"accept":13859,"reject":111487,"acceptFC":8576,"rejectFC":106770,"rejectIv":56090,"rejectOp":56090},
+{"id":"NetworkScale","p":"NaN","accept":110400,"reject":14340,"acceptFC":101542,"rejectFC":13185,"rejectIv":304,"rejectOp":304},
+{"id":"NetworkScaleRootOnly","p":"NaN","accept":110147,"reject":14772,"acceptFC":101483,"rejectFC":13669,"rejectIv":555,"rejectOp":555},
+{"id":"unknown","p":"NaN","accept":15867,"reject":108934,"acceptFC":14520,"rejectFC":100323,"rejectIv":103725,"rejectOp":103725},
+{"id":"unknown","p":"NaN","accept":5414,"reject":120111,"acceptFC":4960,"rejectFC":110538,"rejectIv":118362,"rejectOp":118362}
 ]}
 -->

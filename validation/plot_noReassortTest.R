@@ -21,10 +21,10 @@ doCompare <- function(dsFileName, ds2FileName) {
     
     # theme_set(theme_minimal(base_size = 10)) 
     
-    p1 <- ggplot() + geom_density(data=dt, aes(x=network.height, colour="MCMC_MTT", linetype="Height")) 
-    p1 <- p1 + geom_density(data=dt, aes(x=network.totalLength, colour="MCMC_MTT", linetype="Length")) 
-    p1 <- p1 + geom_density(data=dts, aes(x=tree.height, colour="Direct simulation", linetype="Height")) 
-    p1 <- p1 + geom_density(data=dts, aes(x=tree.length, colour="Direct simulation", linetype="Length"))
+    p1 <- ggplot() + geom_density(data=dts, aes(x=network.height, colour="Direct simulation", linetype="Height")) 
+    # p1 <- p1 + geom_density(data=dt, aes(x=network.totalLength, colour="MCMC_MTT", linetype="Length")) 
+    p1 <- p1 + geom_density(data=dt, aes(x=Tree.height, colour="MCMC", linetype="Height")) 
+    # p1 <- p1 + geom_density(data=dts, aes(x=tree.length, colour="Direct simulation", linetype="Length"))
     p1 <- p1 + theme_minimal(base_size = textSize) + labs(colour = "", linetype="", x="Statistic", y="Density")
     
     
@@ -77,11 +77,16 @@ doCompare <- function(dsFileName, ds2FileName) {
     dev.off()
 }
 
-setwd("/home/ugne/_18_Mokslai/MascotExtended/validation/simulator")
+setwd("/Users/ugne/Documents/MascotExtended/validation/test_xmls_for_MASCOT")
 
 doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/test_xmls_for_MTT/simulate_noReassort_MTT.log",
           "/home/ugne/_18_Mokslai/MascotExtended/validation/simulator/simulate_noReassortment.log")
 
 doCompare("/home/ugne/_18_Mokslai/BEAST.v2.5.1.Linux/beast/bin/simulate_noReassort_MTT.log",
           "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_reassort/simulate.log")
+
+## MASCOT
+
+doCompare("/Users/ugne/Documents/MascotExtended/validation/approximation/simulate_2tax_2type_no_reassort_approx.log",
+          "/Users/ugne/Documents/MascotExtended/validation/test_xmls_for_MASCOT/test_2type_2tax.log")
 
