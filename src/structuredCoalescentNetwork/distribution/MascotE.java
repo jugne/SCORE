@@ -114,6 +114,7 @@ public class MascotE extends StructuredNetworkDistribution {
 	linProbsLength = 0;
 	int networkInterval = 0, ratesInterval = 0;
 	double nextEventTime = 0.0;
+	double prevEventTime = 0.0;
 
 	// Time to the next rate shift or event on the tree
 	StructuredNetworkEvent nextNetworkEvent = networkEventList.get(networkInterval);
@@ -135,7 +136,7 @@ public class MascotE extends StructuredNetworkDistribution {
 	do {
 	    nextEventTime = Math.min(nextNetworkEventTime, nextRateShift);
 	    if (nextEventTime > 0) { // if true, calculate the interval contribution
-		logP += doEuler(nextEventTime, ratesInterval);
+		logP += doEuler(nextEventTime - prevEventTime, ratesInterval);
 	    }
 
 	    if (nextNetworkEventTime <= nextRateShift) {
@@ -172,6 +173,7 @@ public class MascotE extends StructuredNetworkDistribution {
 		nextNetworkEventTime -= nextRateShift;
 		nextRateShift = dynamics.getInterval(ratesInterval);
 	    }
+	    prevEventTime = nextEventTime;
 	    if (logP == Double.NEGATIVE_INFINITY) {
 		return logP;
 	    }
