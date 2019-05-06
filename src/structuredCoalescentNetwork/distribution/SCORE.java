@@ -13,7 +13,7 @@ import structuredCoalescentNetwork.dynamics.ConstantReassortment;
 import structuredCoalescentNetwork.math.Euler2ndOrder;
 import structuredCoalescentNetwork.math.Euler2ndOrderBase;
 
-public class MascotE extends StructuredNetworkDistribution {
+public class SCORE extends StructuredNetworkDistribution {
 
     public Input<ConstantReassortment> dynamicsInput = new Input<>("dynamics", "Input of rates",
 	    Input.Validate.REQUIRED);
@@ -42,8 +42,8 @@ public class MascotE extends StructuredNetworkDistribution {
     private int first = 0;
 
     // maximum integration error tolerance
-    private double maxTolerance = 1e-3;
-    private boolean recalculateLogP;
+//    private double maxTolerance = 1e-3;
+//    private boolean recalculateLogP;
     Euler2ndOrderBase euler;
     Network network;
     ConstantReassortment dynamics;
