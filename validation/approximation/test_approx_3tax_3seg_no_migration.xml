@@ -29,22 +29,23 @@
 
 
 
-    <run spec="MCMC" chainLength="1000000"> 
+    <run spec="MCMC" chainLength="10000000"> 
 
         <state>
-            <stateNode id="network" spec="SimulatedCoalescentNetwork" nSegments="2" enableSegmentTreeUpdate="false">
+            <stateNode id="network" spec="SimulatedCoalescentNetwork" nSegments="3" enableSegmentTreeUpdate="false">
                 <populationModel spec="ConstantPopulation">
                     <popSize spec="RealParameter" value="1.0"/>
                 </populationModel>
-                <reassortmentRate spec="RealParameter" value="0.5"/>
+                <reassortmentRate spec="RealParameter" value="1.0"/>
 
 	<traitSet spec="TraitSet" traitname="date-backward" id="traitSet">
                     <taxa spec="TaxonSet" id="taxonSet">
                         <taxon spec="Taxon" id="t1"/>
                         <taxon spec="Taxon" id="t2"/>
+			<taxon spec="Taxon" id="t3"/>
                     </taxa>
 
-                    t1=0, t2=0.1
+                    t1=0, t2=0.1, t3=0.2
                 </traitSet>
             </stateNode>
         </state>
@@ -52,17 +53,17 @@
 
         <distribution id="coalDensity" spec="SCORE" network="@network">
             <networkIntervals spec="StructuredNetworkIntervals" id="StructuredNetworkIntervals" network="@network"/>
-            <dynamics id="constantReassort" spec="structuredCoalescentNetwork.dynamics.ConstantReassortment" dimension="2">
-		<structuredCoalescentDynamics id="structuredCoalescentDynamics" spec="beast.mascot.dynamics.Constant" dimension="2" fromBeauti="false">
-				<Ne spec="RealParameter" id="Ne" dimension="2" value="1.0"/>
-				<backwardsMigration spec="RealParameter" id="backwardsMigration" dimension="2" value="0.5"/>
+            <dynamics id="constantReassort" spec="structuredCoalescentNetwork.dynamics.ConstantReassortment" dimension="1">
+		<structuredCoalescentDynamics id="structuredCoalescentDynamics" spec="beast.mascot.dynamics.Constant" dimension="1" fromBeauti="false">
+				<Ne spec="RealParameter" id="Ne" dimension="1" value="1.0"/>
+				<backwardsMigration spec="RealParameter" id="backwardsMigration" dimension="1" value="0.0"/>
         			<typeTrait spec="TraitSet" traitname="type" id="typeTrait">
             				<taxa idref="taxonSet"/>
 
-            				t1=0, t2=1
+            				t1=0, t2=0, t3=0
         			</typeTrait>
 		</structuredCoalescentDynamics>
-		<reassortmentRates spec="RealParameter" id="reassortmentRates" dimension="2" value="0.5"/>
+		<reassortmentRates spec="RealParameter" id="reassortmentRates" dimension="1" value="1.0"/>
 		</dynamics>
 	</distribution>
 
@@ -71,7 +72,7 @@
 
 
 
-        <operator id="AddRemoveReassortment" spec="AddRemoveReassortment" network="@network" alpha="1.0" weight="1.0">
+        <operator id="AddRemoveReassortment" spec="AddRemoveReassortment" network="@network" alpha="1.0" weight="10.0">
         </operator>
 
   <operator id="DivertSegmentOperator" spec="DivertSegmentOperator" network="@network" weight="1.0"/>

@@ -1,0 +1,15 @@
+<itsabeastystatewerein version='2.0' sample='10000000'>
+<statenode id='network'>(t1[&amp;segments={0, 1, 2},segsCarried=3]:0.7972808161639081,(t2[&amp;segments={0, 1, 2},segsCarried=3]:0.3641016532310326,t3[&amp;segments={0, 1, 2},segsCarried=3]:0.26410165323103263)[&amp;segments={0, 1, 2},segsCarried=3]:0.3331791629328755)[&amp;segments={0, 1, 2},segsCarried=3]:0.0;</statenode>
+</itsabeastystatewerein>
+<!--
+{"operators":[
+{"id":"AddRemoveReassortment","p":"NaN","accept":1583369,"reject":4299167,"acceptFC":1556231,"rejectFC":4226443,"rejectIv":1664075,"rejectOp":1664075},
+{"id":"DivertSegmentOperator","p":"NaN","accept":328041,"reject":260220,"acceptFC":322478,"rejectFC":255813,"rejectIv":136517,"rejectOp":136517},
+{"id":"UniformNetworkNodeHeightOperator","p":"NaN","accept":447059,"reject":141059,"acceptFC":439402,"rejectFC":138666,"rejectIv":0,"rejectOp":0},
+{"id":"SubNetworkSlide","p":4.726666205717114,"accept":39554,"reject":548903,"acceptFC":37148,"rejectFC":541309,"rejectIv":282808,"rejectOp":282808},
+{"id":"NetworkScale","p":"NaN","accept":471969,"reject":116043,"acceptFC":463870,"rejectFC":114062,"rejectIv":21240,"rejectOp":21240},
+{"id":"NetworkScaleRootOnly","p":"NaN","accept":393526,"reject":195757,"acceptFC":386797,"rejectFC":192366,"rejectIv":65548,"rejectOp":65548},
+{"id":"unknown","p":"NaN","accept":420587,"reject":166522,"acceptFC":413311,"rejectFC":163845,"rejectIv":111767,"rejectOp":111767},
+{"id":"unknown","p":"NaN","accept":120407,"reject":467818,"acceptFC":118378,"rejectFC":460003,"rejectIv":451519,"rejectOp":451519}
+]}
+-->

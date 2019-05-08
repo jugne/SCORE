@@ -50,7 +50,7 @@
         </state>
 
 
-        <distribution id="coalDensity" spec="MascotE" network="@network">
+        <distribution id="coalDensity" spec="SCORE" network="@network">
             <networkIntervals spec="StructuredNetworkIntervals" id="StructuredNetworkIntervals" network="@network"/>
             <dynamics id="constantReassort" spec="structuredCoalescentNetwork.dynamics.ConstantReassortment" dimension="1">
 		<structuredCoalescentDynamics id="structuredCoalescentDynamics" spec="beast.mascot.dynamics.Constant" dimension="1" fromBeauti="false">
