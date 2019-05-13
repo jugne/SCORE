@@ -16,7 +16,6 @@ import beast.core.parameter.RealParameter;
 import beast.evolution.alignment.TaxonSet;
 import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.Tree;
-import beast.evolution.tree.coalescent.PopulationFunction;
 import beast.util.Randomizer;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
@@ -35,11 +34,11 @@ public class SimulateStructureCoalescentNetwork extends Network {
     public Input<RealParameter> migrationRatesInput = new Input<>("migrationRate",
 	    "Rate of migration for each state (per lineage per unit time)", Validate.REQUIRED);
 
-    public Input<PopulationFunction> populationFunctionInput = new Input<>("populationModel",
-	    "Population model to use.", Validate.REQUIRED);
+//    public Input<PopulationFunction> populationFunctionInput = new Input<>("populationModel",
+//	    "Population model to use.", Validate.REQUIRED);
 
-//	public Input<RealParameter> coalescentRatesInput = new Input<>("coalescentRate",
-//			"Rate of migration for each state (per lineage per unit time)", Validate.REQUIRED);
+    public Input<RealParameter> coalescentRatesInput = new Input<>("coalescentRate",
+	    "Rate of migration for each state (per lineage per unit time)", Validate.REQUIRED);
 
     public Input<Integer> dimensionInput = new Input<>("dimension",
 	    "the number of different states." + " if -1, it will use the number of different types ", -1);
@@ -71,8 +70,8 @@ public class SimulateStructureCoalescentNetwork extends Network {
 
     private RealParameter reassortmentRates;
     private RealParameter migrationRates;
-    private PopulationFunction populationFunction;
-//	private RealParameter coalescentRates;
+//    private PopulationFunction populationFunction;
+    private RealParameter coalescentRates;
     private RealParameter Ne;
     private final HashMap<String, Integer> typeNameToIndex = new HashMap<>();
     private final HashMap<Integer, String> typeIndexToName = new HashMap<>();
@@ -95,10 +94,10 @@ public class SimulateStructureCoalescentNetwork extends Network {
 	else
 	    nSegments = segmentTreesInput.get().size();
 
-	populationFunction = populationFunctionInput.get();
+//	populationFunction = populationFunctionInput.get();
 	reassortmentRates = reassortmentRatesInput.get();
 	migrationRates = migrationRatesInput.get();
-//		coalescentRates = coalescentRatesInput.get();
+	coalescentRates = coalescentRatesInput.get();
 
 	if (nSegments == 0) {
 	    throw new IllegalArgumentException("Need at least one segment!");
@@ -228,12 +227,12 @@ public class SimulateStructureCoalescentNetwork extends Network {
 		final int k_ = extantLineages.get(i).size();
 
 		if (k_ >= 2) {
-		    double currentTransformedTime = populationFunction.getIntensity(currentTime);
-		    double transformedTimeToNextCoal = Randomizer.nextExponential(0.5 * k_ * (k_ - 1));
-		    double timeToNextCoal = populationFunction
-			    .getInverseIntensity(transformedTimeToNextCoal + currentTransformedTime) - currentTime;
-//		    final double timeToNextCoal = Randomizer
-//			    .nextExponential(0.5 * k_ * (k_ - 1) * coalescentRates.getArrayValue(i));
+//		    double currentTransformedTime = populationFunction.getIntensity(currentTime);
+//		    double transformedTimeToNextCoal = Randomizer.nextExponential(0.5 * k_ * (k_ - 1));
+//		    double timeToNextCoal = populationFunction
+//			    .getInverseIntensity(transformedTimeToNextCoal + currentTransformedTime) - currentTime;
+		    final double timeToNextCoal = Randomizer
+			    .nextExponential(0.5 * k_ * (k_ - 1) * coalescentRates.getArrayValue(i));
 		    if (timeToNextCoal < minCoal) {
 			minCoal = timeToNextCoal;
 			typeIndexCoal = i;
