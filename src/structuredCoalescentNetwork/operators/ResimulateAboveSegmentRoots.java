@@ -15,26 +15,28 @@ import coalre.distribution.NetworkIntervals;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
 import coalre.operators.NetworkOperator;
+import structuredCoalescentNetwork.distribution.StructuredNetworkEvent;
+import structuredCoalescentNetwork.distribution.StructuredNetworkIntervals;
 
 public class ResimulateAboveSegmentRoots extends NetworkOperator {
 
-    public Input<RealParameter> reassortmentRateInput = new Input<>("reassortmentRate",
+    public Input<RealParameter> reassortmentRateInput = new Input<>("reassortmentRates",
 	    "Rate of reassortment (per lineage per unit time)", Validate.REQUIRED);
 
     public Input<RealParameter> NeInput = new Input<>("Ne", "input of effective population sizes", Validate.REQUIRED);
-
-    public Input<NetworkIntervals> networkIntervalsInput = new Input<>("networkIntervals",
-	    "Structured Intervals for a phylogenetic beast tree", Validate.REQUIRED);
+    
+    public Input<StructuredNetworkIntervals> structuredNetworkIntervalsInput = new Input<>("networkIntervals",
+            "Structured Intervals for a phylogenetic beast tree", Validate.REQUIRED);
 
     private int nSegments;
 
     private PopulationFunction populationFunction;
     private RealParameter reassortmentRate;
     private RealParameter Ne;
-    private NetworkIntervals intervals;
+    private StructuredNetworkIntervals structuredIntervals;
     double meanReassotmentRate;
     double meanNe;
-    double logP;
+    int i=1;
 
     @Override
     public void initAndValidate() {
@@ -42,70 +44,90 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 
 	reassortmentRate = reassortmentRateInput.get();
 	Ne = NeInput.get();
-	intervals = networkIntervalsInput.get();
+	structuredIntervals = structuredNetworkIntervalsInput.get();
 	super.initAndValidate();
     }
 
     @Override
     public double networkProposal() {
+//    System.out.println("before: ");
+//    System.out.println(network.getExtendedNewick());
 	network.startEditing(this);
-	return resimulate();
-
+	// get the place where to cut
+	double networkRootHeight = network.getRootEdge().childNode.getHeight();
+	double maxHeight = getMaxSegmentMRCA();
+//	if (networkRootHeight == maxHeight)
+//		return Double.NEGATIVE_INFINITY;
+	double currentSubNetProb = unstructuredSubNetworkProb(maxHeight);
+	
+	double r = resimulate(maxHeight);
+	if (r == Double.NEGATIVE_INFINITY) {
+		i += 1;
+		System.out.println(i);
+	}
+	
+	double newSubNetProb = unstructuredSubNetworkProb(maxHeight);
+//    System.out.println("after: ");
+//    System.out.println(network.getExtendedNewick());
+	
+	return newSubNetProb - currentSubNetProb;
     }
 
     double unstructuredSubNetworkProb(double startTime) {
 
-	logP = 0.0;
+	double prob = 0.0;
 	meanReassotmentRate = calculate_average_of(reassortmentRate.getValues());
 	meanNe = calculate_average_of(Ne.getValues());
 
-	List<NetworkEvent> subNetEventList = intervals.getNetworkEventList();
+	List<StructuredNetworkEvent> subNetEventList = structuredIntervals.getNetworkEventList();
+	subNetEventList = subNetEventList.stream()
+			.filter(e -> e.time > startTime)
+			.collect(Collectors.toList());
+	
+	StructuredNetworkEvent prevEvent = null;
 
-	subNetEventList = subNetEventList.stream().filter(e -> e.time > startTime).collect(Collectors.toList());
-	NetworkEvent prevEvent = null;
-
-	for (NetworkEvent event : subNetEventList) {
+	for (StructuredNetworkEvent event : subNetEventList) {
 	    if (prevEvent != null)
-		logP += intervalContribution(prevEvent, event);
+		prob += intervalContribution(prevEvent, event);
 
 	    switch (event.type) {
 	    case COALESCENCE:
-		logP += coalesce(event);
+		prob += coalesce(event);
 		break;
 
 	    case SAMPLE:
 		break;
 
 	    case REASSORTMENT:
-		logP += reassortment(event);
+		prob += reassortment(event);
 		break;
 	    }
 
-	    if (logP == Double.NEGATIVE_INFINITY)
+	    if (prob == Double.NEGATIVE_INFINITY)
 		break;
 
 	    prevEvent = event;
 	}
 
-	return logP;
+	return prob;
     }
 
-    private double reassortment(NetworkEvent event) {
+    private double reassortment(StructuredNetworkEvent event) {
 
-	return Math.log(meanReassotmentRate) + event.segsSortedLeft * Math.log(intervals.getBinomialProb())
-		+ (event.segsToSort - event.segsSortedLeft) * Math.log(1 - intervals.getBinomialProb()) + Math.log(2.0);
+	return Math.log(meanReassotmentRate) + event.segsSortedLeft * Math.log(structuredIntervals.getBinomialProb())
+		+ (event.segsToSort - event.segsSortedLeft) * Math.log(1 - structuredIntervals.getBinomialProb()) + Math.log(2.0);
     }
 
-    private double coalesce(NetworkEvent event) {
+    private double coalesce(StructuredNetworkEvent event) {
 
 	return Math.log(1.0 / meanNe);
     }
 
-    private double intervalContribution(NetworkEvent prevEvent, NetworkEvent nextEvent) {
+    private double intervalContribution(StructuredNetworkEvent prevEvent, StructuredNetworkEvent nextEvent) {
 
 	double result = 0.0;
 
-	result += -reassortmentRate.getArrayValue() * prevEvent.totalReassortmentObsProb
+	result += -meanReassotmentRate * prevEvent.totalReassortmentObsProb
 		* (nextEvent.time - prevEvent.time);
 
 	result += -0.5 * prevEvent.lineages * (prevEvent.lineages - 1) * (1.0 / meanNe)
@@ -124,11 +146,11 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 	return total / array.length;
     }
 
-    double resimulate() {
-	network.startEditing(this);
+    double resimulate(double startTime) {
+//	network.startEditing(this);
 
 	// get the place where to cut
-	double maxHeight = getMaxSegmentMRCA();
+	double maxHeight = startTime;
 
 	// get all network edges
 	List<NetworkEdge> networkEdges = new ArrayList<>(network.getEdges());
@@ -153,14 +175,12 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 
 	    // get the current propensities
 	    int k = startingEdges.size();
+	    
+	    double timeToNextCoal = k >= 2 ? Randomizer
+			    .nextExponential(0.5 * k * (k - 1) * (1/meanNe))
+			    : Double.POSITIVE_INFINITY;;
 
-	    double currentTransformedTime = populationFunction.getIntensity(currentTime);
-	    double transformedTimeToNextCoal = k >= 2 ? Randomizer.nextExponential(0.5 * k * (k - 1))
-		    : Double.POSITIVE_INFINITY;
-	    double timeToNextCoal = populationFunction
-		    .getInverseIntensity(transformedTimeToNextCoal + currentTransformedTime) - currentTime;
-
-	    double timeToNextReass = k >= 1 ? Randomizer.nextExponential(k * reassortmentRate.getValue())
+	    double timeToNextReass = k >= 1 ? Randomizer.nextExponential(k * meanReassotmentRate)
 		    : Double.POSITIVE_INFINITY;
 
 	    // next event time
@@ -221,19 +241,6 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 	extantLineages.add(lineage);
     }
 
-    private void sample(List<NetworkNode> remainingSampleNodes, List<NetworkEdge> extantLineages) {
-	// sample the network node
-	NetworkNode n = remainingSampleNodes.get(0);
-
-	// Create corresponding lineage
-	BitSet hasSegs = new BitSet();
-	hasSegs.set(0, nSegments);
-	NetworkEdge lineage = new NetworkEdge(null, n, hasSegs);
-	extantLineages.add(lineage);
-	n.addParentEdge(lineage);
-
-	remainingSampleNodes.remove(0);
-    }
 
     private void reassort(double reassortmentTime, List<NetworkEdge> extantLineages) {
 	NetworkEdge lineage = extantLineages.get(Randomizer.nextInt(extantLineages.size()));

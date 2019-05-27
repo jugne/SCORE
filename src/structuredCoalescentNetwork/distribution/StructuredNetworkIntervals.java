@@ -35,7 +35,7 @@ public class StructuredNetworkIntervals extends CalculationNode {
         storedNetworkEventList = new ArrayList<>();
     }
 
-    List<StructuredNetworkEvent> getNetworkEventList() {
+    public List<StructuredNetworkEvent> getNetworkEventList() {
     	network = networkInput.get();
         update();
 

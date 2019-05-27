@@ -1,6 +1,7 @@
 package structuredCoalescentNetwork.dynamics;
 
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 
 import beast.core.Input;
 import beast.core.Input.Validate;
@@ -50,10 +51,7 @@ public class ConstantReassortment extends Dynamics implements Loggable {
 	return reassort;
     }
 
-    @Override
-    public void close(PrintStream out) {
-	scDynamics.recalculate();
-    }
+
 
     @Override
     public void recalculate() {
@@ -92,8 +90,26 @@ public class ConstantReassortment extends Dynamics implements Loggable {
 
     @Override
     public void init(PrintStream out) {
-	scDynamics.init(out);
-
+        for (int i = 0 ; i < reassortmentRates.get().getDimension(); i++){
+ 			out.print(String.format("%s.%s\t", reassortmentRates.get().getID(), this.getStringStateValue(i)));
+ 		}
     }
+    
+    
+    
+    public void log(long sample, PrintStream out) {
+		for (int i = 0 ; i < reassortmentRates.get().getDimension(); i++){
+			out.print(reassortmentRates.get().getArrayValue(i) + "\t");
+		}
+    }
+    
+	@Override
+	public void close(PrintStream out) {
+		// TODO Auto-generated method stub
+		
+	}
+    
+
+    
 
 }

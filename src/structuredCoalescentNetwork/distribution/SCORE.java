@@ -463,5 +463,9 @@ public class SCORE extends StructuredNetworkDistribution {
 	System.arraycopy(linProbs_tmp, 0, linProbs, 0, linProbsLength);
 	return linProbs_tmp[linProbsLength];
     }
+    
+    public DoubleMatrix getRootState(){
+    	return nodeStateProbabilities[nodeStateProbabilities.length-1];
+    }
 
 }
