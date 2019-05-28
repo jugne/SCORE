@@ -62,15 +62,26 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 	
 	double r = resimulate(maxHeight);
 	if (r == Double.NEGATIVE_INFINITY) {
-		i += 1;
-		System.out.println(i);
+//		i += 1;
+//		System.out.println(i);
+//		if (i == 11505) {
+//			System.out.println("set breakpoint");
+//		}
+		return r;
 	}
 	
 	double newSubNetProb = unstructuredSubNetworkProb(maxHeight);
 //    System.out.println("after: ");
 //    System.out.println(network.getExtendedNewick());
 	
-	return newSubNetProb - currentSubNetProb;
+//	if (newSubNetProb < currentSubNetProb) {
+//		System.out.println("here");
+//	}
+//	
+//	if (newSubNetProb > currentSubNetProb) {
+//		System.out.println("bigger");
+//	}
+	return  currentSubNetProb-newSubNetProb;
     }
 
     double unstructuredSubNetworkProb(double startTime) {
@@ -160,9 +171,6 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 		.filter(e -> e.parentNode.getHeight() > maxHeight).filter(e -> e.childNode.getHeight() <= maxHeight)
 		.collect(Collectors.toList());
 
-//        System.out.println("max " + maxHeight);
-//        for (int i = 0; i < startingEdges.size(); i++)
-//        	System.out.println(startingEdges.get(i).childNode.getHeight());
 
 	if (startingEdges.size() == 0)
 	    return Double.NEGATIVE_INFINITY;
@@ -196,21 +204,9 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 	} while (startingEdges.size() > 1);
 
 	network.setRootEdge(startingEdges.get(0));
-//        System.out.println(network.getExtendedNewick());
 
 	return Double.POSITIVE_INFINITY;
 
-    }
-
-    double getMaxSegmentMRCA() {
-	double maxHeight = 0.0;
-	for (int i = 0; i < segmentTreesInput.get().size(); i++) {
-	    double height = segmentTreesInput.get().get(i).getRoot().getHeight();
-	    if (height > maxHeight)
-		maxHeight = height;
-	}
-
-	return maxHeight;
     }
 
     private void coalesce(double coalescentTime, List<NetworkEdge> extantLineages) {
@@ -276,4 +272,15 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 	extantLineages.add(rightLineage);
     }
 
+    
+    double getMaxSegmentMRCA() {
+	double maxHeight = 0.0;
+	for (int i = 0; i < segmentTreesInput.get().size(); i++) {
+	    double height = segmentTreesInput.get().get(i).getRoot().getHeight();
+	    if (height > maxHeight)
+		maxHeight = height;
+	}
+
+	return maxHeight;
+    }
 }
