@@ -64,9 +64,6 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 	if (r == Double.NEGATIVE_INFINITY) {
 //		i += 1;
 //		System.out.println(i);
-//		if (i == 11505) {
-//			System.out.println("set breakpoint");
-//		}
 		return r;
 	}
 	
@@ -91,9 +88,9 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 	meanNe = calculate_average_of(Ne.getValues());
 
 	List<StructuredNetworkEvent> subNetEventList = structuredIntervals.getNetworkEventList();
-	subNetEventList = subNetEventList.stream()
-			.filter(e -> e.time > startTime)
-			.collect(Collectors.toList());
+//	subNetEventList = subNetEventList.stream()
+//			.filter(e -> e.time > startTime)
+//			.collect(Collectors.toList());
 	
 	StructuredNetworkEvent prevEvent = null;
 
