@@ -133,6 +133,8 @@ public class SCORE extends StructuredNetworkDistribution {
 	nrLineages = activeLineages.size();
 	linProbsLength = nrLineages * types;
 
+	dynamics.getNrTypes();
+	
 	// Calculate the likelihood
 	do {
 	    nextEventTime = Math.min(nextNetworkEventTime, nextRateShift);
@@ -169,6 +171,7 @@ public class SCORE extends StructuredNetworkDistribution {
 	    } else {
 		ratesInterval++;
 		coalescentRates = dynamics.getCoalescentRate(ratesInterval);
+
 		// migrationRates = dynamics.getBackwardsMigration(ratesInterval);
 		// indicators = dynamics.getIndicators(ratesInterval);
 		nextNetworkEventTime -= nextRateShift;
@@ -200,7 +203,8 @@ public class SCORE extends StructuredNetworkDistribution {
 	if (dynamics.typeTraitInput.get() != null) {
 	    for (NetworkEdge l : incomingLines) {
 		activeLineages.add(l);
-		sampleState = (int) dynamics.typeTraitInput.get().getValue(l.childNode.getTaxonLabel());
+		sampleState = (int) dynamics.getValue(l.childNode.getTaxonLabel());
+		
 	    }
 
 	    if (sampleState >= dynamics.getDimension()) {
