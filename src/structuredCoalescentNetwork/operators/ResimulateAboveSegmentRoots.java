@@ -1,6 +1,7 @@
 package structuredCoalescentNetwork.operators;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
     private StructuredNetworkIntervals structuredIntervals;
     double meanReassotmentRate;
     double meanNe;
-    int i=1;
+    int i=0;
 
     @Override
     public void initAndValidate() {
@@ -60,6 +61,11 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 //		return Double.NEGATIVE_INFINITY;
 	double currentSubNetProb = unstructuredSubNetworkProb(maxHeight);
 	
+//	i += 1;
+//	System.out.println(i);
+//	if (i==50) {
+//		System.out.println("stop");
+//	}
 	double r = resimulate(maxHeight);
 	if (r == Double.NEGATIVE_INFINITY) {
 //		i += 1;
@@ -68,16 +74,6 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 	}
 	
 	double newSubNetProb = unstructuredSubNetworkProb(maxHeight);
-//    System.out.println("after: ");
-//    System.out.println(network.getExtendedNewick());
-	
-//	if (newSubNetProb < currentSubNetProb) {
-//		System.out.println("here");
-//	}
-//	
-//	if (newSubNetProb > currentSubNetProb) {
-//		System.out.println("bigger");
-//	}
 	return  currentSubNetProb-newSubNetProb;
     }
 
@@ -86,7 +82,11 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 	double prob = 0.0;
 	meanReassotmentRate = calculate_average_of(reassortmentRate.getValues());
 	meanNe = calculate_average_of(Ne.getValues());
-
+	
+//	System.out.println("Ne_full: "+Arrays.deepToString(Ne.getValues()));
+//	System.out.println("Ne: "+meanNe);
+//	System.out.println("Rea: "+meanReassotmentRate);
+	
 	List<StructuredNetworkEvent> subNetEventList = structuredIntervals.getNetworkEventList();
 //	subNetEventList = subNetEventList.stream()
 //			.filter(e -> e.time > startTime)
@@ -201,6 +201,7 @@ public class ResimulateAboveSegmentRoots extends NetworkOperator {
 	} while (startingEdges.size() > 1);
 
 	network.setRootEdge(startingEdges.get(0));
+//	System.out.println(network.getExtendedNewick());
 
 	return Double.POSITIVE_INFINITY;
 

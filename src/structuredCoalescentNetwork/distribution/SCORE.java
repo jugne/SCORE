@@ -2,6 +2,7 @@ package structuredCoalescentNetwork.distribution;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.jblas.DoubleMatrix;
 
@@ -180,6 +181,7 @@ public class SCORE extends StructuredNetworkDistribution {
 	} while (nextNetworkEventTime <= Double.POSITIVE_INFINITY);
 
 	first++;
+	setNodeStates();
 	return logP;
     }
 
@@ -441,7 +443,6 @@ public class SCORE extends StructuredNetworkDistribution {
 
     }
 
-    // TODO add reassortment here
     private double doEuler(double nextEventTime, int ratesInterval) {
 	// for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];
 	if (linProbs_tmp.length != linProbsLength + 1) {
@@ -466,6 +467,15 @@ public class SCORE extends StructuredNetworkDistribution {
     
     public DoubleMatrix getRootState(){
     	return nodeStateProbabilities[nodeStateProbabilities.length-1];
+    }
+    
+    public void setNodeStates() {    	
+    	for (NetworkNode n : nodes) {
+    		DoubleMatrix m = nodeStateProbabilities[nodes.indexOf(n)];
+    		int i = m.argmax();
+    		n.setTypeLabel(dynamics.getStringStateValue(i));
+    	}
+    	
     }
 
 }

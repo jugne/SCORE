@@ -135,7 +135,6 @@ public class SimulateStructureCoalescentNetwork extends Network {
 
 	final int migDim = dimensionInput.get() == -1 ? dimensionInput.get() * (dimensionInput.get() - 1)
 		: uniqueTypes.size() * (uniqueTypes.size() - 1);
-	System.out.println("Unique types: "+uniqueTypes.size());
 
 
 	if (migDim == migrationRates.getDimension()) {
