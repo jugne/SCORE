@@ -255,8 +255,7 @@ public class SimulateStructureCoalescentNetwork extends Network {
 
 		    for (int j = 0; j < uniqueTypes.size(); j++) {
 			if (i != j) {
-			    final double timeToNextMigration = Randomizer
-				    .nextExponential(k_ * migrationRates.getArrayValue(c));
+			    final double timeToNextMigration = Randomizer.nextExponential(k_ * migrationRates.getArrayValue(c));
 			    c++;
 			    if (migrationType == MigrationType.symmetric)
 				c %= migrationRates.getDimension();
