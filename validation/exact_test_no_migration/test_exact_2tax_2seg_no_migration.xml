@@ -25,7 +25,7 @@
 
 
 
-    <run spec="MCMC" chainLength="10000000"> 
+    <run spec="MCMC" chainLength="1"> 
 
         <state>
             <stateNode id="network" spec="SimulatedCoalescentNetwork" nSegments="2" enableSegmentTreeUpdate="false">
@@ -45,15 +45,15 @@
                 </traitSet>
             </stateNode>
 
-	<parameter id="reassortmentRate" name="stateNode">1.0</parameter>
+	<parameter id="reassortmentRate" dimension="2" name="stateNode">1.0</parameter>
 
         </state>
 
 
-        <distribution id="coalDensity" spec="ExactStructuredCoalescentNetwork" dim="1">
+        <distribution id="coalDensity" spec="ExactStructuredCoalescentNetwork" dim="2">
             <networkIntervals spec="StructuredNetworkIntervals" id="StructuredNetworkIntervals" network="@network"/>
-					<coalescentRate spec="RealParameter" id="coalescentRate" value="1.0"/>
-					<migrationRate spec="RealParameter" id="migrationRate" value="0.0"/>
+					<coalescentRate spec="RealParameter" id="coalescentRate" dimension="2" value="1.0"/>
+					<migrationRate spec="RealParameter" id="migrationRate" dimension="2" value="0.0"/>
 
 					<reassortmentRate idref="reassortmentRate"/>
 
