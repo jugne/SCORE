@@ -1,9 +1,0 @@
-<itsabeastystatewerein version='2.0' sample='1'>
-<statenode id='network'>((#H0[&amp;segments={2},segsCarried=1]:0.5229623645948818,#H1[&amp;segments={1, 2, 4, 5, 7},segsCarried=5]:0.8377106396810268)[&amp;segments={1, 2, 4, 5, 7},segsCarried=5]:0.5585947943168654,((#H2[&amp;segments={2, 3},segsCarried=2]:0.8534107260971504)#H0[&amp;segments={3},segsCarried=1]:0.08442135956167363,(((t1[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.8934191257835964,#H3[&amp;segments={0, 4},segsCarried=2]:0.20885320563072596)[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.3004731320071594,((t2[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.5845659201528705)#H3[&amp;segments={1, 2, 3, 5, 6, 7},segsCarried=6]:0.3441004855836636)#H2[&amp;segments={1, 5, 6, 7},segsCarried=4]:0.1652258520542218)[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.3734365989567836)#H1[&amp;segments={0, 3, 6},segsCarried=3]:0.3991696346478186)[&amp;segments={0, 3, 6},segsCarried=3]:0.9971357993500736)[&amp;segments={0, 1, 2, 3, 4, 5, 6, 7},segsCarried=8]:0.0;</statenode>
-<statenode id='reassortmentRate'>reassortmentRate[1 1] (-Infinity,Infinity): 1.0 </statenode>
-</itsabeastystatewerein>
-<!--
-{"operators":[
-{"id":"AddRemoveReassortment","p":"NaN","accept":0,"reject":2,"acceptFC":0,"rejectFC":0,"rejectIv":0,"rejectOp":0}
-]}
--->

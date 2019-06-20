@@ -1,9 +1,0 @@
-<itsabeastystatewerein version='2.0' sample='20'>
-<statenode id='network'>(#H0[&amp;segments={2},segsCarried=1]:0.6874782313110901,((#H1[&amp;segments={0},segsCarried=1]:0.3578164793585479,#H2[&amp;segments={0, 1},segsCarried=2]:0.6486480033014604)[&amp;segments={0, 1},segsCarried=2]:0.7385710912085126,(((t2[&amp;segments={0, 1, 2},segsCarried=3]:0.34895090109772786,(t1[&amp;segments={0, 1, 2},segsCarried=3]:0.39373439620995787)#H2[&amp;segments={2},segsCarried=1]:0.05521650488776997)[&amp;segments={0, 1, 2},segsCarried=3]:0.2356150190551426)#H1[&amp;segments={1, 2},segsCarried=2]:0.7409558909794585)#H0[&amp;segments={1},segsCarried=1]:0.355431679587602)[&amp;segments={0, 1},segsCarried=2]:0.33204655172348807)[&amp;segments={0, 1, 2},segsCarried=3]:0.0;</statenode>
-<statenode id='reassortmentRate'>reassortmentRate[1 1] (-Infinity,Infinity): 1.0 </statenode>
-</itsabeastystatewerein>
-<!--
-{"operators":[
-{"id":"AddRemoveReassortment","p":"NaN","accept":4,"reject":17,"acceptFC":0,"rejectFC":0,"rejectIv":4,"rejectOp":4}
-]}
--->
