@@ -226,8 +226,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		double k = addLineages(event, first);
 		logP += k;
 		first = false;
-//	       			System.out.println("LogP: "+logP);
-//	       			System.out.println("Join state: "+ jointStateProbabilities);
+
 		break;
 
 	    case REASSORTMENT:

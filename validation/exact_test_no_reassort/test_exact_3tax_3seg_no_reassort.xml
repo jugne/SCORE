@@ -25,7 +25,7 @@
 
 
 
-    <run spec="MCMC" chainLength="1000000"> 
+    <run spec="MCMC" chainLength="10000000"> 
 
         <state>
             <stateNode id="network" spec="SimulatedCoalescentNetwork" nSegments="3" enableSegmentTreeUpdate="false">
@@ -90,11 +90,11 @@
             <log idref="network"/>
         </logger>
 
-        <logger spec="Logger" logEvery="1" fileName="$(filebase).log">
+        <logger spec="Logger" logEvery="1000" fileName="$(filebase).log">
             <log spec="NetworkStatsLogger" network="@network"/>
         </logger>
 
-        <logger spec="Logger" logEvery="100">
+        <logger spec="Logger" logEvery="1000">
             <log spec="NetworkStatsLogger" network="@network"/>
         </logger>
     </run>

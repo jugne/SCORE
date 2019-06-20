@@ -50,81 +50,84 @@ doCompare <- function(dsFileName, mcmcFileName) {
     
     # Kolmogorov-Smirnov test for network statistics
     
-    # H <- c()
-    # L <- c()
-    # R <- c()
-    # l <- length(df$network.height)
-    # # For comparison to run faster, calculations need to be done at fewer ponts.
-    # # It can be achieved by taking a fraction smaller than 0.001 below.
-    # step <- 0.001
-    # nPoints <- round(l*0.001)
-    # by <- as.integer(l/nPoints)
-    # 
-    # for (i in seq(l, 0, by=-by)){
-    #     H <- append(H, log(ks.test(df$network.height[1:(l-i)], dfs$network.height)$statistic))
-    #     L <- append(L, log(ks.test(df$network.totalLength[1:(l-i)], dfs$network.totalLength)$statistic))
-    #     R <- append(L, log(ks.test(df$network.reassortmentNodeCount[1:(l-i)], dfs$network.reassortmentNodeCount)$statistic))
-    # }
-    # 
-    # p3 <- ggplot() + geom_line(aes(x=seq(1, length(H)), y=H, colour="Network height"), data.frame(H))
-    # p3 <- p3 + geom_line(aes(x=seq(1, length(L)), y=L, colour="Network length"), data.frame(L), linetype="dotted")
-    # p3 <- p3 + geom_line(aes(x=seq(1, length(R)), y=R, colour="Rassortment count"), data.frame(R), linetype = "dashed")
-    # p3 <- p3 + theme_minimal(base_size = textSize) + labs(colour = "", linetype="", x=paste("Number of logged iterations (minus burnin) / ", (by)), y="Kolmogorov-Smirnov stat. (log scale)")
+    H <- c()
+    L <- c()
+    R <- c()
+    l <- length(df$network.height)
+    # For comparison to run faster, calculations need to be done at fewer ponts.
+    # It can be achieved by taking a fraction smaller than 0.001 below.
+    step <- 0.00001
+    nPoints <- round(l*step)
+    by <- as.integer(l/nPoints)
+    print(by)
+
+    for (i in seq(l, 0, by=-by)){
+        H <- append(H, log(ks.test(df$network.height[1:(l-i)], dfs$network.height)$statistic))
+        L <- append(L, log(ks.test(df$network.totalLength[1:(l-i)], dfs$network.totalLength)$statistic))
+        R <- append(L, log(ks.test(df$network.reassortmentNodeCount[1:(l-i)], dfs$network.reassortmentNodeCount)$statistic))
+    }
+
+    p3 <- ggplot() + geom_line(aes(x=seq(1, length(H)), y=H, colour="Network height"), data.frame(H))
+    p3 <- p3 + geom_line(aes(x=seq(1, length(L)), y=L, colour="Network length"), data.frame(L), linetype="dotted")
+    p3 <- p3 + geom_line(aes(x=seq(1, length(R)), y=R, colour="Rassortment count"), data.frame(R), linetype = "dashed")
+    p3 <- p3 + theme_minimal(base_size = textSize) + labs(colour = "", linetype="", x=paste("Number of logged iterations (minus burnin) / ", (by)), y="Kolmogorov-Smirnov stat. (log scale)")
 
 
-    # grid.arrange(p1, p2, p3)
+    grid.arrange(p1, p2, p3)
     
-    grid.arrange(p1, p2)
+    # grid.arrange(p1, p2)
     
     dev.off()
 }
 
-setwd("/home/ugne/_18_Mokslai/MascotExtended/validation/simulator")
+setwd("/home/ugne/_18_Mokslai/SCORE/validation/simulator")
 
 doCompare("/home/ugne/_18_Mokslai/CoalRe/validation/simulator/simulate_serial5taxon8seg.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/simulator/simulate_notStructured.log")
+          "/home/ugne/_18_Mokslai/SCORE/validation/simulator/simulate_notStructured.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_reassort/simulate_3tax_3seg_no_reassort.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_reassort/test_exact_3tax_3seg_no_reassort.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/simulate_3tax_3seg_no_reassort.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/test_exact_3tax_3seg_no_reassort.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_reassort/simulate.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_reassort/test_exact.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/simulate.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/test_exact.log")
 
 ## Structured + Reassortment
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_3tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/test_exact_3tax_3seg_2type.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_3tax_3seg_2type.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/test_exact_3tax_3seg_2type.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_2tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/test_exact_2tax_3seg_2type.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_3seg_2type.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/test_exact_2tax_3seg_2type.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_3tax_4seg_2type.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/test_exact_3tax_4seg_2type.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_3tax_4seg_2type.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/test_exact_3tax_4seg_2type.log")
 
 ## Only Structured
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_reassort/simulate_3tax_2seg.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_reassort/test_exact_3tax_2seg.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/simulate_3tax_2seg.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/test_exact_3tax_2seg.log")
+
+
 
 ## Only Reassortment
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/simulate_5tax_8seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/test_exact_5tax_8seg_no_migration.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_5tax_8seg_no_migration.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/test_exact_5tax_8seg_no_migration.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/simulate_5tax_2seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/test_exact_5tax_2seg_no_migration.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_5tax_2seg_no_migration.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/test_exact_5tax_2seg_no_migration.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/simulate_5tax_3seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/test_exact_5tax_3seg_no_migration.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_5tax_3seg_no_migration.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/test_exact_5tax_3seg_no_migration.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/test_exact_2tax_3seg_no_migration.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/test_exact_2tax_3seg_no_migration.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/test_exact_2tax_3seg_no_migration_1e8.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/test_exact_2tax_3seg_no_migration_1e8.log")
 
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
           "/home/ugne/_18_Mokslai/CoalRe/validation/operators/test_compare_contemp2taxon3seg.log")
 
 doCompare("/home/ugne/_18_Mokslai/CoalRe/validation/simulator/simulate_contemp2taxon3seg.log",
@@ -133,44 +136,49 @@ doCompare("/home/ugne/_18_Mokslai/CoalRe/validation/simulator/simulate_contemp2t
 
 ## From Euler
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_3tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/from_euler/test_exact_3tax_3seg_2type.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_3tax_3seg_2type.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_3tax_3seg_2type.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_3tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/from_euler/test_exact_3tax_3seg_2type_NonCoupledMCMC.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_3tax_3seg_2type.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_3tax_3seg_2type_NonCoupledMCMC.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_2tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/from_euler/test_exact_2tax_3seg_2type.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_3seg_2type.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_3seg_2type.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_2tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/from_euler/test_exact_2tax_3seg_2type_CMCMC.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_3seg_2type.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_3seg_2type_CMCMC.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_2tax_3seg_2type_1.0.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/from_euler/test_exact_2tax_3seg_2type_reassort1.0.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_3seg_2type_1.0.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_3seg_2type_reassort1.0.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_2tax_3seg_2type_1.0.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/from_euler/test_exact_2tax_3seg_2type_reassort1_CMCMC.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_3seg_2type_1.0.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_3seg_2type_reassort1_CMCMC.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_2tax_2seg_2type.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/from_euler/test_exact_2tax_2seg_2type.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_2seg_2type.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_2seg_2type.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_2tax_2seg_2type.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/from_euler/test_exact_2tax_2seg_2type_CMCMC.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_2seg_2type.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_2seg_2type_CMCMC.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_2tax_2seg_2type_low_mig.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/from_euler/test_exact_2tax_2seg_2type_CMCMC_low_mig.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_2seg_2type_low_mig.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_2seg_2type_CMCMC_low_mig.log")
 
-doCompare("/home/ugne/_18_Mokslai/MascotExtended/validation/exact_test_reassort/simulate_2tax_2seg_2type_lowReassort.log",
-          "/home/ugne/_18_Mokslai/MascotExtended/validation/from_euler/test_exact_2tax_2seg_2type_low_reassort.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_2seg_2type_lowReassort.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_2seg_2type_low_reassort.log")
 
 
 ## Approximation 
 
 
-doCompare("/Users/ugne/Documents/MascotExtended/validation/approximation/simulate_2tax_2type_no_reassort_approx.log",
-          "/Users/ugne/Documents/MascotExtended/validation/approximation/test_approx_2tax_2type_no_reassort.log")
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/approximation/simulate_2tax_2seg_no_migration.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/approximation/test_approx_2tax_2seg_no_migration.log")
+
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/approximation/simulate_3tax_3seg_no_migration.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/approximation/test_approx_3tax_3seg_no_migration.log")
 
 
+doCompare("/home/ugne/_18_Mokslai/SCORE/validation/approximation/simulate_2tax_2seg_2type.log",
+          "/home/ugne/_18_Mokslai/SCORE/validation/approximation/test_approx_2tax_2seg_2type.log")
 
 
 
