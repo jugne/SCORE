@@ -50,8 +50,12 @@ doCompare <- function(dsFileName, ds2FileName) {
     dev.off()
 }
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/simulator/simulate_noReassortment.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/test_xmls_for_MTT/simulate_noReassort_MTT.log")
+# Set the directory to the directory of the file (validation folder)
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
+
+doCompare("validation/test_xmls_for_MTT/simulate_noReassort_Score.log",
+          "validation/test_xmls_for_MTT/simulate_noReassort_MTT.log")
 
 
 

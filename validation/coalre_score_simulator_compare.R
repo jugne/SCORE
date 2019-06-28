@@ -71,8 +71,12 @@ doCompare <- function(dsFileName, mcmcFileName) {
     dev.off()
 }
 
-doCompare("/home/ugne/_18_Mokslai/CoalRe/validation/simulator/simulate_serial5taxon8seg.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/simulator/simulate_notStructured.log")
+# Set the directory to the directory of the file (validation folder)
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
+
+doCompare("validation/simulator/coalre_simulate_serial5taxon8seg.log",
+          "validation/simulator/simulate_notStructured.log")
 
 
 
