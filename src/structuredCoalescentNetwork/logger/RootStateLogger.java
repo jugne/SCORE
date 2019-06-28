@@ -11,9 +11,6 @@ import beast.core.Loggable;
 import structuredCoalescentNetwork.distribution.SCORE;
 import beast.mascot.dynamics.Dynamics;
 
-/**
- * @author Ugne Jankauskaite and Nicola Felix Mueller
- */
 @Description("logs the state of the root, i.e. the probability the root being in "+ 
 			"any of m states based on the MASCOT density class")
 public class RootStateLogger extends CalculationNode implements Loggable {

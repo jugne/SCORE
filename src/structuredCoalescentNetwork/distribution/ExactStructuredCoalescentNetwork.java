@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2016 Nicola Felix Mueller (nicola.felix.mueller@gmail.com)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package structuredCoalescentNetwork.distribution;
 
 import java.io.PrintStream;
@@ -35,9 +19,6 @@ import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
 import structuredCoalescentNetwork.math.ode_integrator_reassort;
 
-/**
- * @author Nicola Felix Mueller
- */
 
 @Description("Calculate the probability of a tree under the exact numerical structured coalescent with constant rates"
 	+ " as described in Mueller et. al.,2016. The Input rates are backwards in time migration rates"
@@ -255,7 +236,6 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 	    for (int i = 0; i < types; i++)
 		max_coal[i] = 1/NeInput.get().getArrayValue(i);
 	}
-//        System.out.println(logP);
 	return logP;
     }
 

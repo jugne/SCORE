@@ -21,8 +21,6 @@ import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
 
-//TODO check length for rate of reassort and migrattion rates to be the same as number of states
-//TODO figure out number of unique states like in Dynamics.java
 
 public class SimulateStructureCoalescentNetwork extends Network {
 
