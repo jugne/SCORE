@@ -56,7 +56,7 @@ doCompare <- function(dsFileName, mcmcFileName) {
     l <- length(df$network.height)
     # For comparison to run faster, calculations need to be done at fewer ponts.
     # It can be achieved by taking a fraction smaller than 0.001 below.
-    step <- 0.00001
+    step <- 0.001
     nPoints <- round(l*step)
     by <- as.integer(l/nPoints)
     print(by)
@@ -80,105 +80,59 @@ doCompare <- function(dsFileName, mcmcFileName) {
     dev.off()
 }
 
-setwd("/home/ugne/_18_Mokslai/SCORE/validation/simulator")
-
-doCompare("/home/ugne/_18_Mokslai/CoalRe/validation/simulator/simulate_serial5taxon8seg.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/simulator/simulate_notStructured.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/simulate_3tax_3seg_no_reassort.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/test_exact_3tax_3seg_no_reassort.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/simulate.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/test_exact.log")
+# Set the directory to the directory of the file (validation folder)
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
 
 ## Structured + Reassortment
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_3tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/test_exact_3tax_3seg_2type.log")
+doCompare("exact_test/simulate_3tax_3seg_2type_diff_rates.log",
+          "exact_test/exact_inf/test_exact_3tax_3seg_2type_NonCoupledMCMC_diff_rates_resimulate.log")
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/test_exact_2tax_3seg_2type.log")
+doCompare("exact_test/simulate_3tax_3seg_2type_diff_rates.log",
+          "exact_test/exact_inf/test_exact_3tax_3seg_2type_NonCoupledMCMC_diff_rates.log")
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_3tax_4seg_2type.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/test_exact_3tax_4seg_2type.log")
+doCompare("exact_test/simulate_3tax_3seg_2type.log",
+          "exact_test/exact_inf/test_exact_3tax_3seg_2type_NonCoupledMCMC.log")
+
 
 ## Only Structured
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/simulate_3tax_2seg.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_reassort/test_exact_3tax_2seg.log")
-
-
+doCompare("exact_test_no_reassort/simulate_3tax_3seg_no_reassort.log",
+          "exact_test_no_reassort/test_exact_3tax_3seg_no_reassort.log")
 
 ## Only Reassortment
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_5tax_8seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/test_exact_5tax_8seg_no_migration.log")
+doCompare("exact_test_no_migration/simulate_5tax_8seg_no_migration.log",
+          "exact_test_no_migration/test_exact_5tax_8seg_no_migration.log")
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_5tax_2seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/test_exact_5tax_2seg_no_migration.log")
+doCompare("exact_test_no_migration/simulate_5tax_2seg_no_migration.log",
+          "exact_test_no_migration/test_exact_5tax_2seg_no_migration.log")
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_5tax_3seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/test_exact_5tax_3seg_no_migration.log")
+doCompare("exact_test_no_migration/simulate_5tax_3seg_no_migration.log",
+          "exact_test_no_migration/test_exact_5tax_3seg_no_migration.log")
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/test_exact_2tax_3seg_no_migration.log")
+doCompare("exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
+          "exact_test_no_migration/test_exact_2tax_3seg_no_migration.log")
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/test_exact_2tax_3seg_no_migration_1e8.log")
-
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/CoalRe/validation/operators/test_compare_contemp2taxon3seg.log")
-
-doCompare("/home/ugne/_18_Mokslai/CoalRe/validation/simulator/simulate_contemp2taxon3seg.log",
-          "/home/ugne/_18_Mokslai/CoalRe/validation/operators/test_compare_contemp2taxon3seg.log")
+doCompare("exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
+          "exact_test_no_migration/test_exact_2tax_3seg_no_migration_1e8.log")
 
 
-## From Euler
+doCompare("exact_test_no_migration/simulate_2tax_3seg_no_migration.log",
+          "../../CoalRe/validation/operators/test_compare_contemp2taxon3seg.log")
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_3tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_3tax_3seg_2type.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_3tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_3tax_3seg_2type_NonCoupledMCMC.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_3seg_2type.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_3seg_2type.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_3seg_2type_CMCMC.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_3seg_2type_1.0.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_3seg_2type_reassort1.0.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_3seg_2type_1.0.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_3seg_2type_reassort1_CMCMC.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_2seg_2type.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_2seg_2type.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_2seg_2type.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_2seg_2type_CMCMC.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_2seg_2type_low_mig.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_2seg_2type_CMCMC_low_mig.log")
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/exact_test_reassort/simulate_2tax_2seg_2type_lowReassort.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/from_euler/test_exact_2tax_2seg_2type_low_reassort.log")
 
 
 ## Approximation 
 
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/approximation/simulate_2tax_2seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/approximation/test_approx_2tax_2seg_no_migration.log")
+doCompare("approximation/simulate_2tax_2seg_no_migration.log",
+          "approximation/test_approx_2tax_2seg_no_migration.log")
 
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/approximation/simulate_3tax_3seg_no_migration.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/approximation/test_approx_3tax_3seg_no_migration.log")
-
-
-doCompare("/home/ugne/_18_Mokslai/SCORE/validation/approximation/simulate_2tax_2seg_2type.log",
-          "/home/ugne/_18_Mokslai/SCORE/validation/approximation/test_approx_2tax_2seg_2type.log")
+doCompare("approximation/simulate_3tax_3seg_no_migration.log",
+          "approximation/test_approx_3tax_3seg_no_migration.log")
 
 
-
+doCompare("approximation/simulate_2tax_2seg_2type.log",
+          "approximation/test_approx_2tax_2seg_2type.log")
