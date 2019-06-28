@@ -17,8 +17,6 @@
 		 :structuredCoalescentNetwork.simulator">
 
     <network id="network" spec="SimulateStructureCoalescentNetwork" nSegments="2" enableSegmentTreeUpdate="false">
-
-         <Ne spec="RealParameter" id="Ne" dimension="2" value="1.0"/>
    
         <coalescentRate spec="RealParameter" id="coalescentRate" dimension="2" value="1.0"/>
 	<migrationRate spec="RealParameter" id="migrationRate" dimension="2" value="0.5"/>

@@ -27,6 +27,7 @@ import org.jblas.DoubleMatrix;
 
 import beast.core.Description;
 import beast.core.Input;
+import beast.core.Input.Validate;
 import beast.core.parameter.IntegerParameter;
 import beast.core.parameter.RealParameter;
 import beast.evolution.tree.TraitSet;
@@ -47,8 +48,10 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 
     public Input<RealParameter> timeStepInput = new Input<>("timeStep", "the time step used for rk4 integration");
 
-    public Input<RealParameter> coalescentRatesInput = new Input<>("coalescentRate",
-	    "pairwise coalescent rates that translate to 1/Ne in the Wright Fisher model", Input.Validate.REQUIRED);
+//    public Input<RealParameter> coalescentRatesInput = new Input<>("coalescentRate",
+//	    "pairwise coalescent rates that translate to 1/Ne in the Wright Fisher model", Input.Validate.REQUIRED);
+    
+    public Input<RealParameter> NeInput = new Input<>("Ne", "input of effective population sizes", Validate.REQUIRED);
 
     public Input<RealParameter> migrationRatesInput = new Input<>("migrationRate", "Backwards in time migration rate",
 	    Input.Validate.REQUIRED);
@@ -150,7 +153,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		    migration_map[k][l] = c;
 		    c++;
 		} else {
-		    coalescent_rates[k] = coalescentRatesInput.get().getArrayValue(k);
+		    coalescent_rates[k] = 1/NeInput.get().getArrayValue(k);
 		    reassortment_rates[k] = reassortmentRateInput.get().getArrayValue(k);
 		}
 
@@ -250,7 +253,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 	    for (int i = 0; i < types; i++)
 		max_mig[i] = migrationRatesInput.get().getArrayValue(i);
 	    for (int i = 0; i < types; i++)
-		max_coal[i] = coalescentRatesInput.get().getArrayValue(i);
+		max_coal[i] = 1/NeInput.get().getArrayValue(i);
 	}
 //        System.out.println(logP);
 	return logP;

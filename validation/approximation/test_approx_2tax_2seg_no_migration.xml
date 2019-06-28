@@ -62,6 +62,7 @@
             				t1=0, t2=0
         			</typeTrait>
 		</structuredCoalescentDynamics>
+		<typeTrait idref="typeTrait"/>
 		<reassortmentRates spec="RealParameter" id="reassortmentRates" dimension="1" value="1.0"/>
 		</dynamics>
 	</distribution>

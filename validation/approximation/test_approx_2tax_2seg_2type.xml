@@ -29,7 +29,7 @@
 
 
 
-    <run spec="MCMC" chainLength="1000000"> 
+    <run spec="MCMC" chainLength="100000000"> 
 
         <state>
             <stateNode id="network" spec="SimulatedCoalescentNetwork" nSegments="2" enableSegmentTreeUpdate="false">
@@ -62,6 +62,7 @@
             				t1=0, t2=1
         			</typeTrait>
 		</structuredCoalescentDynamics>
+		<typeTrait idref="typeTrait"/>
 		<reassortmentRates spec="RealParameter" id="reassortmentRates" dimension="2" value="0.5"/>
 		</dynamics>
 	</distribution>
