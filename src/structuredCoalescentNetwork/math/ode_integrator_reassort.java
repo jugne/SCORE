@@ -45,12 +45,14 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
 
     }
 
-    public int getDimension() {
+    @Override
+	public int getDimension() {
         return dimension;
     }
 
     
-    public void computeDerivatives(double t, double[] p, double[] pDot) {
+    @Override
+	public void computeDerivatives(double t, double[] p, double[] pDot) {
     	// Calculates the change in probability of being in a state due to coalescence
     	for (int i = 0; i < p.length; i++){
     		pDot[i] = 0.0;
@@ -75,7 +77,8 @@ public class ode_integrator_reassort implements FirstOrderDifferentialEquations 
     			}
     		}
     	}
-    
+		// Calculate the change in the probability of being in a configuration due to
+		// reassortment
     	for (int i=0; i < p.length; i++) {
     		
     		for (int s = 0; s < types; s++) {

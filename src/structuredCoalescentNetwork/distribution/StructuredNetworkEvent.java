@@ -14,6 +14,13 @@ public class StructuredNetworkEvent {
     public NetworkEventType type;
     public double time;
 
+	// Needed for stochastic mapping
+	public double[][] p_stored;
+	public double[][] pDot_stored;
+	public double[][] pDotDot_stored;
+	public double[] intermediateTimeStored;
+	public int numRecords;
+
     /**
      * Number of segments on a reassorting lineage.
      */

@@ -1,15 +1,15 @@
 package structuredCoalescentNetwork.distribution;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import beast.core.CalculationNode;
 import beast.core.Function;
 import beast.core.Input;
 import beast.core.Input.Validate;
 import coalre.network.Network;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Extended for structured case by Ugne Jankauskaite

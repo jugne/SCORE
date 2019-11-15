@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.apache.commons.math3.util.FastMath;
 
-import beast.mascot.distribution.Mascot;
+import structuredCoalescentNetwork.distribution.StructuredNetworkEvent;
 
 public class Euler2ndOrder implements Euler2ndOrderBase {
 
@@ -26,6 +26,8 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     double[] tCR;
     double[] sumDotTypes;
     List<Integer> n_segs;
+	int subIntervalID;
+	double durationCopy;
 
     int iterations;
 
@@ -34,7 +36,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 
     @Override
     public void init(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
-	    List<Integer> n_segs) {
+			List<Integer> n_segs, int numRecords) {
 	this.migration_rates = migration_rates;
 	n = (int) (Math.sqrt(migration_rates.length) + 0.5);
 	this.coalescent_rates = coalescent_rates;
@@ -47,6 +49,8 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	this.n_segs = n_segs;
 
 	iterations = 0;
+		subIntervalID = numRecords;
+
     }
 
     double[] linProbs_tmpdt;
@@ -54,7 +58,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     double[] linProbs_tmpdddt;
 
     @Override
-    public void setup(int maxSize, int types, double epsilon, double max_step) {
+	public void setup(int maxSize, int types, double epsilon, double max_step) {
 	linProbs_tmpdt = new double[maxSize];
 	linProbs_tmpddt = new double[maxSize];
 	linProbs_tmpdddt = new double[maxSize];
@@ -80,28 +84,27 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	this.nextRateShift = nextRateShift;
     }
 
-    public Euler2ndOrder(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
-	    int states, double epsilon, double max_step, List<Integer> n_segs) {
-	this.max_step = max_step;
-	this.epsilon = epsilon;
-	this.migration_rates = migration_rates;
-	n = (int) (Math.sqrt(migration_rates.length) + 0.5);
-	this.coalescent_rates = coalescent_rates;
-	this.reassortment_rates = reassortment_rates;
-	this.lineages = lineages;
-	this.types = states;
-	this.dimension = this.lineages * this.types;
-	sumTypes = new double[states];
-	tCR = new double[states];
-	sumDotTypes = new double[states];
-	this.n_segs = n_segs;
-
-	iterations = 0;
-    }
+//    public Euler2ndOrder(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
+//	    int states, double epsilon, double max_step, List<Integer> n_segs) {
+//	this.max_step = max_step;
+//	this.epsilon = epsilon;
+//	this.migration_rates = migration_rates;
+//	n = (int) (Math.sqrt(migration_rates.length) + 0.5);
+//	this.coalescent_rates = coalescent_rates;
+//	this.reassortment_rates = reassortment_rates;
+//	this.lineages = lineages;
+//	this.types = states;
+//	this.dimension = this.lineages * this.types;
+//	sumTypes = new double[states];
+//	tCR = new double[states];
+//	sumDotTypes = new double[states];
+//	this.n_segs = n_segs;
+//
+//    }
 
     @Override
     public void initAndcalculateValues(int ratesInterval, int lineages, double duration, double[] p, int length,
-	    List<Integer> n_segs) {
+			List<Integer> n_segs, StructuredNetworkEvent startEvent) {
 	double nextRateShiftTime = ratesInterval == nextRateShift.length ? Double.POSITIVE_INFINITY
 		: nextRateShift[ratesInterval];
 	if (ratesInterval >= nextRateShift.length) {
@@ -113,6 +116,8 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	indicators = indicators_[ratesInterval];
 
 	iterations = 0;
+		subIntervalID = startEvent.numRecords;
+	durationCopy = duration;
 	n = (int) (Math.sqrt(migration_rates.length) + 0.5);
 	this.lineages = lineages;
 	this.dimension = this.lineages * this.types;
@@ -122,41 +127,52 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	tCR = new double[types];
 	sumDotTypes = new double[types];
 
-	calculateValues(duration, p, length);
+		calculateValues(duration, p, startEvent, length);
     }
 
     @Override
-    public void calculateValues(double duration, double[] p, int length) {
+	public void calculateValues(double duration, double[] p, StructuredNetworkEvent startEvent, int length) {
 	double[] pDot = linProbs_tmpdt;
 	double[] pDotDot = linProbs_tmpddt;
 	double[] pDotDotDot = linProbs_tmpdddt;
-	calculateValues(duration, p, pDot, pDotDot, pDotDotDot, length);
+
+		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, startEvent, length);
     }
 
-    public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot) {
-	calculateValues(duration, p, pDot, pDotDot, pDotDotDot, pDot.length);
+	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot,
+			StructuredNetworkEvent startEvent) {
+		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, startEvent, pDot.length);
     }
 
     public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot,
-	    int length) {
+			StructuredNetworkEvent startEvent, int length) {
 
-	if (Mascot.debug && false) {
-	    System.err.println(duration);
-	    System.err.println("caol " + Arrays.toString(coalescent_rates));
-	    System.err.println("imgr " + Arrays.toString(migration_rates));
-	    System.err.println("p " + Arrays.toString(p));
-	}
 
 	clearArray(pDotDot, length);
 	clearArray(pDotDotDot, length);
 
+//		p_stored = new double[numRecords][p.length];
+//		pDot_stored = new double[numRecords][p.length];
+//		pDotDot_stored = new double[numRecords][p.length];
+//		intermediateTimeStored = new double[numRecords];
+
 	while (duration > 0) {
 	    iterations++;
-	    // pDot = new double[length];
 	    clearArray(pDot, length);
 	    computeDerivatives(p, pDot, pDotDot, pDotDotDot, length);
 	    computeSecondDerivate(p, pDot, pDotDot, length);
 	    approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot, length);
+
+			if (duration < (durationCopy * subIntervalID) / startEvent.numRecords) {
+				int pos = startEvent.numRecords - subIntervalID;
+				startEvent.intermediateTimeStored[pos] = duration;
+				startEvent.p_stored[pos] = Arrays.copyOfRange(p, 0, p.length);
+				startEvent.pDot_stored[pos] = Arrays.copyOfRange(pDot, 0, p.length);
+				startEvent.pDotDot_stored[pos] = Arrays.copyOfRange(pDotDot, 0, p.length);
+				subIntervalID -= 1;
+			}
+			// TODO here
+
 	    duration = updateP(duration, p, pDot, pDotDot, pDotDotDot, length - 1);
 
 	    if (iterations > 10000) {
@@ -165,7 +181,12 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		break;
 	    }
 	}
-
+		startEvent.numRecords -= subIntervalID;
+		startEvent.intermediateTimeStored = Arrays.copyOfRange(startEvent.intermediateTimeStored, 0,
+				startEvent.numRecords);
+		startEvent.p_stored = Arrays.copyOfRange(startEvent.p_stored, 0, startEvent.numRecords);
+		startEvent.pDot_stored = Arrays.copyOfRange(startEvent.pDot_stored, 0, startEvent.numRecords);
+		startEvent.pDotDot_stored = Arrays.copyOfRange(startEvent.pDotDot_stored, 0, startEvent.numRecords);
     }
 
     void clearArray(double[] v, int n) {
