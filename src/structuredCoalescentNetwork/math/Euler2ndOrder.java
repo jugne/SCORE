@@ -163,9 +163,9 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	    computeSecondDerivate(p, pDot, pDotDot, length);
 	    approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot, length);
 
-			if (duration < (durationCopy * subIntervalID) / startEvent.numRecords) {
+			if (duration < (durationCopy * subIntervalID) / startEvent.numRecords || iterations == 1) {
 				int pos = startEvent.numRecords - subIntervalID;
-				startEvent.intermediateTimeStored[pos] = duration;
+				startEvent.intermediateTimeStored[pos] -= duration;
 				startEvent.p_stored[pos] = Arrays.copyOfRange(p, 0, p.length);
 				startEvent.pDot_stored[pos] = Arrays.copyOfRange(pDot, 0, p.length);
 				startEvent.pDotDot_stored[pos] = Arrays.copyOfRange(pDotDot, 0, p.length);
@@ -181,6 +181,16 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		break;
 	    }
 	}
+
+		if (duration < (durationCopy * subIntervalID) / startEvent.numRecords) {
+			int pos = startEvent.numRecords - subIntervalID;
+			startEvent.intermediateTimeStored[pos] -= duration;
+			startEvent.p_stored[pos] = Arrays.copyOfRange(p, 0, p.length);
+			startEvent.pDot_stored[pos] = Arrays.copyOfRange(pDot, 0, p.length);
+			startEvent.pDotDot_stored[pos] = Arrays.copyOfRange(pDotDot, 0, p.length);
+			subIntervalID -= 1;
+		}
+
 		startEvent.numRecords -= subIntervalID;
 		startEvent.intermediateTimeStored = Arrays.copyOfRange(startEvent.intermediateTimeStored, 0,
 				startEvent.numRecords);

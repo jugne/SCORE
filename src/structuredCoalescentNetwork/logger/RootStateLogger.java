@@ -23,7 +23,7 @@ public class RootStateLogger extends CalculationNode implements Loggable {
 	private int states;
 	@Override
 	public void init(PrintStream out) {
-		DoubleMatrix RootStates = scoreInput.get().getRootState();
+		DoubleMatrix RootStates = scoreInput.get().getRootTypes();
 		states = RootStates.length;
 		for (int i = 0 ; i < states; i++){
 			out.print("RootProbability." + reassortmentDynamics.get().getStringStateValue(i) + "\t");
@@ -33,7 +33,7 @@ public class RootStateLogger extends CalculationNode implements Loggable {
 
 	@Override
 	public void log(int sample, PrintStream out) {
-		DoubleMatrix RootStates = scoreInput.get().getRootState();
+		DoubleMatrix RootStates = scoreInput.get().getRootTypes();
 		states = RootStates.length;
 		for (int i = 0 ; i < states; i++){
 			out.print(RootStates.get(i) + "\t");

@@ -20,6 +20,7 @@ public class StructuredNetworkEvent {
 	public double[][] pDotDot_stored;
 	public double[] intermediateTimeStored;
 	public int numRecords;
+	public ArrayList<NetworkEdge> activeLineages;
 
     /**
      * Number of segments on a reassorting lineage.
