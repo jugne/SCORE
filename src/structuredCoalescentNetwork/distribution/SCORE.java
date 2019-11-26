@@ -200,7 +200,7 @@ public class SCORE extends StructuredNetworkDistribution {
 	} while (nextNetworkEventTime <= Double.POSITIVE_INFINITY);
 
 	first++;
-	setNodeTypes();
+//	setNodeTypes();
 	return logP;
     }
 
@@ -308,7 +308,7 @@ public class SCORE extends StructuredNetworkDistribution {
 	DoubleMatrix pVec = new DoubleMatrix();
 	pVec.copy(lambda);
 	pVec = pVec.div(pVec.sum());
-
+//		System.out.println(network.getExtendedNewick());
 	nodeStateProbabilities[nodes.indexOf(coalLines.get(0).parentNode)] = pVec;
 
 	int linCount = 0;
