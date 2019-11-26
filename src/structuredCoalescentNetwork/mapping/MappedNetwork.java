@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.math3.analysis.interpolation.HermiteInterpolator;
-
 import beast.core.Input;
 import beast.util.Randomizer;
 import coalre.network.Network;
@@ -59,13 +57,14 @@ public class MappedNetwork extends Network {
 		network = score.network;
 		eventList = score.networkEventList;
 
-//		score.store();
+
 //		this.storedNet = (Network) network.copy();
 
 		NetworkNode net = forwardSimulateNetwork();
 		Network netw = new Network();
 		netw.setRootEdge(net.getParentEdges().get(0));
 //		System.out.println(netw.getExtendedNewick());
+
 
 	}
 
@@ -101,19 +100,19 @@ public class MappedNetwork extends Network {
 			// our first
 			// this doesn't matter for interpolator construction,
 			// but is written down in such way for clarity
-			HermiteInterpolator interpolator = new HermiteInterpolator();
-			for (int i = nextEvent.intermediateTimeStored.length - 1; i >= 0; i--) {
-//				double[] p_sqrt = root(Arrays.copyOfRange(nextEvent.p_stored[i], 0, nextEvent.p_stored[i].length - 1));
-//				double[] p_sqrt_Dot = pDot(p_sqrt,
-//						Arrays.copyOfRange(nextEvent.pDot_stored[i], 0, nextEvent.pDot_stored[i].length - 1));
-				interpolator.addSamplePoint(nextEvent.intermediateTimeStored[i],
-
-//						
-						Arrays.copyOfRange(root(nextEvent.p_stored[i]), 0, nextEvent.p_stored[i].length - 1));
-//						Arrays.copyOfRange(nextEvent.pDot_stored[i], 0, nextEvent.pDot_stored[i].length - 1),
-//						Arrays.copyOfRange(nextEvent.pDotDot_stored[i], 0, nextEvent.pDotDot_stored[i].length - 1));
-																												// nextEvent.pDotDot_stored[i]);
-			}
+//			HermiteInterpolator interpolator = new HermiteInterpolator();
+//			for (int i = nextEvent.intermediateTimeStored.length - 1; i >= 0; i--) {
+////				double[] p_sqrt = root(Arrays.copyOfRange(nextEvent.p_stored[i], 0, nextEvent.p_stored[i].length - 1));
+////				double[] p_sqrt_Dot = pDot(p_sqrt,
+////						Arrays.copyOfRange(nextEvent.pDot_stored[i], 0, nextEvent.pDot_stored[i].length - 1));
+//				interpolator.addSamplePoint(nextEvent.intermediateTimeStored[i],
+//
+////						
+//						Arrays.copyOfRange(root(nextEvent.p_stored[i]), 0, nextEvent.p_stored[i].length - 1));
+////						Arrays.copyOfRange(nextEvent.pDot_stored[i], 0, nextEvent.pDot_stored[i].length - 1),
+////						Arrays.copyOfRange(nextEvent.pDotDot_stored[i], 0, nextEvent.pDotDot_stored[i].length - 1));
+//																												// nextEvent.pDotDot_stored[i]);
+//			}
 			
 //			LinearInterpolator linearInterpolator = new LinearInterpolator();
 //			HashMap<Integer, HashMap<Integer, PolynomialSplineFunction>> lineagePolynomials = new HashMap<Integer, HashMap<Integer,PolynomialSplineFunction>>();
@@ -142,7 +141,7 @@ public class MappedNetwork extends Network {
 					double currentTime_l = currentTime;
 
 					totalRate = getTotalForwardsRate(lineageType.get(nextEvent.activeLineages.get(j)), currentTime, j,
-							interpolator, rates, nextEvent);
+							rates, nextEvent);
 
 					int integrationStep;
 					for (integrationStep = 0; integrationStep < FORWARD_INTEGRATION_STEPS; integrationStep++) {
@@ -150,7 +149,7 @@ public class MappedNetwork extends Network {
 						double tnext = currentTime_l
 								- (currentTime_l - endTime) * (integrationStep + 1) / FORWARD_INTEGRATION_STEPS;
 						totalRateNext = getTotalForwardsRate(lineageType.get(nextEvent.activeLineages.get(j)), tnext, j,
-								interpolator, ratesNext, nextEvent);
+								ratesNext, nextEvent);
 //						System.out.println(totalRateNext);
 
 						I += 0.5 * (totalRateNext + totalRate) * dt;
@@ -350,9 +349,9 @@ public class MappedNetwork extends Network {
 
 
 	private double getTotalForwardsRate(int fromType, double t, int lineageIdx,
-			HermiteInterpolator interpolator, double[] rates, StructuredNetworkEvent nextEvent) {
+			double[] rates, StructuredNetworkEvent nextEvent) {
 		double totalRate = 0.0;
-		getForwardsRates(fromType, t, lineageIdx, interpolator, rates, nextEvent);
+		getForwardsRates(fromType, t, lineageIdx, rates, nextEvent);
 		for (int type = 0; type < score.types; type++)
 			totalRate += rates[type];
 
@@ -360,16 +359,27 @@ public class MappedNetwork extends Network {
 	}
 
 	private double[] getForwardsRates(int fromType, double time, int lineageIdx,
-			HermiteInterpolator interpolator, double[] result, StructuredNetworkEvent nextEvent) {
+			double[] result, StructuredNetworkEvent nextEvent) {
 
 		// Assert if x2 is not 0
+		int x1 = -1;
+		double time1 = 0;
+		double time2 = 0;
+		boolean interpolate = false;
 		int x2 = bigger(nextEvent.intermediateTimeStored, time);
-		int x1 = x2 - 1;
+		if (x2 == 0)
+			System.out.println(x2);
+		if (Math.abs(nextEvent.intermediateTimeStored[x2] - time) > 1e-10) {
+			interpolate = true;
+			x1 += x2;
 
-		double time1 = nextEvent.intermediateTimeStored[x1];
-		double time2 = nextEvent.intermediateTimeStored[x2];
+			time1 = nextEvent.intermediateTimeStored[x1];
+			time2 = nextEvent.intermediateTimeStored[x2];
+		}
 
-		double[] p = interpolator.value(time);
+
+
+//		double[] p = interpolator.value(time);
 		int interval = getIntervalIndex(time);
 		double[] migMatrix = score.dynamics.getBackwardsMigration(interval);
 		int n = (int) (Math.sqrt(migMatrix.length) + 0.5);
@@ -380,16 +390,24 @@ public class MappedNetwork extends Network {
 				continue;
 			}
 
-			double pTo = (nextEvent.p_stored[x1][lineageIdx * score.types + type] * (time - time1)
+			double pTo;
+			if (interpolate)
+				pTo = (nextEvent.p_stored[x1][lineageIdx * score.types + type] * (time - time1)
 					+ nextEvent.p_stored[x2][lineageIdx * score.types + type] * (time2 - time)) / (time2 - time1);
+			else
+				pTo = nextEvent.p_stored[x2][lineageIdx * score.types + type];
 
 			result[type] = migMatrix[type * n + fromType] * pTo; // p[lineageIdx * score.types + type];
 		}
 
-		double pFrom = (nextEvent.p_stored[x1][lineageIdx * score.types + fromType] * (time - time1)
+		double pFrom;
+		if (interpolate)
+			pFrom = (nextEvent.p_stored[x1][lineageIdx * score.types + fromType] * (time - time1)
 				+ nextEvent.p_stored[x2][lineageIdx * score.types + fromType] * (time2 - time)) / (time2 - time1);
+		else
+			pFrom = nextEvent.p_stored[x2][lineageIdx * score.types + fromType];
 
-		if (p[lineageIdx * score.types + fromType] <= 0.0) {
+		if (pFrom <= 0.0) {
 			// The source type prob approaches zero as the integration closes
 			// in on a node with a defined type. This causes the transition
 			// rate to this type to become infinite. What follows is a hack
@@ -411,7 +429,7 @@ public class MappedNetwork extends Network {
 			// Apply source type prob as rate denominator:
 
 			for (int type = 0; type < score.types; type++)
-				result[type] /= p[lineageIdx * score.types + fromType];
+				result[type] /= pFrom;
 
 		}
 
@@ -472,10 +490,7 @@ public class MappedNetwork extends Network {
 			// target not found, so return index of insertion point
 			return -idx - 1;
 		}
-		// target found, so skip to after target value(s)
-		do {
-			idx++;
-		} while (idx < arr.length && arr[idx] == target);
+		// target found, so return that
 		return idx;
 	}
 }
