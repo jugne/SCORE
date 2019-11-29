@@ -130,6 +130,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		calculateValues(duration, p, startEvent, length);
     }
 
+
     @Override
 	public void calculateValues(double duration, double[] p, StructuredNetworkEvent startEvent, int length) {
 	double[] pDot = linProbs_tmpdt;
@@ -139,10 +140,6 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, startEvent, length);
     }
 
-	public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot,
-			StructuredNetworkEvent startEvent) {
-		calculateValues(duration, p, pDot, pDotDot, pDotDotDot, startEvent, pDot.length);
-    }
 
     public void calculateValues(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot,
 			StructuredNetworkEvent startEvent, int length) {

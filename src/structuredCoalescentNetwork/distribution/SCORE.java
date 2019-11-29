@@ -18,9 +18,9 @@ public class SCORE extends StructuredNetworkDistribution {
 
     public Input<ConstantReassortment> dynamicsInput = new Input<>("dynamics", "Input of rates",
 	    Input.Validate.REQUIRED);
-    public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration", 0.00001);
+	public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration", 0.000001);
     public Input<Double> maxStepInput = new Input<>("maxStep", "max step for the RK4 integration",
-	    Double.POSITIVE_INFINITY);
+			0.1);
 
 	public Input<Integer> nRecordsInput = new Input<>("nRecords",
 			"maximum number of records to keep per interval for stochastic mapping", 100);
@@ -53,11 +53,6 @@ public class SCORE extends StructuredNetworkDistribution {
 	public ConstantReassortment dynamics;
     StructuredNetworkIntervals networkIntervals;
 	public List<StructuredNetworkEvent> networkEventList;
-
-    int[] nodeType;
-
-    boolean useCache;
-
     double[] linProbs_tmp;
     int[] parents;
 
@@ -138,7 +133,7 @@ public class SCORE extends StructuredNetworkDistribution {
 	nrLineages = activeLineages.size();
 	linProbsLength = nrLineages * types;
 
-	dynamics.getNrTypes();
+
 	
 	// Calculate the likelihood
 	do {
@@ -290,7 +285,6 @@ public class SCORE extends StructuredNetworkDistribution {
 	 * Calculate the overall probability for two strains to coalesce independent of
 	 * the state at which this coalescent event is supposed to happen
 	 */
-	// TODO not sure if this will work with different indexing of network lineages
 	for (int k = 0; k < types; k++) {
 	    Double pairCoalRate = coalescentRates[k] * linProbs[daughterIndex1 * types + k]
 		    * linProbs[daughterIndex2 * types + k];
@@ -308,7 +302,7 @@ public class SCORE extends StructuredNetworkDistribution {
 	DoubleMatrix pVec = new DoubleMatrix();
 	pVec.copy(lambda);
 	pVec = pVec.div(pVec.sum());
-//		System.out.println(network.getExtendedNewick());
+
 	nodeStateProbabilities[nodes.indexOf(coalLines.get(0).parentNode)] = pVec;
 
 	int linCount = 0;
@@ -380,7 +374,6 @@ public class SCORE extends StructuredNetworkDistribution {
 
 	DoubleMatrix lambda = DoubleMatrix.zeros(types);
 
-	// TODO not sure if this will work with different indexing of network lineages
 	for (int k = 0; k < types; k++) {
 	    Double typeProb = reassortmentRates[k] * linProbs[daughterIndex * types + k]
 		    * Math.pow(0.5, event.segsSortedLeft) * Math.pow(0.5, (event.segsToSort - event.segsSortedLeft))
@@ -460,7 +453,6 @@ public class SCORE extends StructuredNetworkDistribution {
 	}
 	dynamics.setDynamicsKnown();
 	euler.setUpDynamics(coalescentRates, migrationRates, reassortmentRates, indicators, nextRateShift);
-
     }
 
 	private double doEuler(double start, double end, int ratesInterval, StructuredNetworkEvent startEvent) {

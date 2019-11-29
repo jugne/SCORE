@@ -35,8 +35,21 @@ public class StructuredNetworkIntervals extends CalculationNode {
         storedNetworkEventList = new ArrayList<>();
     }
 
+	public void initAndValidate(Network network) {
+		this.network = network;
+
+		storedNetworkEventList = new ArrayList<>();
+	}
+
     public List<StructuredNetworkEvent> getNetworkEventList() {
-    	network = networkInput.get();
+		network = networkInput.get();
+		update();
+
+		return networkEventList;
+	}
+
+	public List<StructuredNetworkEvent> getNetworkEventList(Network network) {
+		this.network = network;
         update();
 
         return networkEventList;
