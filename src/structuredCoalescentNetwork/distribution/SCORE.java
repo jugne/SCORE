@@ -1,7 +1,6 @@
 package structuredCoalescentNetwork.distribution;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.jblas.DoubleMatrix;
@@ -45,9 +44,6 @@ public class SCORE extends StructuredNetworkDistribution {
     // check if this is the first calculation
     private int first = 0;
 
-    // maximum integration error tolerance
-//    private double maxTolerance = 1e-3;
-//    private boolean recalculateLogP;
     Euler2ndOrderBase euler;
 	public Network network;
 	public ConstantReassortment dynamics;
@@ -118,7 +114,6 @@ public class SCORE extends StructuredNetworkDistribution {
 
 	// Time to the next rate shift or event on the tree
 	StructuredNetworkEvent nextNetworkEvent = networkEventList.get(networkInterval);
-		StructuredNetworkEvent startEvent; // = networkEventList.get(networkInterval);
 	double nextNetworkEventTime = nextNetworkEvent.time;
 	double nextRateShift = dynamics.getInterval(ratesInterval);
 
@@ -128,8 +123,6 @@ public class SCORE extends StructuredNetworkDistribution {
 
 	coalescentRates = dynamics.getCoalescentRate(ratesInterval);
 	reassortmentRates = dynamics.getReassortmentRate(ratesInterval);
-//	 migrationRates = dynamics.getBackwardsMigration(ratesInterval);
-	// indicators = dynamics.getIndicators(ratesInterval);
 	nrLineages = activeLineages.size();
 	linProbsLength = nrLineages * types;
 
@@ -139,12 +132,7 @@ public class SCORE extends StructuredNetworkDistribution {
 	do {
 	    nextEventTime = Math.min(nextNetworkEventTime, nextRateShift);
 	    if (nextEventTime > 0) { // if true, calculate the interval contribution
-				startEvent = networkEventList.get(networkInterval - 1);
-				startEvent.activeLineages = new ArrayList<NetworkEdge>();
-				startEvent.activeLineages.addAll(activeLineages);
-//				Array.fill(startEvent.intermediateTimeStored
-//				System.arraycopy(activeLineages, 0, startEvent.activeLineages, 0, activeLineages.size());
-				logP += doEuler(prevEventTime, nextEventTime, ratesInterval, startEvent);
+				logP += doEuler(prevEventTime, nextEventTime, ratesInterval);
 	    }
 
 	    if (nextNetworkEventTime <= nextRateShift) {
@@ -170,9 +158,7 @@ public class SCORE extends StructuredNetworkDistribution {
 		try {
 		    nextNetworkEvent = networkEventList.get(networkInterval);
 		    nextNetworkEventTime = nextNetworkEvent.time;
-//					startEvent = networkEventList.get(networkInterval - 1);
 
-//					startEvent.activeLineages = activeLineages;
 		} catch (Exception e) {
 		    break;
 		}
@@ -180,14 +166,9 @@ public class SCORE extends StructuredNetworkDistribution {
 		ratesInterval++;
 		coalescentRates = dynamics.getCoalescentRate(ratesInterval);
 
-		// migrationRates = dynamics.getBackwardsMigration(ratesInterval);
-		// indicators = dynamics.getIndicators(ratesInterval);
 		nextNetworkEventTime -= nextRateShift;
 		nextRateShift = dynamics.getInterval(ratesInterval);
 	    }
-//			startEvent = networkEventList.get(networkInterval - 1);
-//			startEvent.activeLineages = activeLineages;
-//			System.arraycopy(activeLineages, 0, startEvent.activeLineages, 0, activeLineages.size());
 	    prevEventTime = nextEventTime;
 	    if (logP == Double.NEGATIVE_INFINITY) {
 		return logP;
@@ -455,16 +436,8 @@ public class SCORE extends StructuredNetworkDistribution {
 	euler.setUpDynamics(coalescentRates, migrationRates, reassortmentRates, indicators, nextRateShift);
     }
 
-	private double doEuler(double start, double end, int ratesInterval, StructuredNetworkEvent startEvent) {
-	// for (int i = 0; i < linProbs.length; i++) linProbs_tmp[i] = linProbs[i];
+	private double doEuler(double start, double end, int ratesInterval) {
 		double duration = end - start;
-
-		startEvent.numRecords = nRecordsInput.get();
-		startEvent.p_stored = new double[startEvent.numRecords][linProbsLength];
-		startEvent.pDot_stored = new double[startEvent.numRecords][linProbsLength];
-		startEvent.pDotDot_stored = new double[startEvent.numRecords][linProbsLength];
-		startEvent.intermediateTimeStored = new double[startEvent.numRecords];
-		Arrays.fill(startEvent.intermediateTimeStored, end);
 
 	if (linProbs_tmp.length != linProbsLength + 1) {
 	    linProbs_tmp = new double[linProbsLength + 1];
@@ -480,7 +453,7 @@ public class SCORE extends StructuredNetworkDistribution {
 	}
 
 		euler.initAndcalculateValues(ratesInterval, nrLineages, duration, linProbs_tmp, linProbsLength + 1,
-				n_segs, startEvent);
+				n_segs, null);
 
 	System.arraycopy(linProbs_tmp, 0, linProbs, 0, linProbsLength);
 

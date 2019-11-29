@@ -14,7 +14,6 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 
     double[] migration_rates; // flattened square matrix of migration rates
     int n; // dimension of migration rate matrix and indicators matrix
-    int n2 = 2;
     int[] indicators;
     double[] coalescent_rates;
     double[] reassortment_rates;
@@ -36,7 +35,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 
     @Override
     public void init(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
-			List<Integer> n_segs, int numRecords) {
+			List<Integer> n_segs) {
 	this.migration_rates = migration_rates;
 	n = (int) (Math.sqrt(migration_rates.length) + 0.5);
 	this.coalescent_rates = coalescent_rates;
@@ -49,7 +48,6 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	this.n_segs = n_segs;
 
 	iterations = 0;
-		subIntervalID = numRecords;
 
     }
 
@@ -84,24 +82,6 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	this.nextRateShift = nextRateShift;
     }
 
-//    public Euler2ndOrder(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
-//	    int states, double epsilon, double max_step, List<Integer> n_segs) {
-//	this.max_step = max_step;
-//	this.epsilon = epsilon;
-//	this.migration_rates = migration_rates;
-//	n = (int) (Math.sqrt(migration_rates.length) + 0.5);
-//	this.coalescent_rates = coalescent_rates;
-//	this.reassortment_rates = reassortment_rates;
-//	this.lineages = lineages;
-//	this.types = states;
-//	this.dimension = this.lineages * this.types;
-//	sumTypes = new double[states];
-//	tCR = new double[states];
-//	sumDotTypes = new double[states];
-//	this.n_segs = n_segs;
-//
-//    }
-
     @Override
     public void initAndcalculateValues(int ratesInterval, int lineages, double duration, double[] p, int length,
 			List<Integer> n_segs, StructuredNetworkEvent startEvent) {
@@ -116,7 +96,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	indicators = indicators_[ratesInterval];
 
 	iterations = 0;
-		subIntervalID = startEvent.numRecords;
+
 	durationCopy = duration;
 	n = (int) (Math.sqrt(migration_rates.length) + 0.5);
 	this.lineages = lineages;
@@ -126,6 +106,9 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	sumTypes = new double[types];
 	tCR = new double[types];
 	sumDotTypes = new double[types];
+
+		if (startEvent != null)
+			subIntervalID = startEvent.numRecords;
 
 		calculateValues(duration, p, startEvent, length);
     }
@@ -148,11 +131,6 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	clearArray(pDotDot, length);
 	clearArray(pDotDotDot, length);
 
-//		p_stored = new double[numRecords][p.length];
-//		pDot_stored = new double[numRecords][p.length];
-//		pDotDot_stored = new double[numRecords][p.length];
-//		intermediateTimeStored = new double[numRecords];
-
 	while (duration > 0) {
 	    iterations++;
 	    clearArray(pDot, length);
@@ -160,15 +138,13 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	    computeSecondDerivate(p, pDot, pDotDot, length);
 	    approximateThirdDerivate(p, pDot, pDotDot, pDotDotDot, length);
 
-			if (duration < (durationCopy * subIntervalID) / startEvent.numRecords || iterations == 1) {
+			if (startEvent != null
+					&& (duration < (durationCopy * subIntervalID) / startEvent.numRecords || iterations == 1)) {
 				int pos = startEvent.numRecords - subIntervalID;
 				startEvent.intermediateTimeStored[pos] -= duration;
 				startEvent.p_stored[pos] = Arrays.copyOfRange(p, 0, p.length);
-				startEvent.pDot_stored[pos] = Arrays.copyOfRange(pDot, 0, p.length);
-				startEvent.pDotDot_stored[pos] = Arrays.copyOfRange(pDotDot, 0, p.length);
 				subIntervalID -= 1;
 			}
-			// TODO here
 
 	    duration = updateP(duration, p, pDot, pDotDot, pDotDotDot, length - 1);
 
@@ -179,21 +155,19 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 	    }
 	}
 
-		if (duration < (durationCopy * subIntervalID) / startEvent.numRecords) {
-			int pos = startEvent.numRecords - subIntervalID;
-			startEvent.intermediateTimeStored[pos] -= duration;
-			startEvent.p_stored[pos] = Arrays.copyOfRange(p, 0, p.length);
-			startEvent.pDot_stored[pos] = Arrays.copyOfRange(pDot, 0, p.length);
-			startEvent.pDotDot_stored[pos] = Arrays.copyOfRange(pDotDot, 0, p.length);
-			subIntervalID -= 1;
-		}
+		if (startEvent != null) {
+			if (duration < (durationCopy * subIntervalID) / startEvent.numRecords) {
+				int pos = startEvent.numRecords - subIntervalID;
+				startEvent.intermediateTimeStored[pos] -= duration;
+				startEvent.p_stored[pos] = Arrays.copyOfRange(p, 0, p.length);
+				subIntervalID -= 1;
+			}
 
-		startEvent.numRecords -= subIntervalID;
-		startEvent.intermediateTimeStored = Arrays.copyOfRange(startEvent.intermediateTimeStored, 0,
-				startEvent.numRecords);
-		startEvent.p_stored = Arrays.copyOfRange(startEvent.p_stored, 0, startEvent.numRecords);
-		startEvent.pDot_stored = Arrays.copyOfRange(startEvent.pDot_stored, 0, startEvent.numRecords);
-		startEvent.pDotDot_stored = Arrays.copyOfRange(startEvent.pDotDot_stored, 0, startEvent.numRecords);
+			startEvent.numRecords -= subIntervalID;
+			startEvent.intermediateTimeStored = Arrays.copyOfRange(startEvent.intermediateTimeStored, 0,
+					startEvent.numRecords);
+			startEvent.p_stored = Arrays.copyOfRange(startEvent.p_stored, 0, startEvent.numRecords);
+		}
     }
 
     void clearArray(double[] v, int n) {
@@ -205,8 +179,6 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
     double updateP(double duration, double[] p, double[] pDot, double[] pDotDot, double[] pDotDotDot, int length) {
 	final double max_dotdotdot = maxAbs(pDotDotDot, length);
 
-	// double timeStep = FastMath.min(FastMath.pow(epsilon*6/max_dotdotdot, C),
-	// FastMath.min(duration, max_step));
 
 	double timeStep = FastMath.min(FastMath.cbrt(epsilon * 6 / max_dotdotdot), FastMath.min(duration, max_step));
 	double timeStepSquare = timeStep * timeStep * 0.5;
@@ -223,7 +195,6 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		its++;
 
 		if (its > 10000) {
-//					System.err.println("cannot find proper time step, skip these parameter values");
 		    p[length - 1] = Double.NEGATIVE_INFINITY;
 		    break;
 		}

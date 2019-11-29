@@ -783,8 +783,6 @@ public class MappedNetwork extends Network {
 
 		startEvent.numRecords = nRecordsInput.get();
 		startEvent.p_stored = new double[startEvent.numRecords][linProbsLength];
-		startEvent.pDot_stored = new double[startEvent.numRecords][linProbsLength];
-		startEvent.pDotDot_stored = new double[startEvent.numRecords][linProbsLength];
 		startEvent.intermediateTimeStored = new double[startEvent.numRecords];
 		Arrays.fill(startEvent.intermediateTimeStored, end);
 

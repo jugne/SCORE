@@ -9,7 +9,7 @@ public interface Euler2ndOrderBase {
     public void setup(int maxSize, int types, double epsilon, double max_step);
 
     public void init(double[] migration_rates, double[] coalescent_rates, double[] reassortment_rates, int lineages,
-			List<Integer> n_segs, int numRecords);
+			List<Integer> n_segs);
 
 //    public void calculateValues(double duration, double[] p, int length);
 
