@@ -100,11 +100,11 @@
             <log spec="NetworkStatsLogger" network="@network"/>
         </logger>
 
-        <logger spec="Logger" logEvery="1">
+        <logger spec="Logger" logEvery="100">
             <log spec="NetworkStatsLogger" network="@network"/>
         </logger>
         
-        <logger spec="Logger" logEvery="1" mode="tree" fileName="$(filebase).typed.trees">
+        <logger spec="Logger" logEvery="100" mode="tree" fileName="$(filebase).typed.trees">
             <log spec="MappedNetwork" untypedNetwork="@network" dynamics="@constantReassort"/>
         </logger>
         

@@ -23,12 +23,9 @@ import structuredCoalescentNetwork.math.Euler2ndOrderBase;
 
 /**
  * @author Ugne Stolz. Created on 15 Nov 2019. Mostly Uses ideas of stochastic
- *         mapping implementation from Tim Vaughan's BDMM Prime implementation
+ *         mapping from Tim Vaughan's derivations for structured coalescent
  */
 public class MappedNetwork extends Network {
-
-//	public Input<SCORE> scoreDistribInput = new Input<>("scoreDistribution",
-//			"If provided, extract the parameterization from here.", Input.Validate.REQUIRED);
 
 	public Input<Boolean> mapOnInitInput = new Input<>("mapOnInit",
 			"If true, mapping will be performed when object is " + "first initialize.", true);
@@ -36,35 +33,17 @@ public class MappedNetwork extends Network {
 	public Input<Network> netwokInput = new Input<>("untypedNetwork", "Network on which to apply mapping.",
 			Input.Validate.REQUIRED);
 
-//	public Input<StructuredNetworkIntervals> networkIntervalsInput = new Input<>("networkIntervals",
-//			"Structured Intervals for a phylogenetic beast tree", Validate.REQUIRED);
-
 	public Input<ConstantReassortment> dynamicsInput = new Input<>("dynamics", "Input of rates",
 			Input.Validate.REQUIRED);
 
 	public Input<Integer> nRecordsInput = new Input<>("nRecords",
-			"maximum number of records to keep per interval for stochastic mapping", 1000);
+			"maximum number of records to keep per interval for stochastic mapping", 200);
 
-//	public Input<TraitSet> typeTraitSetInput = new Input<>("typeTraitSet",
-//			"Trait information for initializing traits " + "(like node types/locations) in the tree. If this is "
-//					+ "not provided we will try to extract this information from "
-//					+ "metadata on the untyped tree leaves.");
-//
-//	public Input<ConstantReassortment> dynamicsInput = new Input<>("dynamics", "Input of rates",
-//			Input.Validate.REQUIRED);
-//
-//	public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration", 0.00001);
-//	public Input<Double> maxStepInput = new Input<>("maxStep", "max step for the RK4 integration",
-//			Double.POSITIVE_INFINITY);
+	// DEBUG purposes
+	boolean rejection = true;
 
-//	public Input<Integer> nRecordsInput = new Input<>("nRecords",
-//			"maximum number of records to keep per interval for stochastic mapping", 100);
-//
-//	public Input<Integer> nForwardsStepsInput = new Input<>("nSteps",
-//			"number of integration steps between events, for forwards integration", 100);
 
 	StructuredNetworkIntervals intervals = new StructuredNetworkIntervals();
-
 	public ConstantReassortment dynamics;
 
 	private Network untypedNetwork;
@@ -84,9 +63,9 @@ public class MappedNetwork extends Network {
 	 * Maximum number of steps in each waiting time calculation in forward
 	 * simulation.
 	 */
-	private final int FORWARD_INTEGRATION_STEPS = 1000;
+	private final int FORWARD_INTEGRATION_STEPS = 100;
 
-	private final double STEP_SIZE_BACKWARD_INTEGRATION = 0.00001;
+	private final double STEP_SIZE_BACKWARD_INTEGRATION = 0.000001;
 
 	private final double MAX_STEP_FOR_BACKWARD_INTEGRATION = 0.1;
 
@@ -114,10 +93,19 @@ public class MappedNetwork extends Network {
 
 		intervals.initAndValidate(untypedNetwork);
 		eventList = intervals.getNetworkEventList(untypedNetwork);
-
+		System.out.println("Before: " + untypedNetwork.getExtendedNewick());
 		backwardIntegration();
-		NetworkNode net = forwardSimulateNetwork();
-		this.setRootEdge(net.getParentEdges().get(0));
+		Object[] net = forwardSimulateNetwork();
+		while (!(Boolean) net[0]) {
+			untypedNetwork = (Network) netwokInput.get().copy();
+
+			intervals.initAndValidate(untypedNetwork);
+			eventList = intervals.getNetworkEventList(untypedNetwork);
+			backwardIntegration();
+			net = forwardSimulateNetwork();
+		}
+		this.setRootEdge(((NetworkNode) net[1]).getParentEdges().get(0));
+		System.out.println("Final: " + this.getExtendedNewick());
 	}
 
 	private void backwardIntegration() {
@@ -207,8 +195,7 @@ public class MappedNetwork extends Network {
 
 
 
-
-	private NetworkNode forwardSimulateNetwork() {
+	private Object[] forwardSimulateNetwork() {
 		int nIntervals = eventList.size() - 1;
 		StructuredNetworkEvent currentEvent = eventList.get(nIntervals);
 		StructuredNetworkEvent nextEvent = eventList.get(nIntervals - 1);
@@ -224,22 +211,25 @@ public class MappedNetwork extends Network {
 		root.setTypeIndex(startType);
 		root.setTypeLabel(dynamics.getStringStateValue(startType));
 		root.setMetaData(currentEvent.node.getMetaData());
-		
+
 		NetworkNode currentNode = root;
 		double currentTime = currentEvent.time;
 		double endTime = nextEvent.time;
-		
+
 		double[] rates = new double[types];
 		double[] ratesNext = new double[types];
 		double totalRate;
 		double totalRateNext;
-		
-		while (nIntervals > 0) {
-			while (true) {
+		int its = 0;
 
+		while (nIntervals > 0) {
+			if (its > 1000)
+				return new Object[] { false, null };
+			while (true) {
 				double dt = (endTime - currentTime) / FORWARD_INTEGRATION_STEPS;
 				NetworkEdge minEdge = new NetworkEdge();
 				double minTime = Double.NEGATIVE_INFINITY;
+				double[] minRates = new double[types];
 
 				for (NetworkEdge e : nextEvent.activeLineages)
 				{
@@ -256,8 +246,17 @@ public class MappedNetwork extends Network {
 					for (integrationStep = 0; integrationStep < FORWARD_INTEGRATION_STEPS; integrationStep++) {
 						double tnext = currentTime_l
 								- (currentTime_l - endTime) * (integrationStep + 1) / FORWARD_INTEGRATION_STEPS;
+						if (tnext == 0.1) {
+							System.out.println();
+						}
 						totalRateNext = getTotalForwardsRate(lineageType.get(e), tnext, idx,
 								ratesNext, nextEvent);
+
+						if (ratesNext[0] == 0.0 && ratesNext[1] == 0.0) {
+							Network test = new Network();
+							test.setRootEdge(root.getParentEdges().get(0));
+							System.out.println(test.getExtendedNewick());
+						}
 
 						I += 0.5 * (totalRateNext + totalRate) * dt;
 
@@ -266,19 +265,28 @@ public class MappedNetwork extends Network {
 							if (currentTime_l > minTime) {
 								minTime = currentTime_l;
 								minEdge = e;
+								minRates = ratesNext.clone();
+								if (minRates[0] == 0.0 && minRates[1] == 0.0) {
+									Network test = new Network();
+									test.setRootEdge(root.getParentEdges().get(0));
+									System.out.println(test.getExtendedNewick());
+								}
 							}
 							break;
 						}
 						totalRate = totalRateNext;
-						double[] tmp = rates;
-						rates = ratesNext;
-						ratesNext = tmp;
+//						double[] tmp = rates;
+//						rates = ratesNext;
+//						ratesNext = tmp;
 
 						t = tnext;
 					}
+//					System.out.println("K: " + K);
+//					System.out.println("I: " + I);
 				}
 
 				if (minTime > endTime) {
+
 
 					NetworkEdge lineage = minEdge;
 					NetworkNode parent = lineage.parentNode;
@@ -287,7 +295,35 @@ public class MappedNetwork extends Network {
 					newEdge.hasSegments = lineage.hasSegments;
 
 					int oldType = lineageType.get(lineage);
-					int newType = Randomizer.randomChoicePDF(ratesNext);
+					
+					int newType = 0;
+					if (minRates[0] == 0.0 && minRates[1] == 0.0) {
+						Network test = new Network();
+						test.setRootEdge(root.getParentEdges().get(0));
+						System.out.println(test.getExtendedNewick());
+					}
+
+					try {
+						Network test = new Network();
+						test.setRootEdge(root.getParentEdges().get(0));
+//						System.out.println("Interval: " + test.getExtendedNewick());
+//						System.out.println("Rates: " + ratesNext);
+						newType = Randomizer.randomChoicePDF(minRates);
+					} catch (Exception e) {
+						Network test = new Network();
+						test.setRootEdge(root.getParentEdges().get(0));
+						System.out.println(test.getExtendedNewick());
+					}
+
+					if (oldType == newType) {// happens only when rate of change is very close to zero
+						its++;
+						Network test = new Network();
+						test.setRootEdge(root.getParentEdges().get(0));
+						System.out.println(test.getExtendedNewick());
+						System.out.println("Type matched fired");
+						continue;
+					}
+
 					newNode.setTypeIndex(oldType);
 					newNode.setTypeLabel(dynamics.getStringStateValue(oldType));
 
@@ -303,6 +339,7 @@ public class MappedNetwork extends Network {
 					newNode.setHeight(minTime);
 
 					currentTime = minTime;
+
 				}
 				else
 					break;
@@ -313,15 +350,38 @@ public class MappedNetwork extends Network {
 				NetworkEdge sampleLineage = nextEvent.node.getParentEdges().get(0);
 
 				NetworkNode sampleNode = new NetworkNode();
-				// TODO debug this!
 				sampleNode.setMetaData(nextEvent.node.getMetaData());
 
 				sampleNode.setHeight(endTime);
 				sampleNode.setTaxonLabel(nextEvent.node.getTaxonLabel());
 				sampleNode.setTaxonIndex(nextEvent.node.getTaxonIndex());
 				String label = nextEvent.node.getTaxonLabel();
-				sampleNode.setTypeIndex(dynamics.getValue(label));
-				sampleNode.setTypeLabel(dynamics.getStringStateValue(sampleNode.getTypeIndex()));
+				int labelIdx = dynamics.getValue(label);
+				int idx = lineageType.get(sampleLineage);
+				if (idx != labelIdx) {
+					its++;
+					Network test = new Network();
+					test.setRootEdge(root.getParentEdges().get(0));
+					System.out.println(test.getExtendedNewick());
+					System.out.println("Sample missmatch fired");
+					continue;
+//					int lin_idx = nextEvent.activeLineages.indexOf(sampleLineage);
+//					for (int i = 0; i < types; i++) {
+//						System.out.println("Taxon: " + nextEvent.node.getTaxonLabel());
+//						System.out.println("idx: " + idx);
+//						System.out.println("labelIdx: " + labelIdx);
+//						System.out.println("height " + sampleNode.getHeight());
+//						System.out.println("type " + i + ": "
+//								+ nextEvent.p_stored[nextEvent.intermediateTimeStored.length - 1][lin_idx * types + i]);
+//					}
+//					Network test = new Network();
+//					test.setRootEdge(root.getParentEdges().get(0));
+//					System.out.println(test.getExtendedNewick());
+//					throw new IllegalArgumentException("Mapper tip label differs from known.");
+				}
+
+				sampleNode.setTypeIndex(idx);
+				sampleNode.setTypeLabel(dynamics.getStringStateValue(idx));
 
 				nextEvent.node.removeParentEdge(sampleLineage);
 				sampleNode.addParentEdge(sampleLineage);
@@ -331,12 +391,17 @@ public class MappedNetwork extends Network {
 				break;
 			case COALESCENCE:
 
+				NetworkEdge coalLineage = new NetworkEdge();
 
-				NetworkEdge coalLineage = nextEvent.node.getParentEdges().get(0);
+				try {
+					coalLineage = nextEvent.node.getParentEdges().get(0);
+				} catch (Exception e) {
+					Network test = new Network();
+					test.setRootEdge(root.getParentEdges().get(0));
+					System.out.println(test.getExtendedNewick());
+				}
 				int coalType = lineageType.get(coalLineage);
 				NetworkNode coalNode = new NetworkNode();
-				// TODO debug this!
-
 				coalNode.setMetaData(nextEvent.node.getMetaData());
 
 				coalNode.setHeight(endTime);
@@ -369,13 +434,22 @@ public class MappedNetwork extends Network {
 				if (type1==type2)
 					reassType = type1;
 				else {
-					double[] parentProbs = new double[types];
-					int lin_idx = nextEvent.activeLineages.indexOf(parent1);
-					for (int i = 0; i < types; i++) {
-						parentProbs[i] = nextEvent.p_stored[nextEvent.intermediateTimeStored.length - 1][lin_idx * types
-								+ i];
+					if (rejection)
+					{
+						System.out.println("R fired");
+//						return new Object[] { false, null };
+						its++;
+						continue;
 					}
-					reassType = Randomizer.randomChoicePDF(parentProbs);
+					else {
+						double[] parentProbs = new double[types];
+						int lin_idx = nextEvent.activeLineages.indexOf(parent1);
+						for (int i = 0; i < types; i++) {
+							parentProbs[i] = nextEvent.p_stored[nextEvent.intermediateTimeStored.length - 1][lin_idx
+									* types + i];
+						}
+						reassType = Randomizer.randomChoicePDF(parentProbs);
+					}
 				}
 				NetworkNode reassNode = new NetworkNode();
 				reassNode.setHeight(endTime);
@@ -401,6 +475,7 @@ public class MappedNetwork extends Network {
 			}
 
 			nIntervals -= 1;
+			its = 0;
 			if (nIntervals > 0) {
 				currentEvent = eventList.get(nIntervals);
 				nextEvent = eventList.get(nIntervals - 1);
@@ -409,7 +484,7 @@ public class MappedNetwork extends Network {
 			}
 		}
 
-		return root;
+		return new Object[] { true, root };
 	}
 
 
@@ -430,18 +505,28 @@ public class MappedNetwork extends Network {
 		int x1 = -1;
 		double time1 = 0;
 		double time2 = 0;
-		boolean interpolate = false;
+		boolean interpolate = true;
 		int x2 = bigger(nextEvent.intermediateTimeStored, time);
-		if (x2 > nextEvent.intermediateTimeStored.length - 1)
+		if (x2 > nextEvent.intermediateTimeStored.length - 1) {
 			x2 = nextEvent.intermediateTimeStored.length - 1;
+			interpolate = false;
+		}
+		else if (x2 == 0) {
+			interpolate = false;
+		}
 
-		if (Math.abs(nextEvent.intermediateTimeStored[x2] - time) > 1e-10) {
-			interpolate = true;
+		if (interpolate && Math.abs(nextEvent.intermediateTimeStored[x2] - time) > 1e-16) {
 			x1 += x2;
 
-			time1 = nextEvent.intermediateTimeStored[x1];
+			try {
+				time1 = nextEvent.intermediateTimeStored[x1];
+			} catch (Exception e) {
+				System.out.println();
+			}
 			time2 = nextEvent.intermediateTimeStored[x2];
 		}
+		else
+			interpolate = false;
 
 
 		int ratesInterval = getIntervalIndex(time);
@@ -498,6 +583,10 @@ public class MappedNetwork extends Network {
 				result[type] /= pFrom;
 
 		}
+		if (result[0] == 0 && result[1] == 0) {
+			System.out.println("x1: " + x1);
+			System.out.println("x2: " + x2);
+		}
 
 		return result;
 	}
@@ -523,8 +612,6 @@ public class MappedNetwork extends Network {
 	}
 
 	// XXX Backwards stuff
-
-
 	private void sample(StructuredNetworkEvent event) {
 
 		List<NetworkEdge> incomingLines = event.lineagesAdded;
@@ -760,7 +847,6 @@ public class MappedNetwork extends Network {
 			return Math.log(lambda.sum());
 	}
 
-
 	private void setUpDynamics() {
 		int n = dynamics.getEpochCount();
 		double[][] coalescentRates = new double[n][];
@@ -818,6 +904,8 @@ public class MappedNetwork extends Network {
 	public void log(long sample, PrintStream out) {
 		doStochasticMapping();
 
+		if (sample == 62 || sample == 162)
+			System.out.println();
 		out.print("tree STATE_" + sample + " = ");
 		// Don't sort, this can confuse CalculationNodes relying on the tree
 		// tree.getRoot().sort();
