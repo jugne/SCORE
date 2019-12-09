@@ -93,9 +93,10 @@ public class MappedNetwork extends Network {
 
 		intervals.initAndValidate(untypedNetwork);
 		eventList = intervals.getNetworkEventList(untypedNetwork);
-		System.out.println("Before: " + untypedNetwork.getExtendedNewick());
+
 		backwardIntegration();
 		Object[] net = forwardSimulateNetwork();
+
 		while (!(Boolean) net[0]) {
 			untypedNetwork = (Network) netwokInput.get().copy();
 
@@ -104,8 +105,8 @@ public class MappedNetwork extends Network {
 			backwardIntegration();
 			net = forwardSimulateNetwork();
 		}
+
 		this.setRootEdge(((NetworkNode) net[1]).getParentEdges().get(0));
-		System.out.println("Final: " + this.getExtendedNewick());
 	}
 
 	private void backwardIntegration() {
@@ -246,17 +247,8 @@ public class MappedNetwork extends Network {
 					for (integrationStep = 0; integrationStep < FORWARD_INTEGRATION_STEPS; integrationStep++) {
 						double tnext = currentTime_l
 								- (currentTime_l - endTime) * (integrationStep + 1) / FORWARD_INTEGRATION_STEPS;
-						if (tnext == 0.1) {
-							System.out.println();
-						}
 						totalRateNext = getTotalForwardsRate(lineageType.get(e), tnext, idx,
 								ratesNext, nextEvent);
-
-						if (ratesNext[0] == 0.0 && ratesNext[1] == 0.0) {
-							Network test = new Network();
-							test.setRootEdge(root.getParentEdges().get(0));
-							System.out.println(test.getExtendedNewick());
-						}
 
 						I += 0.5 * (totalRateNext + totalRate) * dt;
 
@@ -266,11 +258,11 @@ public class MappedNetwork extends Network {
 								minTime = currentTime_l;
 								minEdge = e;
 								minRates = ratesNext.clone();
-								if (minRates[0] == 0.0 && minRates[1] == 0.0) {
-									Network test = new Network();
-									test.setRootEdge(root.getParentEdges().get(0));
-									System.out.println(test.getExtendedNewick());
-								}
+//								if (minRates[0] == 0.0 && minRates[1] == 0.0) {
+//									Network test = new Network();
+//									test.setRootEdge(root.getParentEdges().get(0));
+//									System.out.println(test.getExtendedNewick());
+//								}
 							}
 							break;
 						}
@@ -298,22 +290,12 @@ public class MappedNetwork extends Network {
 					
 					int newType = 0;
 					if (minRates[0] == 0.0 && minRates[1] == 0.0) {
-						Network test = new Network();
-						test.setRootEdge(root.getParentEdges().get(0));
-						System.out.println(test.getExtendedNewick());
+//						Network test = new Network();
+//						test.setRootEdge(root.getParentEdges().get(0));
+//						System.out.println(test.getExtendedNewick());
+						break;
 					}
-
-					try {
-						Network test = new Network();
-						test.setRootEdge(root.getParentEdges().get(0));
-//						System.out.println("Interval: " + test.getExtendedNewick());
-//						System.out.println("Rates: " + ratesNext);
-						newType = Randomizer.randomChoicePDF(minRates);
-					} catch (Exception e) {
-						Network test = new Network();
-						test.setRootEdge(root.getParentEdges().get(0));
-						System.out.println(test.getExtendedNewick());
-					}
+					newType = Randomizer.randomChoicePDF(minRates);
 
 					if (oldType == newType) {// happens only when rate of change is very close to zero
 						its++;
@@ -360,10 +342,10 @@ public class MappedNetwork extends Network {
 				int idx = lineageType.get(sampleLineage);
 				if (idx != labelIdx) {
 					its++;
-					Network test = new Network();
-					test.setRootEdge(root.getParentEdges().get(0));
-					System.out.println(test.getExtendedNewick());
-					System.out.println("Sample missmatch fired");
+//					Network test = new Network();
+//					test.setRootEdge(root.getParentEdges().get(0));
+//					System.out.println(test.getExtendedNewick());
+//					System.out.println("Sample missmatch fired");
 					continue;
 //					int lin_idx = nextEvent.activeLineages.indexOf(sampleLineage);
 //					for (int i = 0; i < types; i++) {
@@ -391,15 +373,7 @@ public class MappedNetwork extends Network {
 				break;
 			case COALESCENCE:
 
-				NetworkEdge coalLineage = new NetworkEdge();
-
-				try {
-					coalLineage = nextEvent.node.getParentEdges().get(0);
-				} catch (Exception e) {
-					Network test = new Network();
-					test.setRootEdge(root.getParentEdges().get(0));
-					System.out.println(test.getExtendedNewick());
-				}
+				NetworkEdge coalLineage = coalLineage = nextEvent.node.getParentEdges().get(0);
 				int coalType = lineageType.get(coalLineage);
 				NetworkNode coalNode = new NetworkNode();
 				coalNode.setMetaData(nextEvent.node.getMetaData());
@@ -436,7 +410,7 @@ public class MappedNetwork extends Network {
 				else {
 					if (rejection)
 					{
-						System.out.println("R fired");
+//						System.out.println("R fired");
 //						return new Object[] { false, null };
 						its++;
 						continue;
@@ -582,10 +556,6 @@ public class MappedNetwork extends Network {
 			for (int type = 0; type < types; type++)
 				result[type] /= pFrom;
 
-		}
-		if (result[0] == 0 && result[1] == 0) {
-			System.out.println("x1: " + x1);
-			System.out.println("x2: " + x2);
 		}
 
 		return result;
