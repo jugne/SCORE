@@ -39,6 +39,11 @@ public class MappedNetwork extends Network {
 	public Input<Integer> nRecordsInput = new Input<>("nRecords",
 			"maximum number of records to keep per interval for stochastic mapping", 200);
 
+	public Input<Boolean> remapOnLogInput = new Input<>("remapOnLog",
+			"If true, mapping will be regenerated when this object " +
+					"is logged.",
+			true);
+
 	// DEBUG purposes
 	boolean rejection = true;
 
@@ -80,7 +85,7 @@ public class MappedNetwork extends Network {
 	public void initAndValidate() {
 
 		dynamics = dynamicsInput.get();
-		types = dynamics.getDimension();
+		types = dynamics.getNrTypes();
 
 		activeLineages = new ArrayList<>();
 
@@ -601,7 +606,7 @@ public class MappedNetwork extends Network {
 
 			}
 
-			if (sampleState >= dynamics.getDimension()) {
+			if (sampleState >= types) {
 				System.err.println("sample discovered with higher state than dimension");
 			}
 
@@ -865,6 +870,23 @@ public class MappedNetwork extends Network {
 
 	// XXX logging
 
+	private long lastRemapSample = -1;
+
+	/**
+	 * Remap the tree. Intended to be called by loggers requiring a mapped tree.
+	 * Supplying the sample number allows the result of the remapping to be cached
+	 * and used for other loggers.
+	 *
+	 * @param sample sample number at log
+	 */
+	public void remapForLog(long sample) {
+		if (!remapOnLogInput.get() || sample == lastRemapSample)
+			return;
+
+		doStochasticMapping();
+		lastRemapSample = sample;
+	}
+
 	@Override
 	public void init(PrintStream out) {
 		untypedNetwork.init(out);
@@ -872,10 +894,8 @@ public class MappedNetwork extends Network {
 
 	@Override
 	public void log(long sample, PrintStream out) {
-		doStochasticMapping();
+		remapForLog(sample);
 
-		if (sample == 62 || sample == 162)
-			System.out.println();
 		out.print("tree STATE_" + sample + " = ");
 		// Don't sort, this can confuse CalculationNodes relying on the tree
 		// tree.getRoot().sort();

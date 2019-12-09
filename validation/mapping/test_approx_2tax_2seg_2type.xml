@@ -24,20 +24,8 @@
 		 :structuredCoalescentNetwork.math
 		 :structuredCoalescentNetwork.dynamics
 		 :structuredCoalescentNetwork.mapping
+		 :structuredCoalescentNetwork.logger
 		 :beast.mascot.dynamics">
-
-
-
-
-
-    <run spec="MCMC" chainLength="100000000"> 
-
-        <state>
-            <stateNode id="network" spec="SimulatedCoalescentNetwork" nSegments="2" enableSegmentTreeUpdate="false">
-                <populationModel spec="ConstantPopulation">
-                    <popSize spec="RealParameter" value="1.0"/>
-                </populationModel>
-                <reassortmentRate spec="RealParameter" value="0.5"/>
 
 			<traitSet spec="TraitSet" traitname="date-backward" id="traitSet">
                     <taxa spec="TaxonSet" id="taxonSet">
@@ -47,11 +35,12 @@
 
                     t1=0, t2=0.1
                 </traitSet>
-            </stateNode>
-        </state>
 
 
-        <distribution id="coalDensity" spec="SCORE" network="@network">
+
+    <run spec="MCMC" chainLength="10000000"> 
+    
+    <distribution id="coalDensity" spec="SCORE" network="@network">
             <networkIntervals spec="StructuredNetworkIntervals" id="StructuredNetworkIntervals" network="@network"/>
             <dynamics id="constantReassort" spec="structuredCoalescentNetwork.dynamics.ConstantReassortment" dimension="2">
 		<structuredCoalescentDynamics id="structuredCoalescentDynamics" spec="beast.mascot.dynamics.Constant" dimension="2" fromBeauti="false">
@@ -62,14 +51,23 @@
 
             				t1=0, t2=1
         			</typeTrait>
-		</structuredCoalescentDynamics>
-		<typeTrait idref="typeTrait"/>
-		<reassortmentRates spec="RealParameter" id="reassortmentRates" dimension="2" value="0.5"/>
-		</dynamics>
-	</distribution>
+				</structuredCoalescentDynamics>
+				<typeTrait idref="typeTrait"/>
+				<reassortmentRates spec="RealParameter" id="reassortmentRates" dimension="2" value="0.5"/>
+			</dynamics>
+		</distribution>
 
+        <state>
+            <stateNode id="network" spec="SimulatedCoalescentNetwork" nSegments="2" enableSegmentTreeUpdate="false">
+                <populationModel spec="ConstantPopulation">
+                    <popSize spec="RealParameter" value="1.0"/>
+                </populationModel>
+                <reassortmentRate spec="RealParameter" value="0.5"/>
 
-
+			<traitSet idref="traitSet"/>
+            </stateNode>
+            <stateNode spec="MappedNetwork" id="mappedNet" untypedNetwork="@network" dynamics="@constantReassort"/>
+        </state>
 
 
 
@@ -92,7 +90,7 @@
 
 	<operator spec="NetworkExchange" network="@network" isNarrow="false" weight="1.0"/> 
 
-        <logger spec="Logger" logEvery="1" mode="tree" fileName="$(filebase).trees">
+        <logger spec="Logger" logEvery="100" mode="tree" fileName="$(filebase).trees">
             <log idref="network"/>
         </logger>
 
@@ -105,26 +103,14 @@
         </logger>
         
         <logger spec="Logger" logEvery="100" mode="tree" fileName="$(filebase).typed.trees">
-            <log spec="MappedNetwork" untypedNetwork="@network" dynamics="@constantReassort"/>
+            <log idref="mappedNet"/>
         </logger>
         
-        
-<!--         <logger spec="Logger" logEvery="1">
-            <log spec="MappedLogger">
-            <mappedNetwork spec="MappedNetwork" untypedNetwork="@network">
-            	<networkIntervals spec="StructuredNetworkIntervals" network="@network"/>
-            	<dynamics spec="structuredCoalescentNetwork.dynamics.ConstantReassortment" dimension="2">
-			<structuredCoalescentDynamics spec="beast.mascot.dynamics.Constant" dimension="2" fromBeauti="false">
-				<Ne idref="Ne"/>
-				<backwardsMigration idref="backwardsMigration"/>
-        			<typeTrait idref="typeTrait"/>
-		</structuredCoalescentDynamics>
-		<typeTrait idref="typeTrait"/>
-		<reassortmentRates idref="reassortmentRates"/>
-		</dynamics>
-            </mappedNetwork>
+        <logger spec="Logger" logEvery="100" fileName="$(filebase).stats.log">
+            <log spec="TypedNetworkStatsLogger" network="@mappedNet">
             </log>
-        </logger> -->
+        </logger> 
+
     </run>
 
 </beast>

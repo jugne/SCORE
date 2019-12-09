@@ -63,7 +63,7 @@ public class SCORE extends StructuredNetworkDistribution {
 	networkEventList = networkIntervals.getNetworkEventList();
 	nodeStateProbabilities = new DoubleMatrix[network.getInternalNodes().size()];
 	nrSamples = network.getLeafNodes().size();
-	types = dynamics.getDimension();
+		types = dynamics.getNrTypes();
 
 	int intCount = networkEventList.size();
 
@@ -199,7 +199,7 @@ public class SCORE extends StructuredNetworkDistribution {
 		
 	    }
 
-	    if (sampleState >= dynamics.getDimension()) {
+			if (sampleState >= dynamics.getNrTypes()) {
 		System.err.println("sample discovered with higher state than dimension");
 	    }
 

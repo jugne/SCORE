@@ -72,7 +72,7 @@ public class SimulateStructureCoalescentNetwork extends Network {
     private RealParameter coalescentRates;
     private RealParameter Ne;
     private final HashMap<String, Integer> typeNameToIndex = new HashMap<>();
-    private final HashMap<Integer, String> typeIndexToName = new HashMap<>();
+	public final HashMap<Integer, String> typeIndexToName = new HashMap<>();
 
     private ArrayList<String> uniqueTypes;
 
@@ -131,7 +131,7 @@ public class SimulateStructureCoalescentNetwork extends Network {
 	if (reassortmentRates.getDimension() != uniqueTypes.size())
 		reassortmentRates.setDimension(uniqueTypes.size());
 
-	final int migDim = dimensionInput.get() == -1 ? dimensionInput.get() * (dimensionInput.get() - 1)
+		final int migDim = dimensionInput.get() != -1 ? dimensionInput.get() * (dimensionInput.get() - 1)
 		: uniqueTypes.size() * (uniqueTypes.size() - 1);
 
 

@@ -13,34 +13,42 @@ import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
 import structuredCoalescentNetwork.dynamics.ConstantReassortment;
 import structuredCoalescentNetwork.mapping.MappedNetwork;
+import structuredCoalescentNetwork.simulator.SimulateStructureCoalescentNetwork;
 
 /**
  * Logger for generating statistics from type mapped trees.
  */
 public class TypedNetworkStatsLogger extends BEASTObject implements Loggable {
 
-	public Input<MappedNetwork> typedNetworkInput = new Input<>("typedNetwork",
-            "Tree with type changes mapped.",
-            Input.Validate.REQUIRED);
+	public Input<MappedNetwork> typedNetworkInput = new Input<>("network",
+			"Network with type changes mapped.");
 
-	public Input<ConstantReassortment> dynamicsInput = new Input<>("dynamics", "Input of rates",
-			Input.Validate.REQUIRED);
+	public Input<SimulateStructureCoalescentNetwork> simulatedTypedNetworkInput = new Input<>("simulatedNetwork",
+			"Simulated network with type changes mapped.",
+			Input.Validate.XOR, typedNetworkInput);
 
 
     int[][] countMatrix;
 
 	MappedNetwork network;
+	SimulateStructureCoalescentNetwork simNetwork;
 	ConstantReassortment dynamics;
     int nTypes;
     String typeLabel;
-    boolean includeRootEdgeChanges;
+	boolean simulation;
 
     @Override
     public void initAndValidate() {
-		network = typedNetworkInput.get();
-		dynamics = dynamicsInput.get();
-		nTypes = dynamics.getNrTypes();
-
+		if (simulatedTypedNetworkInput.get() != null) {
+			simulation = true;
+			simNetwork = simulatedTypedNetworkInput.get();
+			nTypes = simNetwork.typeIndexToName.keySet().size();
+		} else {
+			simulation = false;
+			network = typedNetworkInput.get();
+			dynamics = network.dynamics;
+			nTypes = dynamics.getNrTypes();
+		}
         countMatrix = new int[nTypes][nTypes];
     }
 
@@ -51,18 +59,24 @@ public class TypedNetworkStatsLogger extends BEASTObject implements Loggable {
 				countMatrix[i][j] = 0;
 			}
 		}
+		List<NetworkNode> migrationNodes;
 
-		List<NetworkNode> migrationNodes = network.getNodes().stream().filter(n -> n.getParentCount() == 1)
+		if (simulation)
+			migrationNodes = simNetwork.getNodes().stream().filter(n -> n.getParentCount() == 1)
 				.filter(n -> n.getChildCount() == 1).sorted(Comparator.comparing(NetworkNode::getHeight))
 				.collect(Collectors.toList());
+		else
+			migrationNodes = network.getNodes().stream().filter(n -> n.getParentCount() == 1)
+					.filter(n -> n.getChildCount() == 1).sorted(Comparator.comparing(NetworkNode::getHeight))
+					.collect(Collectors.toList());
 
 		Collections.reverse(migrationNodes);
 
 		for (NetworkNode m : migrationNodes) {
-			NetworkEdge parentEdge = m.getParentEdges().get(0);
+			NetworkEdge childEdge = m.getChildEdges().get(0);
 
-			int fromType = parentEdge.parentNode.getTypeIndex();
-			int toType = m.getTypeIndex();
+			int fromType = m.getTypeIndex();
+			int toType = childEdge.childNode.getTypeIndex();
 			if (fromType == toType)
 				throw new IllegalArgumentException("Not valid migration node");
 			countMatrix[fromType][toType] += 1;
@@ -73,16 +87,27 @@ public class TypedNetworkStatsLogger extends BEASTObject implements Loggable {
     @Override
     public void init(PrintStream out) {
 
-		String prefix = network.getID() != null
-				? network.getID() + "."
-                : "";
+		String prefix;
+		if (simulation)
+			prefix = simNetwork.getID() != null
+					? simNetwork.getID() + "."
+					: "";
+		else
+			prefix = network.getID() != null
+					? network.getID() + "."
+					: "";
 
         for (int type=0; type<nTypes; type++) {
             for (int typeP=0; typeP<nTypes; typeP++) {
                 if (type == typeP)
                     continue;
 
-				out.print(prefix + "count_" + dynamics.getStringStateValue(type)
+				if (simulation)
+					out.print(prefix + "count_" + simNetwork.typeIndexToName.get(type)
+							+ "_to_" + simNetwork.typeIndexToName.get(typeP) + "\t");
+
+				else
+					out.print(prefix + "count_" + dynamics.getStringStateValue(type)
 						+ "_to_" + dynamics.getStringStateValue(typeP) + "\t");
             }
         }
@@ -90,6 +115,13 @@ public class TypedNetworkStatsLogger extends BEASTObject implements Loggable {
 
     @Override
     public void log(long sample, PrintStream out) {
+
+		if (!simulation) {
+			network = (MappedNetwork) network.getCurrent();
+			network.remapForLog(sample);
+		}
+		else
+			simNetwork = (SimulateStructureCoalescentNetwork) simNetwork.getCurrent();
 
 		countChanges();
 
