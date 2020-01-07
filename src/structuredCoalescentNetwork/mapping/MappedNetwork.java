@@ -233,6 +233,9 @@ public class MappedNetwork extends Network {
 				return new Object[] { false, null };
 			while (true) {
 				double dt = (endTime - currentTime) / FORWARD_INTEGRATION_STEPS;
+				// If the length of interval between events is 0, jump to next event
+				if (dt == 0.0)
+					break;
 				NetworkEdge minEdge = new NetworkEdge();
 				double minTime = Double.NEGATIVE_INFINITY;
 				double[] minRates = new double[types];
@@ -308,6 +311,7 @@ public class MappedNetwork extends Network {
 						test.setRootEdge(root.getParentEdges().get(0));
 						System.out.println(test.getExtendedNewick());
 						System.out.println("Type matched fired");
+						System.exit(0);
 						continue;
 					}
 
@@ -346,12 +350,13 @@ public class MappedNetwork extends Network {
 				int labelIdx = dynamics.getValue(label);
 				int idx = lineageType.get(sampleLineage);
 				if (idx != labelIdx) {
-					its++;
+					return new Object[] { false, null };
+//					its++;
 //					Network test = new Network();
 //					test.setRootEdge(root.getParentEdges().get(0));
 //					System.out.println(test.getExtendedNewick());
 //					System.out.println("Sample missmatch fired");
-					continue;
+//					continue;
 //					int lin_idx = nextEvent.activeLineages.indexOf(sampleLineage);
 //					for (int i = 0; i < types; i++) {
 //						System.out.println("Taxon: " + nextEvent.node.getTaxonLabel());
@@ -417,8 +422,7 @@ public class MappedNetwork extends Network {
 					{
 //						System.out.println("R fired");
 //						return new Object[] { false, null };
-						its++;
-						continue;
+						return new Object[] { false, null };
 					}
 					else {
 						double[] parentProbs = new double[types];
@@ -486,6 +490,8 @@ public class MappedNetwork extends Network {
 		double time2 = 0;
 		boolean interpolate = true;
 		int x2 = bigger(nextEvent.intermediateTimeStored, time);
+		if (nextEvent.intermediateTimeStored.length == 0)
+			System.out.println(this.untypedNetwork.getExtendedNewick());
 		if (x2 > nextEvent.intermediateTimeStored.length - 1) {
 			x2 = nextEvent.intermediateTimeStored.length - 1;
 			interpolate = false;
@@ -523,8 +529,12 @@ public class MappedNetwork extends Network {
 				pTo = (nextEvent.p_stored[x1][lineageIdx * types + type] * (time - time1)
 						+ nextEvent.p_stored[x2][lineageIdx * types + type] * (time2 - time))
 						/ (time2 - time1);
-			else
+			else {
+				if (x2 == -1)
+					System.out.println(x2);
+
 				pTo = nextEvent.p_stored[x2][lineageIdx * types + type];
+			}
 
 			result[type] = migMatrix[type * n + fromType] * pTo; // p[lineageIdx * score.types + type];
 		}

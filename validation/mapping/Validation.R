@@ -16,13 +16,13 @@ doCompare <- function(dsFileName, mcmcFileName) {
 
     # Remove 10% for burnin
     N <- dim(df)[1]
-    df <- df[-(1:ceiling(0.1*N)),]
+    df <- df[-(1:ceiling(0.3*N)),]
 
     # Tree age/length plot
     pdf(gsub(".log", ".pdf", mcmcFileName), width = 10, height = 10) 
     
 
-    par(mfcol=c(2,1))
+    par(mfcol=c(3,1))
 
     maxLength <- max(quantile(df$network.totalLength, probs=0.99),
                      quantile(dfs$network.totalLength, probs=0.99),
@@ -67,42 +67,40 @@ doCompare <- function(dsFileName, mcmcFileName) {
 
   # Kolmogorov-Smirnov test for network statistics
 
-  # H <- c()
-  # L <- c()
-  # R <- c()
-  # l <- length(df$network.height)
-  # 
-  # # For comparison to run faster, calculations need to be done at fewer ponts.
-  # # It can be achieved by taking a fraction smaller than 0.01 below.
-  # nPoints <- round(l*0.01)
-  # by <- as.integer(l/nPoints)
-  # 
-  # for (i in seq(l, 0, by=-by)){
-  #     H <- append(H, log(ks.test(df$network.height[1:(l-i)], dfs$network.height)$statistic))
-  #     L <- append(L, log(ks.test(df$network.totalLength[1:(l-i)], dfs$network.totalLength)$statistic))
-  #     R <- append(L, log(ks.test(df$network.reassortmentNodeCount[1:(l-i)], dfs$network.reassortmentNodeCount)$statistic))
-  # }
-  # plot(seq(1, length(L)), L, type='l', col='red',  lwd=2,
-  #      xlab=paste("Number of logged iterations (minus burnin) / ", by),
-  #      ylab="Kolmogorov-Smirnov stat. (log scale)", 
-  #      main="Kolmogorov-Smirnov test for network statistics",
-  #      ylim=c(min(L, H, R), max(L, H, R)))
-  # 
-  # lines(seq(1, length(H)), H, col='blue', lwd=2, lty=2)
-  # lines(seq(1, length(R)), R, lwd=2, lty=3)
-  # legend("topright", inset=0.05,
-  #        c("Network length", "Network height", "Reassortment count"),
-  #        lty=c(2,2, 3), lwd=2, col=c("red","blue","black"))
+  H <- c()
+  L <- c()
+  R <- c()
+  l <- length(df$network.height)
+
+  # For comparison to run faster, calculations need to be done at fewer ponts.
+  # It can be achieved by taking a fraction smaller than 0.01 below.
+  nPoints <- round(l*0.0001)
+  by <- as.integer(l/nPoints)
+
+  for (i in seq(l, 0, by=-by)){
+      H <- append(H, log(ks.test(df$network.height[1:(l-i)], dfs$network.height)$statistic))
+      L <- append(L, log(ks.test(df$network.totalLength[1:(l-i)], dfs$network.totalLength)$statistic))
+      R <- append(L, log(ks.test(df$network.reassortmentNodeCount[1:(l-i)], dfs$network.reassortmentNodeCount)$statistic))
+  }
+  plot(seq(1, length(L)), L, type='l', col='red',  lwd=2,
+       xlab=paste("Number of logged iterations (minus burnin) / ", by),
+       ylab="Kolmogorov-Smirnov stat. (log scale)",
+       main="Kolmogorov-Smirnov test for network statistics",
+       ylim=c(min(L, H, R), max(L, H, R)))
+
+  lines(seq(1, length(H)), H, col='blue', lwd=2, lty=2)
+  lines(seq(1, length(R)), R, lwd=2, lty=3)
+  legend("topright", inset=0.05,
+         c("Network length", "Network height", "Reassortment count"),
+         lty=c(2,2, 3), lwd=2, col=c("red","blue","black"))
   dev.off()
 }
 
-doCompare("simulate_3tax_3seg_3type.log",
-          "test_approx_3tax_3seg_3type.log")
+doCompare("/Users/jugne/Documents/Source/SCORE/validation/mapping/3tax_3seg_3types/high_migration/simulation/simulate_3tax_3seg_3type.log",
+          "/Users/jugne/Documents/Source/SCORE/validation/mapping/3tax_3seg_3types/high_migration/inference/test_approx_3tax_3seg_3type.log")
 
-doCompare("simulate_2tax_2seg_2type_diff_rates.log",
-          "test_approx_2tax_2seg_2type_diff_rates.log")
+doCompare("/Users/jugne/Documents/Source/SCORE/validation/mapping/3tax_3seg_3types/medium_mig/simulation/simulate_3tax_3seg_3type.log",
+          "/Users/jugne/Documents/Source/SCORE/validation/mapping/3tax_3seg_3types/medium_mig/inference/test_approx_3tax_3seg_3type.log")
 
-doCompare("simulate_2tax_2seg_2type.log",
-          "test_approx_2tax_2seg_2type.log")
-
-
+doCompare("/Users/jugne/Documents/Source/SCORE/validation/mapping/3tax_3seg_3types/slow_mig/simulation/simulate_3tax_3seg_3type.log",
+          "/Users/jugne/Documents/Source/SCORE/validation/mapping/3tax_3seg_3types/slow_mig/inference/test_approx_3tax_3seg_3type.log")
