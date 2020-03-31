@@ -63,9 +63,18 @@ import coalre.networkannotator.ReassortmentLogReader;
 public class ReassortmentAndMigration extends ReassortmentAnnotator {
 
     
-    List<NetworkNode> allTrunkNodes;
-    List<Double> leaveDistance;
-    List<Boolean> isTrunkNode;
+	List<NetworkNode> reaAfterList;
+	List<NetworkNode> reaBeforeList;
+	List<NetworkNode> migrationForwardList;
+
+	List<NetworkNode> migrationBackwardList;
+	List<NetworkNode> migrationUnasignedList;
+
+	List<Double> reaToTipLengths;
+
+	List<Double> migToTipLengths;
+	Double lengthForward;
+	Double lengthBackward;
 
     private static class NetworkAnnotatorOptions {
         File inFile;
@@ -82,7 +91,7 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
                     "Input file: " + inFile + "\n" +
                     "Output file: " + outFile + "\n" +
                     "Burn-in percentage: " + burninPercentage + "%\n" +
-					"Minimal distance before/after reassortment event" + minMigrationDistance;
+					"Minimal distance before/after reassortment event " + minMigrationDistance;
         }
     }
 
@@ -106,8 +115,11 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
         
 		// compute number of migration within minMigrationDistance to reassotment
         try (PrintStream ps = new PrintStream(options.outFile)) {
-			ps.print("n_reassortment \t" + "n_migration \t" + "n_forward \t"
-					+ "n_backward");
+			ps.print("n_reassortment \t" + "n_migration \t" + "n_after \t"
+					+ "n_before \t" + "length_after \t" + "sum_rate_after \t" + "length_before \t"
+					+ "sum_rate_before \t" + "network_length \t"
+					+ "min_rea_tip_distance \t" + "median_rea_tip_distance \t" + "min_mig_tip_distance \t"
+					+ "median_mig_tip_distance");
 			ps.print("\n");
 			for (Network network : logReader) {
 	        	pruneNetwork(network, options.removeSegments);
@@ -118,25 +130,6 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 	        ps.close();
         }
         System.out.println("\nDone!");
-    }
-    
-
-    
-    private void getAllAncestralEdges(NetworkNode node){
-    	if (allTrunkNodes.indexOf(node)!=-1)
-    		return;
-    	
-    	allTrunkNodes.add(node);
-		
-    	
-    	for (NetworkEdge parentEdge : node.getParentEdges()){
-    		if (parentEdge.isRootEdge()){
-    			return;
-    		}else{
-    			getAllAncestralEdges(parentEdge.parentNode);   			
-    		}
-			
-		}
     }
         
 
@@ -151,23 +144,187 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 				.filter(n -> isMigrationNode(n))
 				.collect(Collectors.toList());
 		
-		int migrationForward = 0;
-		int migrationBackward = 0;
-		List<NetworkNode> migrationForwardList = new ArrayList<>();
-		List<NetworkNode> migrationBackwardList = new ArrayList<>();
+		// clear the lists and sums
+		migrationForwardList = new ArrayList<>();
+		migrationBackwardList = new ArrayList<>();
+		migrationUnasignedList = new ArrayList<>();
+		reaToTipLengths = new ArrayList<>();
+		migToTipLengths = new ArrayList<>();
+		reaAfterList = new ArrayList();
+		reaBeforeList = new ArrayList();
+		lengthBackward = 0.0;
+		lengthForward = 0.0;
+		double sumRateForward = 0.0;
+		double sumRateBackward = 0.0;
+		
+
+//		for (NetworkNode node : reaNodes) {
+//			migrationForwardList.addAll(getMigrationNodesForward(node, 0.0, minMigrationDistance));
+//			migrationBackwardList.addAll(getMigrationNodesBackward(node, 0.0, minMigrationDistance));
+//		}
+//		migrationForwardList = migrationForwardList.stream().distinct().collect(Collectors.toList());
+//		migrationBackwardList = migrationBackwardList.stream().distinct().collect(Collectors.toList());
+//		
+//		ps.print(reaNodes.size() + "\t" + migNodes.size() + "\t" + migrationForwardList.size() + "\t"
+//				+ migrationBackwardList.size());
+
+		for (NetworkNode node : migNodes) {
+			NetworkNode reaBefore = closestReaBeforeMig(node, 0.0, minMigrationDistance);
+			NetworkNode reaAfter = closestReaAfterMig(node, 0.0, minMigrationDistance);
+			double heigthDiffBefore = Double.POSITIVE_INFINITY;
+			double heigthDiffAfter = Double.POSITIVE_INFINITY;
+
+			migToTipLengths.add(lengthToTip(node));
+			double middlePoint = Double.POSITIVE_INFINITY;
+
+			if (reaBefore != null)
+				heigthDiffBefore = reaBefore.getHeight() - node.getHeight();
+			if (reaAfter != null)
+				heigthDiffAfter = node.getHeight() - reaAfter.getHeight();
+			if (reaBefore != null && reaAfter != null)
+				middlePoint = (reaBefore.getHeight() - reaAfter.getHeight()) / 2.0;
+			
+			if (heigthDiffBefore == Double.POSITIVE_INFINITY && heigthDiffAfter == Double.POSITIVE_INFINITY) {
+				continue;
+			}
+			else if (heigthDiffBefore < heigthDiffAfter) {
+				migrationForwardList.add(node);
+
+//				double middlePoint = Double.POSITIVE_INFINITY;
+//				NetworkNode nextRea = findDownStreamReas(reaBefore);
+//				if (nextRea != null) {
+//					middlePoint = (reaBefore.getHeight() - nextRea.getHeight()) / 2.0;
+//				}
+//				middlePoint = (reaBefore.getHeight() - reaAfter.getHeight()) /2.0;
+
+				double minDist = middlePoint < minMigrationDistance ? middlePoint : minMigrationDistance;
+				double l1 = lengthAfterRea(reaBefore, 0.0, minDist);
+				if (!reaBeforeList.contains(reaBefore)) {
+					reaBeforeList.add(reaBefore);
+					lengthForward += l1;
+				}
+				sumRateForward += 1 / l1;
+
+			} else {
+				migrationBackwardList.add(node);
+
+//				double middlePoint = Double.POSITIVE_INFINITY;
+//				NetworkNode nextRea = findUpStreamReas(reaAfter);
+//				if (nextRea != null) {
+//					middlePoint = (nextRea.getHeight() - reaAfter.getHeight()) / 2.0;
+//				}
+
+				double minDist = middlePoint < minMigrationDistance ? middlePoint : minMigrationDistance;
+
+				double l2 = lengthBeforeRea(reaAfter, 0.0, minDist);
+				if (!reaAfterList.contains(reaAfter)) {
+					reaAfterList.add(reaAfter);
+					lengthBackward += l2;
+				}
+				sumRateBackward += 1 / l2;
+			}
+		}
 		
 		for (NetworkNode node : reaNodes) {
-			migrationForwardList.addAll(getMigrationNodesForward(node, 0.0, minMigrationDistance));
-			migrationBackwardList.addAll(getMigrationNodesBackward(node, 0.0, minMigrationDistance));
-
-//			migrationForward += getMigrationNodesForward(node, 0.0, minMigrationDistance).size();
-//			migrationBackward += getMigrationNodesBackward(node, 0.0, minMigrationDistance).size();
+			reaToTipLengths.add(lengthToTip(node));
 		}
-		migrationForwardList = migrationForwardList.stream().distinct().collect(Collectors.toList());
-		migrationBackwardList = migrationBackwardList.stream().distinct().collect(Collectors.toList());
-		
+
+		// get the length of the network
+		List<NetworkEdge> allEdges = network.getEdges().stream()
+				.filter(e -> !e.isRootEdge())
+				.collect(Collectors.toList());
+
+		double fullLength = 0.0;
+		for (NetworkEdge edge : allEdges)
+			fullLength += edge.getLength();
+
 		ps.print(reaNodes.size() + "\t" + migNodes.size() + "\t" + migrationForwardList.size() + "\t"
-				+ migrationBackwardList.size());
+				+ migrationBackwardList.size() + "\t" + lengthForward + "\t" + "\t"
+				+ sumRateForward + "\t" + lengthBackward + "\t" + "\t" + sumRateBackward + "\t" +
+				+ fullLength + "\t" + findMin(reaToTipLengths) + "\t" + findMedian(reaToTipLengths) + "\t"
+				+ findMin(migToTipLengths) + "\t" + findMedian(migToTipLengths));
+	}
+
+	private NetworkNode findDownStreamReas(NetworkNode node) {
+		NetworkNode left = null;
+		NetworkNode right = null;
+		
+		if (!node.isLeaf()) {
+			left = node.getChildEdges().get(0).childNode;
+			if (!left.isReassortment()) {
+				left = findDownStreamReas(left);
+			}
+
+			// check if right sibling exists
+			if (node.getChildCount() > 1) {
+				right = node.getChildEdges().get(1).childNode;
+				if (!right.isReassortment()) {
+					right = findDownStreamReas(right);
+				}
+			}
+			if (right == null) {
+				if (left == null)
+					return null;
+				else
+					return left;
+			} else if (left == null)
+				return right;
+			else if (left.getHeight() > right.getHeight())
+				return left;
+			else
+				return right;
+		}
+		return null;
+	}
+
+	private NetworkNode findUpStreamReas(NetworkNode node) {
+		NetworkNode left = null;
+		NetworkNode right = null;
+
+		if (!node.getParentEdges().get(0).isRootEdge()) {
+			left = node.getParentEdges().get(0).parentNode;
+			if (!left.isReassortment()) {
+				left = findUpStreamReas(left);
+			}
+
+			// check if right sibling exists
+			if (node.getParentCount() > 1) {
+				right = node.getParentEdges().get(0).parentNode;
+				if (!right.isReassortment()) {
+					right = findUpStreamReas(right);
+				}
+			}
+			if (right == null) {
+				if (left == null)
+					return null;
+				else
+					return left;
+			} else if (left == null)
+				return right;
+			else if (left.getHeight() < right.getHeight())
+				return left;
+			else
+				return right;
+		}
+		return null;
+	}
+
+	private double findMedian(List<Double> list) {
+		int size = list.size();
+		list = list.stream().sorted().collect(Collectors.toList());
+
+		if ((size - 1) % 2 == 0)
+			return (list.get((size - 1) / 2) + list.get((size - 1) / 2 - 1)) / 2.0;
+
+		return list.get((size - 1) / 2);
+
+	}
+
+	private double findMin(List<Double> list) {
+		list = list.stream().sorted().collect(Collectors.toList());
+
+		return list.get(0);
+
 	}
 
 	private List<NetworkNode> getMigrationNodesForward(NetworkNode node, double offset, double threshold) {
@@ -177,7 +334,8 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 			if (node.getHeight() - left.getHeight() < threshold - offset) {
 			if (isMigrationNode(left))
 				migrationForward.add(left);
-		migrationForward.addAll(getMigrationNodesForward(left, node.getHeight() - left.getHeight(), threshold));
+				migrationForward.addAll(
+						getMigrationNodesForward(left, node.getHeight() - left.getHeight() + offset, threshold));
 			}
 		
 		
@@ -187,7 +345,8 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 				if (node.getHeight() - right.getHeight() < threshold - offset) {
 				if (isMigrationNode(right))
 					migrationForward.add(right);
-				migrationForward.addAll(getMigrationNodesForward(right, node.getHeight() - right.getHeight(), threshold));
+					migrationForward.addAll(
+							getMigrationNodesForward(right, node.getHeight() - right.getHeight() + offset, threshold));
 				}
 
 		}
@@ -200,6 +359,167 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 					.collect(Collectors.toList());
 		} else {
 			return migrationForward;
+		}
+	}
+
+	private double lengthToTip(NetworkNode node) {
+		double leftLength = 0.0;
+		double rightLength = 0.0;
+
+		if (!node.isLeaf()) {
+			NetworkNode left = node.getChildEdges().get(0).childNode;
+			leftLength += node.getHeight() - left.getHeight();
+			if (!left.isLeaf())
+				leftLength += lengthToTip(left);
+
+			// check if right sibling exists
+			if (node.getChildCount() > 1) {
+				NetworkNode right = node.getChildEdges().get(1).childNode;
+				rightLength += node.getHeight() - right.getHeight();
+				if (!right.isLeaf())
+					leftLength += lengthToTip(right);
+			}
+		}
+		return leftLength + rightLength;
+	}
+
+	private double lengthAfterRea(NetworkNode reassortment, double offset, double threshold) {
+		double leftLength = 0.0;
+		double rightLength = 0.0;
+
+		if (!reassortment.isLeaf()) {
+			NetworkNode left = reassortment.getChildEdges().get(0).childNode;
+			if (reassortment.getHeight() - left.getHeight() < threshold - offset) {
+				leftLength += reassortment.getHeight() - left.getHeight();
+				if (!left.isReassortment())
+					leftLength += lengthAfterRea(left, reassortment.getHeight() - left.getHeight() + offset, threshold);
+			} else
+				leftLength += threshold - offset;
+
+			// check if right sibling exists
+			if (reassortment.getChildCount() > 1) {
+				NetworkNode right = reassortment.getChildEdges().get(1).childNode;
+				if (reassortment.getHeight() - right.getHeight() < threshold - offset) {
+					rightLength += reassortment.getHeight() - right.getHeight();
+					if (!right.isReassortment())
+						rightLength += lengthAfterRea(right, reassortment.getHeight() - right.getHeight() + offset,
+							threshold);
+				} else
+					rightLength += threshold - offset;
+			}
+		}
+		return leftLength + rightLength;
+	}
+
+	private double lengthBeforeRea(NetworkNode reassortment, double offset, double threshold) {
+		double leftLength = 0.0;
+		double rightLength = 0.0;
+
+		if (!reassortment.getParentEdges().get(0).isRootEdge()) {
+			NetworkNode left = reassortment.getParentEdges().get(0).parentNode;
+			if (left.getHeight() - reassortment.getHeight() < threshold - offset) {
+				leftLength += left.getHeight() - reassortment.getHeight();
+				if (!left.isReassortment())
+					leftLength += lengthBeforeRea(left, left.getHeight() - reassortment.getHeight() + offset,
+							threshold);
+			} else
+				leftLength += threshold - offset;
+
+			// check if right sibling exists
+			if (reassortment.getParentCount() > 1) {
+				NetworkNode right = reassortment.getParentEdges().get(1).parentNode;
+				if (right.getHeight() - reassortment.getHeight() < threshold - offset) {
+					rightLength += right.getHeight() - reassortment.getHeight();
+					if (!right.isReassortment())
+						rightLength += lengthBeforeRea(right, right.getHeight() - reassortment.getHeight() + offset,
+							threshold);
+				} else
+					rightLength += threshold - offset;
+			}
+		}
+		return leftLength + rightLength;
+	}
+
+	private NetworkNode closestReaBeforeMig(NetworkNode node, double offset, double threshold) {
+		List<NetworkNode> reaBackward = new ArrayList<>();
+		if (!node.getParentEdges().get(0).isRootEdge()) {
+			NetworkNode left = node.getParentEdges().get(0).parentNode;
+			if (left.getHeight() - node.getHeight() < threshold - offset) {
+				if (left.isReassortment())
+					reaBackward.add(left);
+				else
+					reaBackward.add(closestReaBeforeMig(left, left.getHeight() - node.getHeight() + offset, threshold));
+			}
+
+			// check if right parent exists
+			if (node.getParentCount() > 1) {
+				NetworkNode right = node.getParentEdges().get(1).parentNode;
+				if (right.getHeight() - node.getHeight() < threshold - offset) {
+					if (right.isReassortment())
+						reaBackward.add(right);
+					else
+						reaBackward.add(
+								closestReaBeforeMig(right, right.getHeight() - node.getHeight() + offset, threshold));
+				}
+
+			}
+
+			// no double counting
+			if (!reaBackward.isEmpty())
+				return reaBackward.stream()
+						.sorted(Comparator.comparingDouble(n -> (n.getHeight() - node.getHeight() + offset))).distinct()
+						.collect(Collectors.toList()).get(0);
+			else
+				return null;
+
+		} else {
+			return null;
+		}
+	}
+
+	private NetworkNode closestReaAfterMig(NetworkNode node, double offset, double threshold) {
+		List<NetworkNode> reaForward = new ArrayList<>();
+		if (!node.isLeaf()) {
+			NetworkNode left = node.getChildEdges().get(0).childNode;
+			if (node.getHeight() - left.getHeight() < threshold - offset) {
+				if (left.isReassortment())
+					reaForward.add(left);
+				else {
+					NetworkNode temp = closestReaAfterMig(left, node.getHeight() - left.getHeight() + offset,
+							threshold);
+					if (temp != null)
+						reaForward.add(temp);
+				}
+//					reaForward.add(
+//							closestReaAfterMig(left, node.getHeight() - left.getHeight() + offset, threshold));
+			}
+
+			// check if right sibling exists
+			if (node.getChildCount() > 1) {
+				NetworkNode right = node.getChildEdges().get(1).childNode;
+				if (node.getHeight() - right.getHeight() < threshold - offset) {
+					if (right.isReassortment())
+						reaForward.add(right);
+					else {
+						NetworkNode temp = closestReaAfterMig(right, node.getHeight() - right.getHeight() + offset,
+								threshold);
+						if (temp != null)
+							reaForward.add(temp);
+					}
+//						reaForward.add(
+//								closestReaAfterMig(right, node.getHeight() - right.getHeight() + offset, threshold));
+				}
+
+			}
+			// no double counting
+			if (!reaForward.isEmpty())
+				return reaForward.stream()
+						.sorted(Comparator.comparingDouble(n -> (node.getHeight() - n.getHeight() + offset))).distinct()
+						.collect(Collectors.toList()).get(0);
+			else
+				return null;
+		} else {
+			return null;
 		}
 	}
 
@@ -247,28 +567,6 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 			return false;
 	}
 
-    private void getAllAncestralEdgesLeaveDist(NetworkNode node, double dist, double threshold){
-    	int index = allTrunkNodes.indexOf(node);
-    	if (index==-1){
-    		allTrunkNodes.add(node);
-    		leaveDistance.add(dist);
-    	}else{
-    		if (leaveDistance.get(index)>dist)
-    			return;
-    		else if (leaveDistance.get(index) > threshold)
-    			return;
-			else
-    			leaveDistance.set(index, dist);
-    	}
-    	
-    	for (NetworkEdge parentEdge : node.getParentEdges()){
-    		if (parentEdge.isRootEdge()){
-    			return;
-    		}else{
-    			getAllAncestralEdgesLeaveDist(parentEdge.parentNode, dist+parentEdge.getLength(), threshold);   			
-    		}			
-		}
-    }
         
     /**
      * Use a GUI to retrieve ACGAnnotator options.
@@ -311,14 +609,6 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
         burninSlider.setPaintLabels(true);
         burninSlider.setSnapToTicks(true);
 
-
-//        JSlider thresholdSlider = new JSlider(JSlider.HORIZONTAL,
-//                0, 100, (int)(options.convSupportThresh));
-//        thresholdSlider.setMajorTickSpacing(50);
-//        thresholdSlider.setMinorTickSpacing(10);
-//        thresholdSlider.setPaintTicks(true);
-//        thresholdSlider.setPaintLabels(true);
-//        thresholdSlider.setSnapToTicks(true);
 
         Container cp = dialog.getContentPane();
         BoxLayout boxLayout = new BoxLayout(cp, BoxLayout.PAGE_AXIS);
