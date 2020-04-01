@@ -26,12 +26,9 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.swing.BoxLayout;
@@ -55,7 +52,6 @@ import javax.swing.border.EtchedBorder;
 
 import beast.core.util.Log;
 import coalre.network.Network;
-import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
 import coalre.networkannotator.ReassortmentLogReader;
 
@@ -63,25 +59,15 @@ import coalre.networkannotator.ReassortmentLogReader;
  * A rewrite of TreeAnnotator that outputs how often reassortment events happen on trunk branches vs. other branches 
  * @author Nicola Felix Müller <nicola.felix.mueller@gmail.com>
  */
-public class ReassortmentAndMigration extends ReassortmentAnnotator {
+public class MigrationAnalysis extends ReassortmentAnnotator {
 
-    
-	List<NetworkNode> reaAfterList;
-	List<NetworkNode> reaBeforeList;
-	List<NetworkNode> migrationForwardList;
 
-	List<NetworkNode> migrationBackwardList;
-	List<NetworkNode> migrationUnasignedList;
-
-	List<Double> reaToTipLengths;
 
 	List<Double> migToTipLengths;
-	Double lengthForward;
-	Double lengthBackward;
 
     private static class NetworkAnnotatorOptions {
         File inFile;
-		File outFile = new File("reassortment_and_migration.txt");
+		File outFile = new File("migration_tip_distance.txt");
         double burninPercentage = 10.0;
 
 		double minMigrationDistance;
@@ -98,7 +84,7 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
         }
     }
 
-	public ReassortmentAndMigration(NetworkAnnotatorOptions options) throws Exception {
+	public MigrationAnalysis(NetworkAnnotatorOptions options) throws Exception {
 
         // Display options:
         System.out.println(options + "\n");
@@ -119,9 +105,8 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 		// compute number of migration within minMigrationDistance to reassotment
         try (PrintStream ps = new PrintStream(options.outFile)) {
 
-			ps.print("n_reassortment" + "\t" + "n_migration" + "\t" + "n_reassortment_window" + "\t"
-					+ "network_length" + "\t" + "network_length_window");// + "\t" + "mig_tip_lengths" + "\t"
-//					+ "mig_tip_heights");
+			ps.print("n_migration" + "\t" + "mig_tip_lengths" + "\t"
+					+ "mig_tip_heights");
 			ps.print("\n");
 			for (Network network : logReader) {
 	        	pruneNetwork(network, options.removeSegments);
@@ -138,10 +123,6 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 	private void computeReassortmentAndMigration(Network network, PrintStream ps, double minMigrationDistance)
 			throws Exception {
 		// get all reassortment nodes of the network
-
-		List<NetworkNode> reaNodes = network.getNodes().stream()
-				.filter(n -> n.isReassortment())
-				.collect(Collectors.toList());
 		
 		List<NetworkNode> migNodes = network.getNodes().stream()
 				.filter(n -> isMigrationNode(n))
@@ -151,167 +132,21 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 
 
 		// clear the lists and sums
-		migrationForwardList = new ArrayList<>();
-		migrationBackwardList = new ArrayList<>();
-		migrationUnasignedList = new ArrayList<>();
-		reaToTipLengths = new ArrayList<>();
 		migToTipLengths = new ArrayList<>();
-		reaAfterList = new ArrayList<NetworkNode>();
-		reaBeforeList = new ArrayList<NetworkNode>();
-		lengthBackward = 0.0;
-		lengthForward = 0.0;
 		List<Double> migToTipHeight = new ArrayList<Double>();
-		List<NetworkNode> reaCounts = new ArrayList<NetworkNode>();
-		Double length = 0.0;
-		HashMap<NetworkEdge, Double> lineageMap = new HashMap<NetworkEdge, Double>();
+
 
 
 		for (NetworkNode node : migNodes) {
-			reaCounts.addAll(reaNodesBefore(node, 0.0, minMigrationDistance, length, lineageMap));
 			migToTipLengths.add(lengthToTip(node));
 			migToTipHeight.add(node.getHeight() - closesDescendantTip(node).getHeight());
 		}
-		
-		Set<NetworkNode> reaNodesSet = new HashSet<NetworkNode>();
-		for (NetworkEdge edge : lineageMap.keySet()) {
-			if (edge.childNode.isReassortment())
-				reaNodesSet.add(edge.childNode);
-		}
-		
-		double totalLengthWindow = 0.0;
-		for (double l : lineageMap.values())
-			totalLengthWindow += l;
 
-		// get the length of the network
-		List<NetworkEdge> allEdges = network.getEdges().stream()
-				.filter(e -> !e.isRootEdge())
-				.collect(Collectors.toList());
 
-		double fullLength = 0.0;
-		for (NetworkEdge edge : allEdges)
-			fullLength += edge.getLength();
-
-		ps.print(reaNodes.size() + "\t" + migNodes.size() + "\t" + reaNodesSet.size() + "\t"
-				+ fullLength + "\t" + totalLengthWindow);// + "\t" + Arrays.toString(migToTipLengths.toArray()) + "\t"
-//				+ Arrays.toString(migToTipHeight.toArray()));
+		ps.print(migNodes.size() + "\t" + Arrays.toString(migToTipLengths.toArray()).replaceAll("\\s+", "") + "\t"
+				+ Arrays.toString(migToTipHeight.toArray()).replaceAll("\\s+", ""));
 	}
 
-	private NetworkNode findDownStreamReas(NetworkNode node) {
-		NetworkNode left = null;
-		NetworkNode right = null;
-		
-		if (!node.isLeaf()) {
-			left = node.getChildEdges().get(0).childNode;
-			if (!left.isReassortment()) {
-				left = findDownStreamReas(left);
-			}
-
-			// check if right sibling exists
-			if (node.getChildCount() > 1) {
-				right = node.getChildEdges().get(1).childNode;
-				if (!right.isReassortment()) {
-					right = findDownStreamReas(right);
-				}
-			}
-			if (right == null) {
-				if (left == null)
-					return null;
-				else
-					return left;
-			} else if (left == null)
-				return right;
-			else if (left.getHeight() > right.getHeight())
-				return left;
-			else
-				return right;
-		}
-		return null;
-	}
-
-	private NetworkNode findUpStreamReas(NetworkNode node) {
-		NetworkNode left = null;
-		NetworkNode right = null;
-
-		if (!node.getParentEdges().get(0).isRootEdge()) {
-			left = node.getParentEdges().get(0).parentNode;
-			if (!left.isReassortment()) {
-				left = findUpStreamReas(left);
-			}
-
-			// check if right sibling exists
-			if (node.getParentCount() > 1) {
-				right = node.getParentEdges().get(0).parentNode;
-				if (!right.isReassortment()) {
-					right = findUpStreamReas(right);
-				}
-			}
-			if (right == null) {
-				if (left == null)
-					return null;
-				else
-					return left;
-			} else if (left == null)
-				return right;
-			else if (left.getHeight() < right.getHeight())
-				return left;
-			else
-				return right;
-		}
-		return null;
-	}
-
-	private double findMedian(List<Double> list) {
-		int size = list.size();
-		list = list.stream().sorted().collect(Collectors.toList());
-
-		if ((size - 1) % 2 == 0)
-			return (list.get((size - 1) / 2) + list.get((size - 1) / 2 - 1)) / 2.0;
-
-		return list.get((size - 1) / 2);
-
-	}
-
-	private double findMin(List<Double> list) {
-		list = list.stream().sorted().collect(Collectors.toList());
-
-		return list.get(0);
-
-	}
-
-	private List<NetworkNode> getMigrationNodesForward(NetworkNode node, double offset, double threshold) {
-		List<NetworkNode> migrationForward = new ArrayList<>();
-		if (!node.isLeaf()) {
-		NetworkNode left = node.getChildEdges().get(0).childNode;
-			if (node.getHeight() - left.getHeight() < threshold - offset) {
-			if (isMigrationNode(left))
-				migrationForward.add(left);
-				migrationForward.addAll(
-						getMigrationNodesForward(left, node.getHeight() - left.getHeight() + offset, threshold));
-			}
-		
-		
-		// check if right sibling exists
-		if (node.getChildCount() > 1) {
-			NetworkNode right = node.getChildEdges().get(1).childNode;
-				if (node.getHeight() - right.getHeight() < threshold - offset) {
-				if (isMigrationNode(right))
-					migrationForward.add(right);
-					migrationForward.addAll(
-							getMigrationNodesForward(right, node.getHeight() - right.getHeight() + offset, threshold));
-				}
-
-		}
-		
-			// no double counting
-			LinkedHashSet<NetworkNode> hashSet = new LinkedHashSet<>(migrationForward);
-			migrationForward = new ArrayList<>(hashSet);
-			return migrationForward.stream()
-					.sorted(Comparator.comparingDouble(n -> (node.getHeight() - n.getHeight() + offset))).distinct()
-					.collect(Collectors.toList());
-		} else {
-			return migrationForward;
-		}
-	}
 
 	private double lengthToTip(NetworkNode node) {
 		double leftLength = 0.0;
@@ -355,278 +190,6 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 		return null;
 	}
 
-	private double lengthAfterRea(NetworkNode reassortment, double offset, double threshold) {
-		double leftLength = 0.0;
-		double rightLength = 0.0;
-
-		if (!reassortment.isLeaf()) {
-			NetworkNode left = reassortment.getChildEdges().get(0).childNode;
-			if (reassortment.getHeight() - left.getHeight() < threshold - offset) {
-				leftLength += reassortment.getHeight() - left.getHeight();
-				if (!left.isReassortment())
-					leftLength += lengthAfterRea(left, reassortment.getHeight() - left.getHeight() + offset, threshold);
-			} else
-				leftLength += threshold - offset;
-
-			// check if right sibling exists
-			if (reassortment.getChildCount() > 1) {
-				NetworkNode right = reassortment.getChildEdges().get(1).childNode;
-				if (reassortment.getHeight() - right.getHeight() < threshold - offset) {
-					rightLength += reassortment.getHeight() - right.getHeight();
-					if (!right.isReassortment())
-						rightLength += lengthAfterRea(right, reassortment.getHeight() - right.getHeight() + offset,
-							threshold);
-				} else
-					rightLength += threshold - offset;
-			}
-		}
-		return leftLength + rightLength;
-	}
-
-	private double lengthBeforeRea(NetworkNode reassortment, double offset, double threshold) {
-		double leftLength = 0.0;
-		double rightLength = 0.0;
-
-		if (!reassortment.getParentEdges().get(0).isRootEdge()) {
-			NetworkNode left = reassortment.getParentEdges().get(0).parentNode;
-			if (left.getHeight() - reassortment.getHeight() < threshold - offset) {
-				leftLength += left.getHeight() - reassortment.getHeight();
-				if (!left.isReassortment())
-					leftLength += lengthBeforeRea(left, left.getHeight() - reassortment.getHeight() + offset,
-							threshold);
-			} else
-				leftLength += threshold - offset;
-
-			// check if right sibling exists
-			if (reassortment.getParentCount() > 1) {
-				NetworkNode right = reassortment.getParentEdges().get(1).parentNode;
-				if (right.getHeight() - reassortment.getHeight() < threshold - offset) {
-					rightLength += right.getHeight() - reassortment.getHeight();
-					if (!right.isReassortment())
-						rightLength += lengthBeforeRea(right, right.getHeight() - reassortment.getHeight() + offset,
-							threshold);
-				} else
-					rightLength += threshold - offset;
-			}
-		}
-		return leftLength + rightLength;
-	}
-
-	private NetworkNode closestReaBeforeMig(NetworkNode node, double offset, double threshold) {
-		List<NetworkNode> reaBackward = new ArrayList<>();
-		if (!node.getParentEdges().get(0).isRootEdge()) {
-			NetworkNode left = node.getParentEdges().get(0).parentNode;
-			if (left.getHeight() - node.getHeight() < threshold - offset) {
-				if (left.isReassortment())
-					reaBackward.add(left);
-				else
-					reaBackward.add(closestReaBeforeMig(left, left.getHeight() - node.getHeight() + offset, threshold));
-			}
-
-			// check if right parent exists
-			if (node.getParentCount() > 1) {
-				NetworkNode right = node.getParentEdges().get(1).parentNode;
-				if (right.getHeight() - node.getHeight() < threshold - offset) {
-					if (right.isReassortment())
-						reaBackward.add(right);
-					else
-						reaBackward.add(
-								closestReaBeforeMig(right, right.getHeight() - node.getHeight() + offset, threshold));
-				}
-
-			}
-
-			// no double counting
-			if (!reaBackward.isEmpty())
-				return reaBackward.stream()
-						.sorted(Comparator.comparingDouble(n -> (n.getHeight() - node.getHeight() + offset))).distinct()
-						.collect(Collectors.toList()).get(0);
-			else
-				return null;
-
-		} else {
-			return null;
-		}
-	}
-
-	private List<NetworkNode> reaNodesBefore(NetworkNode node, double offset, Double threshold, double length,
-			HashMap<NetworkEdge, Double> edgeList)
-			throws Exception {
-		List<NetworkNode> reaBeforeList = new ArrayList<>();
-		if (!node.getParentEdges().get(0).isRootEdge()) {
-			NetworkEdge leftParentdEdge = node.getParentEdges().get(0);
-			NetworkNode left = node.getParentEdges().get(0).parentNode;
-			double leftEdgeLength = leftParentdEdge.getLength();
-
-			if (leftEdgeLength < threshold - offset) {
-				length += leftEdgeLength;
-				
-				if (!edgeList.containsKey(leftParentdEdge)
-						|| (edgeList.containsKey(leftParentdEdge) && edgeList.get(leftParentdEdge) < leftEdgeLength))
-					edgeList.put(leftParentdEdge, leftEdgeLength);
-
-				if (isMigrationNode(left)) {
-					// reset window from new migration node
-//					reaBeforeList.addAll(reaNodesBefore(left, 0.0, threshold, length));
-				}
-				if (left.isReassortment()) {
-					// add the reassortment node
-					reaBeforeList.add(left);
-					// move further up
-					reaBeforeList.addAll(
-							reaNodesBefore(left, leftEdgeLength + offset, threshold, length,
-									edgeList));
-				} else if (left.isCoalescence()) {
-					// move further up
-					reaBeforeList.addAll(
-							reaNodesBefore(left, leftEdgeLength + offset, threshold, length,
-									edgeList));
-				}
-			} else {
-				if ((threshold - offset) > 0) {
-					length += threshold - offset;
-					if (!edgeList.containsKey(leftParentdEdge)
-							|| (edgeList.containsKey(leftParentdEdge)
-									&& edgeList.get(leftParentdEdge) < threshold - offset))
-						edgeList.put(leftParentdEdge, threshold - offset); // add only the edge length up until the
-																			// window ends
-				}
-
-//					throw new Exception("offset greater than the threshold!!");
-//				length += threshold - offset;
-			}
-
-				if (node.getParentCount() > 1) {
-				NetworkEdge rightParentEdge = node.getParentEdges().get(1);
-					NetworkNode right = node.getParentEdges().get(1).parentNode;
-				double rightEdgeLength = rightParentEdge.getLength();
-
-				if (rightEdgeLength < threshold - offset) {
-					length += rightEdgeLength;
-
-					if (!edgeList.containsKey(rightParentEdge)
-							|| (edgeList.containsKey(rightParentEdge)
-									&& edgeList.get(rightParentEdge) < rightEdgeLength))
-						edgeList.put(rightParentEdge, rightEdgeLength);
-
-					if (isMigrationNode(right)) {
-							// reset window from new migration node
-//						reaBeforeList.addAll(reaNodesBefore(right, 0.0, threshold, length));
-					}
-					if (right.isReassortment()) {
-						// add the reassortment node
-						reaBeforeList.add(right);
-						// move further up
-						reaBeforeList.addAll(
-								reaNodesBefore(right, rightEdgeLength + offset, threshold,
-										length, edgeList));
-					} else if (right.isCoalescence()) {
-						// move further up
-						reaBeforeList.addAll(
-								reaNodesBefore(right, rightEdgeLength + offset, threshold,
-										length, edgeList));
-						}
-				} else
-				if ((threshold - offset) > 0) {
-					length += threshold - offset;
-
-					if (!edgeList.containsKey(rightParentEdge)
-							|| (edgeList.containsKey(rightParentEdge)
-									&& edgeList.get(rightParentEdge) < threshold - offset))
-						edgeList.put(rightParentEdge, threshold - offset);
-				}
-
-//					throw new Exception("offset greater than the threshold!!");
-
-					}
-				}
-		return reaBeforeList;
-	}
-
-
-	private NetworkNode closestReaAfterMig(NetworkNode node, double offset, double threshold) {
-		List<NetworkNode> reaForward = new ArrayList<>();
-		if (!node.isLeaf()) {
-			NetworkNode left = node.getChildEdges().get(0).childNode;
-			if (node.getHeight() - left.getHeight() < threshold - offset) {
-				if (left.isReassortment())
-					reaForward.add(left);
-				else {
-					NetworkNode temp = closestReaAfterMig(left, node.getHeight() - left.getHeight() + offset,
-							threshold);
-					if (temp != null)
-						reaForward.add(temp);
-				}
-//					reaForward.add(
-//							closestReaAfterMig(left, node.getHeight() - left.getHeight() + offset, threshold));
-			}
-
-			// check if right sibling exists
-			if (node.getChildCount() > 1) {
-				NetworkNode right = node.getChildEdges().get(1).childNode;
-				if (node.getHeight() - right.getHeight() < threshold - offset) {
-					if (right.isReassortment())
-						reaForward.add(right);
-					else {
-						NetworkNode temp = closestReaAfterMig(right, node.getHeight() - right.getHeight() + offset,
-								threshold);
-						if (temp != null)
-							reaForward.add(temp);
-					}
-//						reaForward.add(
-//								closestReaAfterMig(right, node.getHeight() - right.getHeight() + offset, threshold));
-				}
-
-			}
-			// no double counting
-			if (!reaForward.isEmpty())
-				return reaForward.stream()
-						.sorted(Comparator.comparingDouble(n -> (node.getHeight() - n.getHeight() + offset))).distinct()
-						.collect(Collectors.toList()).get(0);
-			else
-				return null;
-		} else {
-			return null;
-		}
-	}
-
-	private List<NetworkNode> getMigrationNodesBackward(NetworkNode node, double offset, double threshold) {
-		List<NetworkNode> migrationBackwards = new ArrayList<>();
-		if (!node.getParentEdges().get(0).isRootEdge()) {
-			NetworkNode left = node.getParentEdges().get(0).parentNode;
-			if (left.getHeight() - node.getHeight() < threshold - offset) {
-				if (isMigrationNode(left))
-					migrationBackwards.add(left);
-			migrationBackwards
-					.addAll(getMigrationNodesBackward(left, offset + left.getHeight() - node.getHeight(), threshold));
-			}
-
-			// check if right parent exists
-			if (node.getParentCount() > 1) {
-				NetworkNode right = node.getParentEdges().get(1).parentNode;
-				if (right.getHeight() - node.getHeight() < threshold - offset) {
-					if (isMigrationNode(right))
-						migrationBackwards.add(right);
-				migrationBackwards
-						.addAll(getMigrationNodesBackward(right, offset + right.getHeight() - node.getHeight(),
-								threshold));
-				}
-
-			}
-
-			// no double counting
-			LinkedHashSet<NetworkNode> hashSet = new LinkedHashSet<>(migrationBackwards);
-			migrationBackwards = new ArrayList<>(hashSet);
-			return migrationBackwards.stream()
-					.sorted(Comparator.comparingDouble(n -> (n.getHeight() - node.getHeight() + offset))).distinct()
-					.collect(Collectors.toList());
-		} else {
-			return migrationBackwards;
-		}
-
-			
-	}
-
 	private boolean isMigrationNode(NetworkNode node) {
 		if (!node.isLeaf() && node.getChildCount() == 1 && node.getParentCount() == 1)
 			return true;
@@ -648,9 +211,9 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
         JDialog dialog = new JDialog((JDialog)null, true);
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         dialog.setLocationRelativeTo(null);
-        dialog.setTitle("Reassortment Event Trunk Mapper");
+		dialog.setTitle("Migration To Tip Distance Calculator");
 
-        JLabel logFileLabel = new JLabel("Reassortment Network log file:");
+		JLabel logFileLabel = new JLabel("Structured Reassortment Network log file:");
         JLabel outFileLabel = new JLabel("Output file:");
         JLabel burninLabel = new JLabel("Burn-in percentage:");
         JLabel trunkDefinitionLabel = new JLabel("Trunk definition:");
@@ -993,7 +556,7 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 
         // Run ACGAnnotator
         try {
-			new ReassortmentAndMigration(options);
+			new MigrationAnalysis(options);
 
         } catch (Exception e) {
             if (args.length == 0) {
