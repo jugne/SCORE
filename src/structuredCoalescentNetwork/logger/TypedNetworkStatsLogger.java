@@ -78,7 +78,12 @@ public class TypedNetworkStatsLogger extends BEASTObject implements Loggable {
 			int fromType = m.getTypeIndex();
 			int toType = childEdge.childNode.getTypeIndex();
 			if (fromType == toType)
+			{
+				System.out.println("log");
+				System.out.println(network.getExtendedNewick());
 				throw new IllegalArgumentException("Not valid migration node");
+			}
+
 			countMatrix[fromType][toType] += 1;
 		}
     }

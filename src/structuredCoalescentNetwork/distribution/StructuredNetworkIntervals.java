@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.math3.util.Precision;
+
 import beast.core.CalculationNode;
 import beast.core.Function;
 import beast.core.Input;
@@ -65,9 +67,10 @@ public class StructuredNetworkIntervals extends CalculationNode {
 //        if (!eventListDirty)
 //            return;
 
+//		System.out.println(network.getExtendedNewick());
         networkEventList = network.getNodes().stream().map(n -> {
             StructuredNetworkEvent event = new StructuredNetworkEvent();
-            event.time = n.getHeight();
+			event.time = Precision.round(n.getHeight(), 10);
             event.node = n;
             switch(n.getChildCount()) {
                 case 0:
