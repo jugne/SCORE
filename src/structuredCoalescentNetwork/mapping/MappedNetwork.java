@@ -367,25 +367,6 @@ public class MappedNetwork extends Network {
 				int idx = lineageType.get(sampleLineage);
 				if (idx != labelIdx) {
 					return new Object[] { false, null };
-//					its++;
-//					Network test = new Network();
-//					test.setRootEdge(root.getParentEdges().get(0));
-//					System.out.println(test.getExtendedNewick());
-//					System.out.println("Sample missmatch fired");
-//					continue;
-//					int lin_idx = nextEvent.activeLineages.indexOf(sampleLineage);
-//					for (int i = 0; i < types; i++) {
-//						System.out.println("Taxon: " + nextEvent.node.getTaxonLabel());
-//						System.out.println("idx: " + idx);
-//						System.out.println("labelIdx: " + labelIdx);
-//						System.out.println("height " + sampleNode.getHeight());
-//						System.out.println("type " + i + ": "
-//								+ nextEvent.p_stored[nextEvent.intermediateTimeStored.length - 1][lin_idx * types + i]);
-//					}
-//					Network test = new Network();
-//					test.setRootEdge(root.getParentEdges().get(0));
-//					System.out.println(test.getExtendedNewick());
-//					throw new IllegalArgumentException("Mapper tip label differs from known.");
 				}
 
 				sampleNode.setTypeIndex(idx);
@@ -430,7 +411,7 @@ public class MappedNetwork extends Network {
 				int type1 = lineageType.get(parent1);
 				int type2 = lineageType.get(parent2);
 				int reassType = Integer.MAX_VALUE;
-				int otherType = Integer.MAX_VALUE;
+//				int otherType = Integer.MAX_VALUE;
 				
 				if (type1==type2)
 					reassType = type1;
@@ -440,16 +421,16 @@ public class MappedNetwork extends Network {
 						return new Object[] { false, null };
 					}
 					else {
-						double[] parentProbs1 = new double[types];
-						int lin_idx = nextEvent.activeLineages.indexOf(parent1);
-						double[] parentProbs2 = new double[types];
-						int lin_idx2 = nextEvent.activeLineages.indexOf(parent2);
-						for (int i = 0; i < types; i++) {
-							parentProbs1[i] = nextEvent.p_stored[0][lin_idx
-									* types + i];
-							parentProbs2[i] = nextEvent.p_stored[0][lin_idx2
-									* types + i];
-						}
+//						double[] parentProbs1 = new double[types];
+//						int lin_idx = nextEvent.activeLineages.indexOf(parent1);
+//						double[] parentProbs2 = new double[types];
+//						int lin_idx2 = nextEvent.activeLineages.indexOf(parent2);
+//						for (int i = 0; i < types; i++) {
+//							parentProbs1[i] = nextEvent.p_stored[0][lin_idx
+//									* types + i];
+//							parentProbs2[i] = nextEvent.p_stored[0][lin_idx2
+//									* types + i];
+//						}
 //						reassType = Randomizer.randomChoicePDF(parentProbs);
 //						if (reassType != type1 && reassType != type2) {
 							double[] r1 = new double[types];
@@ -461,32 +442,26 @@ public class MappedNetwork extends Network {
 									parent1.childNode.getHeight(), nextEvent.activeLineages.indexOf(parent2),
 									r2, nextEvent);
 
+						if (inheritReaType) { // Reassortment child lineage must inherit the type of at least one parent
+							reassType = rates1 > rates2 ? type2
+									: type1;
+						} else // Reassortment child lineage may or may not inherit the type of at least one
+								// parent
 							reassType = rates1 > rates2 ? Randomizer.randomChoicePDF(r1)
 									: Randomizer.randomChoicePDF(r2);
-//							System.out.println(this.untypedNetwork.getExtendedNewick());
-							otherType = reassType == type1 ? type2 : type1;
-							if (reassType != type1 && reassType != type2) {
-								System.out.println();
-							}
-//						}
-//						otherType = reassType == type1 ? type2 : type1;
-//						if (reassType != type1 && reassType != type2) {
-//							System.out.println();
-//						}
 					}
 				}
 
 				// Need to chose the type for child from cumulative rates of the parents
 				// Or migrate one child to the others type based on rates
 				NetworkNode reassNode = new NetworkNode();
-				NetworkNode fakeMigNode = new NetworkNode();
-				NetworkEdge fakeMigEdge = new NetworkEdge();
 
-				if (otherType != Integer.MAX_VALUE) {
-					fakeMigNode.setHeight(endTime);
-					fakeMigNode.setTypeIndex(otherType);
-					fakeMigNode.setTypeLabel(dynamics.getStringStateValue(otherType));
-				}
+
+//				if (otherType != Integer.MAX_VALUE) {
+//					fakeMigNode.setHeight(endTime);
+//					fakeMigNode.setTypeIndex(otherType);
+//					fakeMigNode.setTypeLabel(dynamics.getStringStateValue(otherType));
+//				}
 
 				reassNode.setHeight(endTime);
 				reassNode.setTypeIndex(reassType);
@@ -497,27 +472,35 @@ public class MappedNetwork extends Network {
 				NetworkEdge child = nextEvent.node.getChildEdges().get(0);
 				nextEvent.node.removeChildEdge(child);
 
-				if (otherType != Integer.MAX_VALUE) {
-					if (otherType != type1) {
-						fakeMigNode.addParentEdge(parent2);
-						fakeMigEdge.hasSegments = parent2.hasSegments;
-						fakeMigNode.addChildEdge(fakeMigEdge);
+				if (reassType != type2) {
+						NetworkNode fakeMigNode2 = new NetworkNode();
+						NetworkEdge fakeMigEdge2 = new NetworkEdge();
 
-						reassNode.addParentEdge(fakeMigEdge);
-						reassNode.addParentEdge(parent1);
-					}
-					else {
-						fakeMigNode.addParentEdge(parent1);
-						fakeMigEdge.hasSegments = parent1.hasSegments;
-						fakeMigNode.addChildEdge(fakeMigEdge);
+						fakeMigNode2.setHeight(endTime);
+						fakeMigNode2.setTypeIndex(type2);
+						fakeMigNode2.setTypeLabel(dynamics.getStringStateValue(type2));
 
-						reassNode.addParentEdge(fakeMigEdge);
-						reassNode.addParentEdge(parent2);
+						fakeMigNode2.addParentEdge(parent2);
+						fakeMigEdge2.hasSegments = parent2.hasSegments;
+						fakeMigNode2.addChildEdge(fakeMigEdge2);
+
+						reassNode.addParentEdge(fakeMigEdge2);
 					}
-				} else {
+					if (reassType != type1) {
+						NetworkNode fakeMigNode1 = new NetworkNode();
+						NetworkEdge fakeMigEdge1 = new NetworkEdge();
+
+						fakeMigNode1.addParentEdge(parent1);
+						fakeMigEdge1.hasSegments = parent1.hasSegments;
+						fakeMigNode1.addChildEdge(fakeMigEdge1);
+
+						reassNode.addParentEdge(fakeMigEdge1);
+
+					}
+				if (reassType == type1)
 					reassNode.addParentEdge(parent1);
+				if (reassType == type2)
 					reassNode.addParentEdge(parent2);
-				}
 
 				reassNode.addChildEdge(child);
 
