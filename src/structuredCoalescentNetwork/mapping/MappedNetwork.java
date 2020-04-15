@@ -157,7 +157,7 @@ public class MappedNetwork extends Network {
 		StructuredNetworkEvent nextNetworkEvent = eventList.get(networkInterval);
 		StructuredNetworkEvent startEvent = new StructuredNetworkEvent();
 		double nextRateShift = dynamics.getInterval(ratesInterval);
-		double nextNetworkEventTime = nextNetworkEvent.time;
+		double nextNetworkEventTime = nextNetworkEvent.node.getHeight();
 
 		setUpDynamics();
 
@@ -200,7 +200,7 @@ public class MappedNetwork extends Network {
 				nextRateShift -= nextNetworkEventTime;
 				try {
 					nextNetworkEvent = eventList.get(networkInterval);
-					nextNetworkEventTime = nextNetworkEvent.time;
+					nextNetworkEventTime = nextNetworkEvent.node.getHeight();
 				} catch (Exception e) {
 					break;
 				}
@@ -235,8 +235,8 @@ public class MappedNetwork extends Network {
 		root.setMetaData(currentEvent.node.getMetaData());
 
 		NetworkNode currentNode = root;
-		double currentTime = currentEvent.time;
-		double endTime = nextEvent.time;
+		double currentTime = currentEvent.node.getHeight();
+		double endTime = nextEvent.node.getHeight();
 
 		double[] rates = new double[types];
 		double[] ratesNext = new double[types];
@@ -282,23 +282,12 @@ public class MappedNetwork extends Network {
 								minTime = currentTime_l;
 								minEdge = e;
 								minRates = ratesNext.clone();
-//								if (minRates[0] == 0.0 && minRates[1] == 0.0) {
-//									Network test = new Network();
-//									test.setRootEdge(root.getParentEdges().get(0));
-//									System.out.println(test.getExtendedNewick());
-//								}
 							}
 							break;
 						}
 						totalRate = totalRateNext;
-//						double[] tmp = rates;
-//						rates = ratesNext;
-//						ratesNext = tmp;
-
 						t = tnext;
 					}
-//					System.out.println("K: " + K);
-//					System.out.println("I: " + I);
 				}
 
 				if (minTime > endTime) {
@@ -314,9 +303,6 @@ public class MappedNetwork extends Network {
 					
 					int newType = 0;
 					if (minRates[0] == 0.0 && minRates[1] == 0.0) {
-//						Network test = new Network();
-//						test.setRootEdge(root.getParentEdges().get(0));
-//						System.out.println(test.getExtendedNewick());
 						break;
 					}
 					newType = Randomizer.randomChoicePDF(minRates);
@@ -355,7 +341,6 @@ public class MappedNetwork extends Network {
 			switch (nextEvent.type) {
 			case SAMPLE:
 				NetworkEdge sampleLineage = nextEvent.node.getParentEdges().get(0);
-
 				NetworkNode sampleNode = new NetworkNode();
 				sampleNode.setMetaData(nextEvent.node.getMetaData());
 
@@ -379,8 +364,7 @@ public class MappedNetwork extends Network {
 
 				break;
 			case COALESCENCE:
-
-				NetworkEdge coalLineage = coalLineage = nextEvent.node.getParentEdges().get(0);
+				NetworkEdge coalLineage = nextEvent.node.getParentEdges().get(0);
 				int coalType = lineageType.get(coalLineage);
 				NetworkNode coalNode = new NetworkNode();
 				coalNode.setMetaData(nextEvent.node.getMetaData());
@@ -411,7 +395,6 @@ public class MappedNetwork extends Network {
 				int type1 = lineageType.get(parent1);
 				int type2 = lineageType.get(parent2);
 				int reassType = Integer.MAX_VALUE;
-//				int otherType = Integer.MAX_VALUE;
 				
 				if (type1==type2)
 					reassType = type1;
@@ -421,18 +404,6 @@ public class MappedNetwork extends Network {
 						return new Object[] { false, null };
 					}
 					else {
-//						double[] parentProbs1 = new double[types];
-//						int lin_idx = nextEvent.activeLineages.indexOf(parent1);
-//						double[] parentProbs2 = new double[types];
-//						int lin_idx2 = nextEvent.activeLineages.indexOf(parent2);
-//						for (int i = 0; i < types; i++) {
-//							parentProbs1[i] = nextEvent.p_stored[0][lin_idx
-//									* types + i];
-//							parentProbs2[i] = nextEvent.p_stored[0][lin_idx2
-//									* types + i];
-//						}
-//						reassType = Randomizer.randomChoicePDF(parentProbs);
-//						if (reassType != type1 && reassType != type2) {
 							double[] r1 = new double[types];
 							double rates1 = getTotalForwardsRate(lineageType.get(parent1),
 									parent1.childNode.getHeight(), nextEvent.activeLineages.indexOf(parent1),
@@ -443,8 +414,11 @@ public class MappedNetwork extends Network {
 									r2, nextEvent);
 
 						if (inheritReaType) { // Reassortment child lineage must inherit the type of at least one parent
-							reassType = rates1 > rates2 ? type2
-									: type1;
+							while (reassType != type1 && reassType != type2) {
+								reassType = rates1 > rates2 ? Randomizer.randomChoicePDF(r1)
+										: Randomizer.randomChoicePDF(r2);
+							}
+
 						} else // Reassortment child lineage may or may not inherit the type of at least one
 								// parent
 							reassType = rates1 > rates2 ? Randomizer.randomChoicePDF(r1)
@@ -455,13 +429,6 @@ public class MappedNetwork extends Network {
 				// Need to chose the type for child from cumulative rates of the parents
 				// Or migrate one child to the others type based on rates
 				NetworkNode reassNode = new NetworkNode();
-
-
-//				if (otherType != Integer.MAX_VALUE) {
-//					fakeMigNode.setHeight(endTime);
-//					fakeMigNode.setTypeIndex(otherType);
-//					fakeMigNode.setTypeLabel(dynamics.getStringStateValue(otherType));
-//				}
 
 				reassNode.setHeight(endTime);
 				reassNode.setTypeIndex(reassType);
@@ -489,6 +456,10 @@ public class MappedNetwork extends Network {
 					if (reassType != type1) {
 						NetworkNode fakeMigNode1 = new NetworkNode();
 						NetworkEdge fakeMigEdge1 = new NetworkEdge();
+
+					fakeMigNode1.setHeight(endTime);
+					fakeMigNode1.setTypeIndex(type1);
+					fakeMigNode1.setTypeLabel(dynamics.getStringStateValue(type1));
 
 						fakeMigNode1.addParentEdge(parent1);
 						fakeMigEdge1.hasSegments = parent1.hasSegments;
@@ -518,8 +489,8 @@ public class MappedNetwork extends Network {
 			if (nIntervals > 0) {
 				currentEvent = eventList.get(nIntervals);
 				nextEvent = eventList.get(nIntervals - 1);
-				currentTime = currentEvent.time;
-				endTime = nextEvent.time;
+				currentTime = currentEvent.node.getHeight();
+				endTime = nextEvent.node.getHeight();
 			}
 		}
 
@@ -546,8 +517,6 @@ public class MappedNetwork extends Network {
 		double time2 = 0;
 		boolean interpolate = true;
 		int x2 = bigger(nextEvent.intermediateTimeStored, time);
-		if (nextEvent.intermediateTimeStored.length == 0)
-			System.out.println(this.untypedNetwork.getExtendedNewick());
 		if (x2 > nextEvent.intermediateTimeStored.length - 1) {
 			x2 = nextEvent.intermediateTimeStored.length - 1;
 			interpolate = false;
@@ -559,11 +528,7 @@ public class MappedNetwork extends Network {
 		if (interpolate && Math.abs(nextEvent.intermediateTimeStored[x2] - time) > 1e-16) {
 			x1 += x2;
 
-			try {
-				time1 = nextEvent.intermediateTimeStored[x1];
-			} catch (Exception e) {
-				System.out.println();
-			}
+			time1 = nextEvent.intermediateTimeStored[x1];
 			time2 = nextEvent.intermediateTimeStored[x2];
 		}
 		else
@@ -582,7 +547,7 @@ public class MappedNetwork extends Network {
 
 //			UnivariateInterpolator interpolator2;
 			double pTo;
-			double[] points = new double[nextEvent.p_stored.length];
+//			double[] points = new double[nextEvent.p_stored.length];
 			if (interpolate) {
 //				interpolator2 = new SplineInterpolator();
 //				for (int ss = 0; ss < nextEvent.p_stored.length; ss++) {
