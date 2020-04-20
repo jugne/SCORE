@@ -71,6 +71,7 @@ public class StructuredNetworkIntervals extends CalculationNode {
         networkEventList = network.getNodes().stream().map(n -> {
             StructuredNetworkEvent event = new StructuredNetworkEvent();
 			event.time = Precision.round(n.getHeight(), 10);
+//			event.time = n.getHeight();
             event.node = n;
             switch(n.getChildCount()) {
                 case 0:

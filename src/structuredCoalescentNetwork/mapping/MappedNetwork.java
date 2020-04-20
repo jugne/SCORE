@@ -9,7 +9,10 @@ import java.util.List;
 
 import org.jblas.DoubleMatrix;
 
+import beast.core.Function;
 import beast.core.Input;
+import beast.core.Input.Validate;
+import beast.evolution.tree.TraitSet;
 import beast.util.Randomizer;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
@@ -22,8 +25,11 @@ import structuredCoalescentNetwork.math.Euler2ndOrderBase;
 
 
 /**
- * @author Ugne Stolz. Created on 15 Nov 2019. Mostly Uses ideas of stochastic
- *         mapping from Tim Vaughan's derivations for structured coalescent
+ * Mostly Uses ideas of stochastic mapping from Tim Vaughan's derivations for
+ * structured coalescent. NB remapping will currently only work with constant
+ * dynamics class of MASCOT
+ * 
+ * @author Ugne Stolz. Created on 15 Nov 2019.
  */
 public class MappedNetwork extends Network {
 
@@ -33,11 +39,33 @@ public class MappedNetwork extends Network {
 	public Input<Network> netwokInput = new Input<>("untypedNetwork", "Network on which to apply mapping.",
 			Input.Validate.REQUIRED);
 
-	public Input<ConstantReassortment> dynamicsInput = new Input<>("dynamics", "Input of rates",
-			Input.Validate.REQUIRED);
+	public Input<ConstantReassortment> dynamicsInput = new Input<>("dynamics", "Input of rates");
+
+	public Input<Function> NeInput = new Input<>("Ne", "ONLY for re-mapping. Input of effective population sizes",
+			Validate.XOR, dynamicsInput);
+
+	public Input<Function> b_mInput = new Input<>("backwardsMigration",
+			"ONLY for re-mapping. Input of backwards in time migration rates",
+			Validate.XOR, dynamicsInput);
+
+	public Input<Function> reassortmentRatesInput = new Input<>("reassortmentRates",
+			"ONLY for re-mapping. Input of reassortment rates",
+			Validate.XOR, dynamicsInput);
+
+	public Input<Double> ploidyInput = new Input<>("ploidy",
+			"ONLY for re-mapping. Ploidy (copy number) for this gene, typically a whole number or half (default is 1).",
+			1.0);
+
+	public Input<Integer> dimensionInput = new Input<>("dimension",
+			"ONLY for re-mapping. The number of different states." +
+					" if -1, it will use the number of different types ",
+			Validate.XOR, dynamicsInput);
+
+	public Input<TraitSet> typeTraitInput = new Input<>("typeTrait", "ONLY for re-mapping. Type trait set.",
+			Validate.XOR, dynamicsInput);
 
 	public Input<Integer> nRecordsInput = new Input<>("nRecords",
-			"maximum number of records to keep per interval for stochastic mapping", 1000);
+			"maximum number of records to keep per interval for stochastic mapping", 200);
 
 	public Input<Boolean> rejectionInput = new Input<>("rejection",
 			"If true, mapper will reject simulation if parent lineage types of reassortment event are different. "
@@ -53,13 +81,14 @@ public class MappedNetwork extends Network {
 			"Does child lineage of reassortment event inherits the type from at least one parent",
 			true);
 
-	// DEBUG purposes
+
 	boolean rejection;
 	boolean inheritReaType;
 
 
 	StructuredNetworkIntervals intervals = new StructuredNetworkIntervals();
 	public ConstantReassortment dynamics;
+	public beast.mascot.dynamics.Constant constantStructuredCoalescentDynamics;
 
 	private Network untypedNetwork;
 	private List<StructuredNetworkEvent> eventList;
@@ -82,7 +111,7 @@ public class MappedNetwork extends Network {
 
 	private final double STEP_SIZE_BACKWARD_INTEGRATION = 0.000001;
 
-	private final double MAX_STEP_FOR_BACKWARD_INTEGRATION = 0.001;
+	private final double MAX_STEP_FOR_BACKWARD_INTEGRATION = 0.1;
 
 	List<NetworkEdge> activeLineages;
 
@@ -97,7 +126,20 @@ public class MappedNetwork extends Network {
 		rejection = rejectionInput.get();
 		inheritReaType = inheritReaTypeInput.get();
 
-		dynamics = dynamicsInput.get();
+		if (dynamicsInput.get() == null) {
+			constantStructuredCoalescentDynamics = new beast.mascot.dynamics.Constant();
+			constantStructuredCoalescentDynamics.initByName("Ne", doubleToStringLine(NeInput.get().getDoubleValues()),
+					"backwardsMigration", doubleToStringLine(b_mInput.get().getDoubleValues()),
+					"ploidy", ploidyInput.get(),
+					"dimension", dimensionInput.get(),
+					"typeTrait", typeTraitInput.get());
+
+			dynamics = new ConstantReassortment();
+			dynamics.initByName("reassortmentRates", doubleToStringLine(reassortmentRatesInput.get().getDoubleValues()),
+					"structuredCoalescentDynamics", constantStructuredCoalescentDynamics);
+		} else
+			dynamics = dynamicsInput.get();
+
 		types = dynamics.getNrTypes();
 
 		activeLineages = new ArrayList<>();
@@ -108,9 +150,20 @@ public class MappedNetwork extends Network {
 
 	public void doStochasticMapping() {
 		untypedNetwork = (Network) netwokInput.get().copy();
-//		System.out.println("untyped");
-//		System.out.println(untypedNetwork.getExtendedNewick());
 		this.setRootEdge(untypedNetwork.getRootEdge());
+
+		if (dynamicsInput.get() == null) {
+			constantStructuredCoalescentDynamics = new beast.mascot.dynamics.Constant();
+			constantStructuredCoalescentDynamics.initByName("Ne", doubleToStringLine(NeInput.get().getDoubleValues()),
+					"backwardsMigration", doubleToStringLine(b_mInput.get().getDoubleValues()),
+					"ploidy", ploidyInput.get(),
+					"dimension", dimensionInput.get(),
+					"typeTrait", typeTraitInput.get());
+
+			dynamics = new ConstantReassortment();
+			dynamics.initByName("reassortmentRates", doubleToStringLine(reassortmentRatesInput.get().getDoubleValues()),
+					"structuredCoalescentDynamics", constantStructuredCoalescentDynamics);
+		}
 
 		intervals.initAndValidate(untypedNetwork);
 		eventList = intervals.getNetworkEventList(untypedNetwork);
@@ -157,7 +210,7 @@ public class MappedNetwork extends Network {
 		StructuredNetworkEvent nextNetworkEvent = eventList.get(networkInterval);
 		StructuredNetworkEvent startEvent = new StructuredNetworkEvent();
 		double nextRateShift = dynamics.getInterval(ratesInterval);
-		double nextNetworkEventTime = nextNetworkEvent.node.getHeight();
+		double nextNetworkEventTime = nextNetworkEvent.time;
 
 		setUpDynamics();
 
@@ -242,15 +295,12 @@ public class MappedNetwork extends Network {
 		double[] ratesNext = new double[types];
 		double totalRate;
 		double totalRateNext;
-		int its = 0;
 
 		while (nIntervals > 0) {
-			if (its > 1000)
-				return new Object[] { false, null };
 			while (true) {
 				double dt = (endTime - currentTime) / FORWARD_INTEGRATION_STEPS;
 				// If the length of interval between events is 0, jump to next event
-				if (dt == 0.0)
+				if (dt > -1E-15)
 					break;
 				NetworkEdge minEdge = new NetworkEdge();
 				double minTime = Double.NEGATIVE_INFINITY;
@@ -307,14 +357,12 @@ public class MappedNetwork extends Network {
 					}
 					newType = Randomizer.randomChoicePDF(minRates);
 
-					if (oldType == newType) {// happens only when rate of change is very close to zero
-						its++;
+					if (oldType == newType) {
 						Network test = new Network();
 						test.setRootEdge(root.getParentEdges().get(0));
 						System.out.println(test.getExtendedNewick());
-						System.out.println("Type matched fired");
+						System.out.println("Old and new types are the same matched. Mapping failed!");
 						System.exit(0);
-						continue;
 					}
 
 					newNode.setTypeIndex(oldType);
@@ -485,7 +533,7 @@ public class MappedNetwork extends Network {
 			}
 
 			nIntervals -= 1;
-			its = 0;
+
 			if (nIntervals > 0) {
 				currentEvent = eventList.get(nIntervals);
 				nextEvent = eventList.get(nIntervals - 1);
@@ -938,7 +986,9 @@ public class MappedNetwork extends Network {
 
 	@Override
 	public void init(PrintStream out) {
-		untypedNetwork.init(out);
+//		untypedNetwork.init(out);
+		out.println("#nexus");
+		out.println("begin trees;");
 	}
 
 	@Override
@@ -959,7 +1009,7 @@ public class MappedNetwork extends Network {
 
 	// XXX utils
 
-	public static int bigger(double[] arr, double target) {
+	private static int bigger(double[] arr, double target) {
 		int idx = Arrays.binarySearch(arr, target);
 		if (idx < 0) {
 			// target not found, so return index of insertion point
@@ -967,5 +1017,15 @@ public class MappedNetwork extends Network {
 		}
 		// target found, so return that
 		return idx;
+	}
+
+	private String doubleToStringLine(double[] arr) {
+		String line = "";
+		
+		for (Double value : arr) {
+			line = line.concat(value.toString()).concat(" ");
+		}
+		return line;
+
 	}
 }
