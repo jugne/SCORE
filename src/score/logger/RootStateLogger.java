@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.logger;
+package score.logger;
 
 import java.io.PrintStream;
 
@@ -8,8 +8,8 @@ import beast.core.CalculationNode;
 import beast.core.Description;
 import beast.core.Input;
 import beast.core.Loggable;
-import structuredCoalescentNetwork.distribution.SCORE;
 import beast.mascot.dynamics.Dynamics;
+import score.distribution.SCORE;
 
 @Description("logs the state of the root, i.e. the probability the root being in "+ 
 			"any of m states based on the MASCOT density class")

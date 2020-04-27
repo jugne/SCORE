@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package structuredCoalescentNetwork.networkAnnotator;
+package score.networkAnnotator;
 
 import java.awt.BorderLayout;
 import java.awt.Container;

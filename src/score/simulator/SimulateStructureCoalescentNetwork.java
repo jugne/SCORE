@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.simulator;
+package score.simulator;
 
 import java.util.ArrayList;
 import java.util.BitSet;

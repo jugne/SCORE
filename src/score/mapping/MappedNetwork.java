@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.mapping;
+package score.mapping;
 
 
 import java.io.PrintStream;
@@ -18,11 +18,11 @@ import beast.util.Randomizer;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
-import structuredCoalescentNetwork.distribution.StructuredNetworkEvent;
-import structuredCoalescentNetwork.distribution.StructuredNetworkIntervals;
-import structuredCoalescentNetwork.dynamics.ConstantReassortment;
-import structuredCoalescentNetwork.math.Euler2ndOrder;
-import structuredCoalescentNetwork.math.Euler2ndOrderBase;
+import score.distribution.StructuredNetworkEvent;
+import score.distribution.StructuredNetworkIntervals;
+import score.dynamics.ConstantReassortment;
+import score.math.Euler2ndOrder;
+import score.math.Euler2ndOrderBase;
 
 
 /**

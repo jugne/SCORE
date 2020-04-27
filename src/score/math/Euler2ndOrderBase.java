@@ -1,8 +1,8 @@
-package structuredCoalescentNetwork.math;
+package score.math;
 
 import java.util.List;
 
-import structuredCoalescentNetwork.distribution.StructuredNetworkEvent;
+import score.distribution.StructuredNetworkEvent;
 
 public interface Euler2ndOrderBase {
 

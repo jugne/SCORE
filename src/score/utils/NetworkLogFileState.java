@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.utils;
+package score.utils;
 
 import java.io.IOException;
 

@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.distribution;
+package score.distribution;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import beast.core.parameter.RealParameter;
 import beast.evolution.tree.TraitSet;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
-import structuredCoalescentNetwork.math.ode_integrator_reassort;
+import score.math.ode_integrator_reassort;
 
 
 @Description("Calculate the probability of a tree under the exact numerical structured coalescent with constant rates"
@@ -105,7 +105,8 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 	calculateLogP();
     }
 
-    public double calculateLogP() {
+    @Override
+	public double calculateLogP() {
 	intervals = networkIntervalsInput.get();
 	networkEventList = intervals.getNetworkEventList();
 	nodeStateProbabilities = new DoubleMatrix[intervals.networkInput.get().getInternalNodes().size()];
@@ -155,10 +156,9 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 
 	    // if the current interval has a length greater than 0, integrate
 	    if (duration > 0) {
-//        		System.out.println("Duration: "+duration);
+
 		p = new double[jointStateProbabilities.size()]; // Captures the probabilities of lineages being in a
 								// state
-
 		List<Integer> n_segs = new ArrayList<>();
 		for (NetworkEdge l : activeLineages) {
 		    n_segs.add(l.hasSegments.cardinality());
@@ -176,7 +176,6 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		// initialize integrator
 		FirstOrderIntegrator integrator = new ClassicalRungeKuttaIntegrator(ts);
 		// set the odes
-//                System.out.println("Sums: "+sums[0][0]);
 		FirstOrderDifferentialEquations ode = new ode_integrator_reassort(migration_rates, coalescent_rates,
 			reassortment_rates, nr_lineages, types, connectivity, sums, combination, n_segs);
 		// integrate
@@ -193,15 +192,12 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 		for (int i = 0; i < p_for_ode.length; i++) {
 		    jointStateProbabilities.set(i, p_for_ode[i]);
 		}
-
-//                System.out.println("Interval: "+ Math.log(jointStateProbabilities.get(0)));
 	    }
 
 	    switch (event.type) {
 	    case COALESCENCE:
 		nr_lineages--;
 		double n = coalesce(event);
-//					System.out.println("Coal: "+n);
 		logP += n;
 		break;
 
@@ -343,11 +339,8 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 	for (int i = 0; i < jointStateProbabilities.size(); i++)
 	    prob += jointStateProbabilities.get(i);
 
-//		System.out.println("Joint state prob: "+ jointStateProbabilities);
-//		System.out.println(prob);
 	for (int i = 0; i < jointStateProbabilities.size(); i++)
 	    jointStateProbabilities.set(i, jointStateProbabilities.get(i) / prob);
-//		System.out.println("After sample:" + Math.log(jointStateProbabilities.get(0)));
 
 	updateConnectivityMatrix();
 
@@ -355,7 +348,6 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 	sumsTot = newSumsTot;
 
 	return Math.log(prob);
-//		return Math.log(1.0);
     }
 
     private double coalesce(StructuredNetworkEvent event) {
@@ -470,10 +462,6 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 
 	sums = newSums;
 	sumsTot = newSumsTot;
-
-	// return the normlization constant as a probability (in log space)
-//		System.out.println("Coal: " +Math.log(prob));
-//		System.out.println("Nomalized: "+jointStateProbabilities.get(0));
 	return Math.log(prob);
     }
 
@@ -591,8 +579,6 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 	sums = newSums;
 	sumsTot = newSumsTot;
 
-//		System.out.println("Reassort: "+Math.log(prob));
-	// return the normlization constant as a probability (in log space)
 	return Math.log(prob);
 
     }
@@ -623,10 +609,7 @@ public class ExactStructuredCoalescentNetwork extends StructuredNetworkDistribut
 	}
     }
 
-    // TODO adapt to network case if implementing logger
-//    public DoubleMatrix getStateProb(int nr){
-//    	return nodeStateProbabilities[nr - nrSamples];
-//    }
+
     public DoubleMatrix[] getStateProbabilities() {
 	return nodeStateProbabilities;
     }

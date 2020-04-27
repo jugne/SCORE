@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.distribution;
+package score.distribution;
 
 import java.util.ArrayList;
 import java.util.Comparator;

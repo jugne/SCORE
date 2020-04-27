@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.distribution;
+package score.distribution;
 
 import beast.core.Distribution;
 import beast.core.Input;

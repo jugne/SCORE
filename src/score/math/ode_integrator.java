@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.math;
+package score.math;
 
 import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 import org.apache.commons.math3.ode.FirstOrderIntegrator;

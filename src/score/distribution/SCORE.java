@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.distribution;
+package score.distribution;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,9 +9,9 @@ import beast.core.Input;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
-import structuredCoalescentNetwork.dynamics.ConstantReassortment;
-import structuredCoalescentNetwork.math.Euler2ndOrder;
-import structuredCoalescentNetwork.math.Euler2ndOrderBase;
+import score.dynamics.ConstantReassortment;
+import score.math.Euler2ndOrder;
+import score.math.Euler2ndOrderBase;
 
 public class SCORE extends StructuredNetworkDistribution {
 

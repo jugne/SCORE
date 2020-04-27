@@ -1,11 +1,11 @@
-package structuredCoalescentNetwork.math;
+package score.math;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.math3.util.FastMath;
 
-import structuredCoalescentNetwork.distribution.StructuredNetworkEvent;
+import score.distribution.StructuredNetworkEvent;
 
 public class Euler2ndOrder implements Euler2ndOrderBase {
 
@@ -143,15 +143,16 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 				int pos = startEvent.numRecords - subIntervalID;
 				startEvent.intermediateTimeStored[pos] -= duration;
 				startEvent.p_stored[pos] = Arrays.copyOfRange(p, 0, p.length);
+				startEvent.pDot_stored[pos] = Arrays.copyOfRange(pDot, 0, p.length);
 				subIntervalID -= 1;
 			}
 
 	    duration = updateP(duration, p, pDot, pDotDot, pDotDotDot, length - 1);
 
-	    if (iterations > 10000) {
-		System.err.println("too many iterations, return negative infinity");
-		p[length - 1] = Double.NEGATIVE_INFINITY;
-		break;
+			if (iterations > 100000) {
+				System.err.println("too many iterations, return negative infinity");
+				p[length - 1] = Double.NEGATIVE_INFINITY;
+				break;
 	    }
 	}
 
@@ -160,6 +161,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 				int pos = startEvent.numRecords - subIntervalID;
 				startEvent.intermediateTimeStored[pos] -= duration;
 				startEvent.p_stored[pos] = Arrays.copyOfRange(p, 0, p.length);
+				startEvent.pDot_stored[pos] = Arrays.copyOfRange(pDot, 0, p.length);
 				subIntervalID -= 1;
 			}
 
@@ -194,7 +196,7 @@ public class Euler2ndOrder implements Euler2ndOrderBase {
 		diff = FastMath.abs(new_val - p[i]);
 		its++;
 
-		if (its > 10000) {
+				if (its > 100000) {
 		    p[length - 1] = Double.NEGATIVE_INFINITY;
 		    break;
 		}

@@ -1,7 +1,6 @@
-package structuredCoalescentNetwork.dynamics;
+package score.dynamics;
 
 import java.io.PrintStream;
-import java.lang.reflect.Method;
 
 import beast.core.Input;
 import beast.core.Input.Validate;
@@ -28,13 +27,14 @@ public class ConstantReassortment extends Dynamics implements Loggable {
 
     @Override
     public void initAndValidate() {
-	super.initAndValidate();
 
 	scDynamics = structuredCoalescentDynamics.get();
 	this.typeTraitInput = scDynamics.typeTraitInput;
+		this.dimensionInput = scDynamics.dimensionInput;
 	if (dimensionInput.get() < 1)
 	    dimensionInput.set(getNrTypes());
 
+		super.initAndValidate();
     }
 
     public double[] getReassortmentRate(int i) {
@@ -97,7 +97,8 @@ public class ConstantReassortment extends Dynamics implements Loggable {
     
     
     
-    public void log(long sample, PrintStream out) {
+    @Override
+	public void log(long sample, PrintStream out) {
 		for (int i = 0 ; i < reassortmentRates.get().getDimension(); i++){
 			out.print(reassortmentRates.get().getArrayValue(i) + "\t");
 		}

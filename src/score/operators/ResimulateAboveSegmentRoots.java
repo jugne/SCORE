@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.operators;
+package score.operators;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,8 +16,8 @@ import coalre.distribution.NetworkIntervals;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
 import coalre.operators.NetworkOperator;
-import structuredCoalescentNetwork.distribution.StructuredNetworkEvent;
-import structuredCoalescentNetwork.distribution.StructuredNetworkIntervals;
+import score.distribution.StructuredNetworkEvent;
+import score.distribution.StructuredNetworkIntervals;
 
 public class ResimulateAboveSegmentRoots extends NetworkOperator {
 

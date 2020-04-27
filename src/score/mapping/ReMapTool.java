@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.mapping;
+package score.mapping;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -52,8 +52,8 @@ import feast.fileio.logfileiterator.LogFileIterator;
 import feast.fileio.logfileiterator.LogFileRealParameter;
 import feast.fileio.logfileiterator.TraceLogFileState;
 import feast.function.Concatenate;
-import structuredCoalescentNetwork.logger.TypedNetworkStatsLogger;
-import structuredCoalescentNetwork.utils.NetworkLogFileState;
+import score.logger.TypedNetworkStatsLogger;
+import score.utils.NetworkLogFileState;
 
 /**
  * @author Ugne Stolz <ugne.stolz@protonmail.com>

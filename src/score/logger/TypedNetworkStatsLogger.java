@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.logger;
+package score.logger;
 
 import java.io.PrintStream;
 import java.util.Collections;
@@ -11,9 +11,9 @@ import beast.core.Input;
 import beast.core.Loggable;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
-import structuredCoalescentNetwork.dynamics.ConstantReassortment;
-import structuredCoalescentNetwork.mapping.MappedNetwork;
-import structuredCoalescentNetwork.simulator.SimulateStructureCoalescentNetwork;
+import score.dynamics.ConstantReassortment;
+import score.mapping.MappedNetwork;
+import score.simulator.SimulateStructureCoalescentNetwork;
 
 /**
  * Logger for generating statistics from type mapped trees.

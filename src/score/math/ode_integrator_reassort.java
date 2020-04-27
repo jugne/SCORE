@@ -1,4 +1,4 @@
-package structuredCoalescentNetwork.math;
+package score.math;
 
 import java.util.ArrayList;
 import java.util.Arrays;
