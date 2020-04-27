@@ -12,6 +12,7 @@ import org.jblas.DoubleMatrix;
 import beast.core.Function;
 import beast.core.Input;
 import beast.core.Input.Validate;
+import beast.core.parameter.RealParameter;
 import beast.evolution.tree.TraitSet;
 import beast.util.Randomizer;
 import coalre.network.Network;
@@ -127,16 +128,7 @@ public class MappedNetwork extends Network {
 		inheritReaType = inheritReaTypeInput.get();
 
 		if (dynamicsInput.get() == null) {
-			constantStructuredCoalescentDynamics = new beast.mascot.dynamics.Constant();
-			constantStructuredCoalescentDynamics.initByName("Ne", doubleToStringLine(NeInput.get().getDoubleValues()),
-					"backwardsMigration", doubleToStringLine(b_mInput.get().getDoubleValues()),
-					"ploidy", ploidyInput.get(),
-					"dimension", dimensionInput.get(),
-					"typeTrait", typeTraitInput.get());
-
-			dynamics = new ConstantReassortment();
-			dynamics.initByName("reassortmentRates", doubleToStringLine(reassortmentRatesInput.get().getDoubleValues()),
-					"structuredCoalescentDynamics", constantStructuredCoalescentDynamics);
+			setDynamics();
 		} else
 			dynamics = dynamicsInput.get();
 
@@ -153,16 +145,7 @@ public class MappedNetwork extends Network {
 		this.setRootEdge(untypedNetwork.getRootEdge());
 
 		if (dynamicsInput.get() == null) {
-			constantStructuredCoalescentDynamics = new beast.mascot.dynamics.Constant();
-			constantStructuredCoalescentDynamics.initByName("Ne", doubleToStringLine(NeInput.get().getDoubleValues()),
-					"backwardsMigration", doubleToStringLine(b_mInput.get().getDoubleValues()),
-					"ploidy", ploidyInput.get(),
-					"dimension", dimensionInput.get(),
-					"typeTrait", typeTraitInput.get());
-
-			dynamics = new ConstantReassortment();
-			dynamics.initByName("reassortmentRates", doubleToStringLine(reassortmentRatesInput.get().getDoubleValues()),
-					"structuredCoalescentDynamics", constantStructuredCoalescentDynamics);
+			setDynamics();
 		}
 
 		intervals.initAndValidate(untypedNetwork);
@@ -1009,6 +992,28 @@ public class MappedNetwork extends Network {
 
 	// XXX utils
 
+	private void setDynamics() {
+		RealParameter backwardsMigration = new RealParameter(doubleToDouble(b_mInput.get().getDoubleValues()));
+		backwardsMigration.setDimension(dimensionInput.get() * (dimensionInput.get() - 1));
+		RealParameter Ne = new RealParameter(doubleToDouble(NeInput.get().getDoubleValues()));
+		Ne.setDimension(dimensionInput.get());
+
+		constantStructuredCoalescentDynamics = new beast.mascot.dynamics.Constant();
+		constantStructuredCoalescentDynamics.initByName("Ne",
+				Ne,
+				"backwardsMigration", backwardsMigration,
+				"ploidy", ploidyInput.get(),
+				"dimension", dimensionInput.get(),
+				"typeTrait", typeTraitInput.get());
+
+		constantStructuredCoalescentDynamics.NeInput.get().setDimension(dimensionInput.get());
+		constantStructuredCoalescentDynamics.b_mInput.get()
+				.setDimension(dimensionInput.get() * (dimensionInput.get() - 1));
+		dynamics = new ConstantReassortment();
+		dynamics.initByName("reassortmentRates", doubleToStringLine(reassortmentRatesInput.get().getDoubleValues()),
+				"structuredCoalescentDynamics", constantStructuredCoalescentDynamics);
+	}
+
 	private static int bigger(double[] arr, double target) {
 		int idx = Arrays.binarySearch(arr, target);
 		if (idx < 0) {
@@ -1025,7 +1030,16 @@ public class MappedNetwork extends Network {
 		for (Double value : arr) {
 			line = line.concat(value.toString()).concat(" ");
 		}
-		return line;
 
+		return line;
+	}
+
+	private Double[] doubleToDouble(double[] arr) {
+		final Double[] convertArray = new Double[arr.length];
+
+		for (int index = 0; index < arr.length; index++)
+			convertArray[index] = Double.valueOf(arr[index]);
+
+		return convertArray;
 	}
 }

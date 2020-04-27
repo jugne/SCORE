@@ -17,19 +17,24 @@
 
 package structuredCoalescentNetwork.networkAnnotator;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import beast.util.Randomizer;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
-import java.util.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * A rewrite of TreeAnnotator that outputs how often reassortment events happen on trunk branches vs. other branches 
- * @author Nicola Felix Müller <nicola.felix.mueller@gmail.com>
+ * Structured coalescent network annotator. Most functions adapted from
+ * ReassortmentAnotator in CoalRe package (Nicola Felix Müller
+ * <nicola.felix.mueller@gmail.com>)
+ * 
+ * @author Ugne Stolz <ugne.stolz@protonmail.com>
  */
-public class ReassortmentAnnotator {
+public class SCoReAnnotator {
 
 	/**
 	 * performs all the removing things steps

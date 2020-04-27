@@ -59,7 +59,7 @@ import coalre.networkannotator.ReassortmentLogReader;
  * A rewrite of TreeAnnotator that outputs how often reassortment events happen on trunk branches vs. other branches 
  * @author Nicola Felix Müller <nicola.felix.mueller@gmail.com>
  */
-public class MigrationAnalysis extends ReassortmentAnnotator {
+public class MigrationAnalysis extends SCoReAnnotator {
 
 
 

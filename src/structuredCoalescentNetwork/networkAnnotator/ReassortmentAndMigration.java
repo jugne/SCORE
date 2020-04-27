@@ -59,12 +59,21 @@ import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
 import coalre.networkannotator.ReassortmentLogReader;
 
-/**
- * A rewrite of TreeAnnotator that outputs how often reassortment events happen on trunk branches vs. other branches 
- * @author Nicola Felix Müller <nicola.felix.mueller@gmail.com>
- */
-public class ReassortmentAndMigration extends ReassortmentAnnotator {
 
+/**
+ * Number of reassortment events preceding migration events on fit and unfit
+ * network edges.
+ * 
+ * 
+ * @author Ugne Stolz <ugne.stolz@protonmail.com>
+ * @date 20 Apr 2020
+ */
+public class ReassortmentAndMigration extends SCoReAnnotator {
+
+	List<NetworkNode> allFitNodes;
+
+	List<NetworkNode> allUnfitNodes;
+	List<Double> leaveDistance;
     
 	List<NetworkNode> reaAfterList;
 	List<NetworkNode> reaBeforeList;
@@ -84,7 +93,9 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 		File outFile = new File("reassortment_and_migration.txt");
         double burninPercentage = 10.0;
 
-		double minMigrationDistance;
+		double maxMigrationDistance;
+
+		double minTipDistance;
         int[] removeSegments = new int[0];
 
 
@@ -94,7 +105,9 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
                     "Input file: " + inFile + "\n" +
                     "Output file: " + outFile + "\n" +
                     "Burn-in percentage: " + burninPercentage + "%\n" +
-					"Minimal distance before/after reassortment event " + minMigrationDistance;
+					"Max distance between reassortment and migration event " + maxMigrationDistance + "%\n" +
+					"minimal distance to a tip to be considered trunk\n" +
+					"(ignored in MostRecentSample Case): " + minTipDistance;
         }
     }
 
@@ -116,16 +129,35 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 	      System.out.println("\nWriting output to " + options.outFile.getName()
 	      + "...");
         
-		// compute number of migration within minMigrationDistance to reassotment
+		// compute number of migration within maxMigrationDistance to reassotment
         try (PrintStream ps = new PrintStream(options.outFile)) {
 
-			ps.print("n_reassortment" + "\t" + "n_migration" + "\t" + "n_reassortment_window" + "\t"
-					+ "network_length" + "\t" + "network_length_window");// + "\t" + "mig_tip_lengths" + "\t"
+			ps.print("n_reassortment" + "\t" +
+					"n_migration" + "\t" +
+					"n_reassortment_total_fit" + "\t" +
+					"n_reassortment_total_unfit" + "\t" +
+					"n_reassortment_window" + "\t" +
+					"n_reassortment_window_fit" + "\t" +
+					"n_reassortment_window_unfit" + "\t" +
+					"n_reassortment_off_window" + "\t" +
+					"n_reassortment_off_window_fit" + "\t" +
+					"n_reassortment_off_window_unfit" + "\t" +
+					"network_length" + "\t" + 
+					"network_length_fit" + "\t" +
+					"network_length_unfit" + "\t" +
+					"network_length_window" + "\t" +
+					"network_length_window_fit" + "\t" +
+					"network_length_window_unfit" + "\t" +
+					"network_length_off_window_fit" + "\t" +
+					"network_length_off_window_unfit");
+
+			// + "\t" + "mig_tip_lengths" + "\t"
 //					+ "mig_tip_heights");
 			ps.print("\n");
 			for (Network network : logReader) {
 	        	pruneNetwork(network, options.removeSegments);
-				computeReassortmentAndMigration(network, ps, options.minMigrationDistance);
+				computeTrunkReassortmentLeaveDist(network, options.minTipDistance);
+				computeReassortmentAndMigration(network, ps, options.maxMigrationDistance);
 	        	
 	        	ps.print("\n");
 	        }
@@ -133,9 +165,83 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
         }
         System.out.println("\nDone!");
     }
+
+	/**
+	 * gets how many reticulation events happen on the trunk vs. not on the trunk
+	 * The trunk is define as any edge on the network that has descendents that are
+	 * more than minTipDistance away from that node
+	 * 
+	 * @param network
+	 * @param ps
+	 * @param minTipDistance
+	 */
+	private void computeTrunkReassortmentLeaveDist(Network network, double minTipDistance) {
+
+		// get the length of the network
+//		List<NetworkEdge> allEdges = network.getEdges().stream()
+//				.filter(e -> !e.isRootEdge())
+//				.collect(Collectors.toList());
+
+//		double fullLength = 0.0;
+//		for (NetworkEdge edge : allEdges)
+//			fullLength += edge.getLength();
+
+		// compute which nodes are on the trunk of the network defined as any connection
+		// between
+		// the root and the most recent sampled individual. To do so, get all zero
+		// height edges
+		List<NetworkEdge> zeroHeightEdges = network.getEdges().stream()
+				.filter(e -> e.isLeafEdge())
+				.collect(Collectors.toList());
+
+		allFitNodes = new ArrayList<>();
+		allUnfitNodes = new ArrayList<>();
+		leaveDistance = new ArrayList<>();
+
+		if (zeroHeightEdges.size() == 0)
+			throw new IllegalArgumentException("no leaf node with 0 height found");
+
+		for (NetworkEdge zeroEdge : zeroHeightEdges) {
+			double dist = 0.0;
+			getAllAncestralEdgesLeaveDist(zeroEdge.childNode, dist, minTipDistance);
+		}
+
+		// drop every node in allTrunkNodes that is less far away from a leave than some
+		// threshold
+		for (int i = allFitNodes.size() - 1; i >= 0; i--) {
+			if (leaveDistance.get(i) < minTipDistance) {
+				allUnfitNodes.add(allFitNodes.get(i));
+				allFitNodes.remove(i);
+			}
+		}
+
+		if (network.getNodes().size() != (allUnfitNodes.size() + allFitNodes.size()))
+			System.out.println("False");
+
+		// calculate how many reassortment events are on the trunk and how many aren't
+//		int onTrunk = allFitNodes.stream()
+//				.filter(e -> e.isReassortment())
+//				.collect(Collectors.toList()).size();
+//
+//		int offTrunk = allEdges.stream()
+//				.filter(e -> !e.isRootEdge())
+//				.filter(e -> e.parentNode.isReassortment())
+//				.collect(Collectors.toList()).size() - onTrunk;
+//
+//		// calculate the length of the trunk
+//		double trunkLength = 0.0;
+//		for (NetworkNode node : allFitNodes) {
+//			for (NetworkEdge edge : node.getParentEdges())
+//				if (!edge.isRootEdge())
+//					trunkLength += edge.getLength();
+//		}
+
+//		ps.print(onTrunk + "\t" + offTrunk + "\t" + trunkLength + "\t" + (fullLength - trunkLength));
+
+	}
         
 
-	private void computeReassortmentAndMigration(Network network, PrintStream ps, double minMigrationDistance)
+	private void computeReassortmentAndMigration(Network network, PrintStream ps, double maxMigrationDistance)
 			throws Exception {
 		// get all reassortment nodes of the network
 
@@ -163,23 +269,33 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 		List<Double> migToTipHeight = new ArrayList<Double>();
 		List<NetworkNode> reaCounts = new ArrayList<NetworkNode>();
 		Double length = 0.0;
-		HashMap<NetworkEdge, Double> lineageMap = new HashMap<NetworkEdge, Double>();
+
+		// Map NetworkEdge -> length. Here length is taken up to the point
+		// where maxMigrationDistance (measured in network height, not length)
+		// to the migration node is reached
+		// (which can also be its full length).
+		// It is used to calculate the total length of the migration node parent
+		// network, within the maxMigrationDistance window
+		HashMap<NetworkEdge, Double> edgeLengthMap = new HashMap<NetworkEdge, Double>();
 
 
 		for (NetworkNode node : migNodes) {
-			reaCounts.addAll(reaNodesBefore(node, 0.0, minMigrationDistance, length, lineageMap));
+			reaCounts.addAll(reaNodesBefore(node, 0.0, maxMigrationDistance, length, edgeLengthMap));
 			migToTipLengths.add(lengthToTip(node));
 			migToTipHeight.add(node.getHeight() - closesDescendantTip(node).getHeight());
 		}
 		
-		Set<NetworkNode> reaNodesSet = new HashSet<NetworkNode>();
-		for (NetworkEdge edge : lineageMap.keySet()) {
+		// Colect reassortment nodes within the windows above migration nodes.
+		// Create a set to avoid double counting.
+		Set<NetworkNode> reaNodesInWindowSet = new HashSet<NetworkNode>();
+		for (NetworkEdge edge : edgeLengthMap.keySet()) {
 			if (edge.childNode.isReassortment())
-				reaNodesSet.add(edge.childNode);
+				reaNodesInWindowSet.add(edge.childNode);
 		}
 		
+		// Total edge length within the windows above migration nodes
 		double totalLengthWindow = 0.0;
-		for (double l : lineageMap.values())
+		for (double l : edgeLengthMap.values())
 			totalLengthWindow += l;
 
 		// get the length of the network
@@ -191,8 +307,84 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 		for (NetworkEdge edge : allEdges)
 			fullLength += edge.getLength();
 
-		ps.print(reaNodes.size() + "\t" + migNodes.size() + "\t" + reaNodesSet.size() + "\t"
-				+ fullLength + "\t" + totalLengthWindow);// + "\t" + Arrays.toString(migToTipLengths.toArray()) + "\t"
+		// Fit and unfit edges separation
+
+		// On fit edges
+		List<NetworkNode> reaNodesFit = new ArrayList<NetworkNode>();
+		List<NetworkNode> reaNodesFitInWindow = new ArrayList<NetworkNode>(); // on window
+		List<NetworkNode> reaNodesFitOffWindow = new ArrayList<NetworkNode>(); // off window
+		// Off fit edges
+		List<NetworkNode> reaNodesUnfit = new ArrayList<NetworkNode>();
+		List<NetworkNode> reaNodesUnfitInWindow = new ArrayList<NetworkNode>();
+		List<NetworkNode> reaNodesUnfitOffWindow = new ArrayList<NetworkNode>();
+
+		reaNodesFit = allFitNodes.stream()
+				.filter(e -> e.isReassortment())
+				.collect(Collectors.toList());
+		reaNodesFitInWindow = reaNodesFit.stream()
+				.filter(n -> reaNodesInWindowSet.contains(n))
+				.collect(Collectors.toList());
+		reaNodesFitOffWindow = reaNodesFit.stream()
+				.filter(n -> !reaNodesInWindowSet.contains(n))
+				.collect(Collectors.toList());
+
+		reaNodesUnfit = allUnfitNodes.stream()
+				.filter(e -> e.isReassortment())
+				.collect(Collectors.toList());
+		reaNodesUnfitInWindow = reaNodesUnfit.stream()
+				.filter(n -> reaNodesInWindowSet.contains(n))
+				.collect(Collectors.toList());
+		reaNodesUnfitOffWindow = reaNodesUnfit.stream()
+				.filter(n -> !reaNodesInWindowSet.contains(n))
+				.collect(Collectors.toList());
+		
+		// calculate the length of the trunk
+		double fitOnWindowLength = 0.0;
+		double unfitOnWindowLength = 0.0;
+		for (NetworkEdge edge : edgeLengthMap.keySet()) {
+			if (allFitNodes.contains(edge.childNode))
+				fitOnWindowLength += edgeLengthMap.get(edge);
+			else
+				unfitOnWindowLength += edgeLengthMap.get(edge);
+		}
+
+		double fitOffWindowLength = 0.0;
+		double unfitOffWindowLength = 0.0;
+		double totalFitLength = 0.0;
+		double totalUnfitLength = 0.0;
+		for (NetworkNode node : allFitNodes) {
+			for (NetworkEdge edge : node.getParentEdges())
+				if (!edge.isRootEdge())
+					totalFitLength += edge.getLength();
+		}
+		
+		fitOffWindowLength = totalFitLength - fitOnWindowLength;
+
+		totalUnfitLength = fullLength - totalFitLength;
+		unfitOffWindowLength = totalUnfitLength - unfitOnWindowLength;
+		
+		
+
+		ps.print(reaNodes.size() + "\t" +
+				migNodes.size() + "\t" +
+				reaNodesFit.size() + "\t" +
+				reaNodesUnfit.size() + "\t" +
+				reaNodesInWindowSet.size() + "\t" +
+				reaNodesFitInWindow.size() + "\t" +
+				reaNodesUnfitInWindow.size() + "\t" +
+				(reaNodes.size() - reaNodesInWindowSet.size()) + "\t" +
+				reaNodesFitOffWindow.size() + "\t" +
+				reaNodesUnfitOffWindow.size() + "\t" +
+				fullLength + "\t" +
+				totalFitLength + "\t" +
+				totalUnfitLength + "\t" +
+				totalLengthWindow + "\t" +
+				fitOnWindowLength + "\t" +
+				unfitOnWindowLength + "\t" +
+				fitOffWindowLength + "\t" +
+				unfitOffWindowLength);
+
+		// + "\t" + Arrays.toString(migToTipLengths.toArray()) + "\t"
 //				+ Arrays.toString(migToTipHeight.toArray()));
 	}
 
@@ -450,7 +642,7 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 	}
 
 	private List<NetworkNode> reaNodesBefore(NetworkNode node, double offset, Double threshold, double length,
-			HashMap<NetworkEdge, Double> edgeList)
+			HashMap<NetworkEdge, Double> edgeLengthMap)
 			throws Exception {
 		List<NetworkNode> reaBeforeList = new ArrayList<>();
 		if (!node.getParentEdges().get(0).isRootEdge()) {
@@ -461,9 +653,9 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 			if (leftEdgeLength < threshold - offset) {
 				length += leftEdgeLength;
 				
-				if (!edgeList.containsKey(leftParentdEdge)
-						|| (edgeList.containsKey(leftParentdEdge) && edgeList.get(leftParentdEdge) < leftEdgeLength))
-					edgeList.put(leftParentdEdge, leftEdgeLength);
+				if (!edgeLengthMap.containsKey(leftParentdEdge)
+						|| (edgeLengthMap.containsKey(leftParentdEdge) && edgeLengthMap.get(leftParentdEdge) < leftEdgeLength))
+					edgeLengthMap.put(leftParentdEdge, leftEdgeLength);
 
 				if (isMigrationNode(left)) {
 					// reset window from new migration node
@@ -475,20 +667,20 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 					// move further up
 					reaBeforeList.addAll(
 							reaNodesBefore(left, leftEdgeLength + offset, threshold, length,
-									edgeList));
+									edgeLengthMap));
 				} else if (left.isCoalescence()) {
 					// move further up
 					reaBeforeList.addAll(
 							reaNodesBefore(left, leftEdgeLength + offset, threshold, length,
-									edgeList));
+									edgeLengthMap));
 				}
 			} else {
 				if ((threshold - offset) > 0) {
 					length += threshold - offset;
-					if (!edgeList.containsKey(leftParentdEdge)
-							|| (edgeList.containsKey(leftParentdEdge)
-									&& edgeList.get(leftParentdEdge) < threshold - offset))
-						edgeList.put(leftParentdEdge, threshold - offset); // add only the edge length up until the
+					if (!edgeLengthMap.containsKey(leftParentdEdge)
+							|| (edgeLengthMap.containsKey(leftParentdEdge)
+									&& edgeLengthMap.get(leftParentdEdge) < threshold - offset))
+						edgeLengthMap.put(leftParentdEdge, threshold - offset); // add only the edge length up until the
 																			// window ends
 				}
 
@@ -504,10 +696,10 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 				if (rightEdgeLength < threshold - offset) {
 					length += rightEdgeLength;
 
-					if (!edgeList.containsKey(rightParentEdge)
-							|| (edgeList.containsKey(rightParentEdge)
-									&& edgeList.get(rightParentEdge) < rightEdgeLength))
-						edgeList.put(rightParentEdge, rightEdgeLength);
+					if (!edgeLengthMap.containsKey(rightParentEdge)
+							|| (edgeLengthMap.containsKey(rightParentEdge)
+									&& edgeLengthMap.get(rightParentEdge) < rightEdgeLength))
+						edgeLengthMap.put(rightParentEdge, rightEdgeLength);
 
 					if (isMigrationNode(right)) {
 							// reset window from new migration node
@@ -519,21 +711,21 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 						// move further up
 						reaBeforeList.addAll(
 								reaNodesBefore(right, rightEdgeLength + offset, threshold,
-										length, edgeList));
+										length, edgeLengthMap));
 					} else if (right.isCoalescence()) {
 						// move further up
 						reaBeforeList.addAll(
 								reaNodesBefore(right, rightEdgeLength + offset, threshold,
-										length, edgeList));
+										length, edgeLengthMap));
 						}
 				} else
 				if ((threshold - offset) > 0) {
 					length += threshold - offset;
 
-					if (!edgeList.containsKey(rightParentEdge)
-							|| (edgeList.containsKey(rightParentEdge)
-									&& edgeList.get(rightParentEdge) < threshold - offset))
-						edgeList.put(rightParentEdge, threshold - offset);
+					if (!edgeLengthMap.containsKey(rightParentEdge)
+							|| (edgeLengthMap.containsKey(rightParentEdge)
+									&& edgeLengthMap.get(rightParentEdge) < threshold - offset))
+						edgeLengthMap.put(rightParentEdge, threshold - offset);
 				}
 
 //					throw new Exception("offset greater than the threshold!!");
@@ -634,6 +826,36 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
 			return false;
 	}
 
+	/**
+	 * Copied from CoalRe TrunkReassortment.java by N.F. Muller and T. Vaughan
+	 * 
+	 * @param node
+	 * @param dist
+	 * @param threshold
+	 */
+	private void getAllAncestralEdgesLeaveDist(NetworkNode node, double dist, double threshold) {
+		int index = allFitNodes.indexOf(node);
+		if (index == -1) {
+			allFitNodes.add(node);
+			leaveDistance.add(dist);
+		} else {
+			if (leaveDistance.get(index) > dist)
+				return;
+			else if (leaveDistance.get(index) > threshold)
+				return;
+			else
+				leaveDistance.set(index, dist);
+		}
+
+		for (NetworkEdge parentEdge : node.getParentEdges()) {
+			if (parentEdge.isRootEdge()) {
+				return;
+			} else {
+				getAllAncestralEdgesLeaveDist(parentEdge.parentNode, dist + parentEdge.getLength(), threshold);
+			}
+		}
+	}
+
         
     /**
      * Use a GUI to retrieve ACGAnnotator options.
@@ -653,7 +875,8 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
         JLabel logFileLabel = new JLabel("Reassortment Network log file:");
         JLabel outFileLabel = new JLabel("Output file:");
         JLabel burninLabel = new JLabel("Burn-in percentage:");
-        JLabel trunkDefinitionLabel = new JLabel("Trunk definition:");
+		JLabel maxMigDistLabel = new JLabel("Max reassortment-to-migration distance:");
+		JLabel minTipDistanceLabel = new JLabel("Min distance to tip for fit edge:");
 
         JTextField inFilename = new JTextField(20);
         inFilename.setEditable(false);
@@ -664,9 +887,10 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
         outFilename.setEditable(false);
         JButton outFileButton = new JButton("Choose File");
 
-		JTextField minMigrationDistance = new JTextField(20);
-		minMigrationDistance.setEditable(true);
-//        minTipDistance.setEnabled(false);        
+		JTextField maxMigrationDistance = new JTextField(20);
+		maxMigrationDistance.setEditable(true);
+		JTextField minTipDistance = new JTextField(20);
+		minTipDistance.setEnabled(true);
 
         JSlider burninSlider = new JSlider(JSlider.HORIZONTAL,
                 0, 100, (int)(options.burninPercentage));
@@ -692,16 +916,15 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
                 .addGroup(layout.createParallelGroup()
                         .addComponent(logFileLabel)
                         .addComponent(outFileLabel)
-                        .addComponent(burninLabel)
-                        .addComponent(trunkDefinitionLabel))
-//                        .addComponent(thresholdLabel)
-//                        .addComponent(geneFlowCheckBox))
+						.addComponent(burninLabel)
+						.addComponent(maxMigDistLabel)
+						.addComponent(minTipDistanceLabel))
                 .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
                         .addComponent(inFilename)
                         .addComponent(outFilename)
                         .addComponent(burninSlider)
-//                        .addComponent(thresholdSlider)
-						.addComponent(minMigrationDistance))
+						.addComponent(maxMigrationDistance)
+						.addComponent(minTipDistance))
                 .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
                         .addComponent(inFileButton)
                         .addComponent(outFileButton))
@@ -729,9 +952,11 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
                                 GroupLayout.DEFAULT_SIZE,
                                 GroupLayout.PREFERRED_SIZE))
                 .addGroup(layout.createParallelGroup()
-						.addComponent(trunkDefinitionLabel))
+						.addComponent(maxMigDistLabel)
+						.addComponent(maxMigrationDistance))
                 .addGroup(layout.createParallelGroup()
-						.addComponent(minMigrationDistance))
+						.addComponent(minTipDistanceLabel)
+						.addComponent(minTipDistance))
                 );
 
         mainPanel.setBorder(new EtchedBorder());
@@ -742,7 +967,8 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
         JButton runButton = new JButton("Analyze");
         runButton.addActionListener((e) -> {
             options.burninPercentage = burninSlider.getValue();
-			options.minMigrationDistance = Double.parseDouble(minMigrationDistance.getText());
+			options.maxMigrationDistance = Double.parseDouble(maxMigrationDistance.getText());
+			options.minTipDistance = Double.parseDouble(minTipDistance.getText());
             dialog.setVisible(false);
         });
         runButton.setEnabled(false);
@@ -851,6 +1077,8 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
                     + "-burnin percentage       Choose _percentage_ of log to discard\n"
                     + "                         in order to remove burn-in period.\n"
                     + "                         (Default 10%)\n"
+					+ "-maxReaMigDistance     	maximum distance between reassortment node and migration node\n"
+					+ "                         In other words, maximum window width to consider.\n"
                     + "-minTipDistance     		minimum distance between internal network node\n"
                     + "                         and tip node such that the internal node is considered trunk.\n"
                     + "                         If not  specified, the trunk is any node between samples\n"
@@ -908,22 +1136,36 @@ public class ReassortmentAndMigration extends ReassortmentAnnotator {
                     break;
 
 
-			case "-minMigrationDistance":
+			case "-maxReaMigDistance":
                     if (args.length<=i+1) {
-					printUsageAndError("-minMigrationDistance must be followed by a number.");
+					printUsageAndError("-maxReaMigDistance must be followed by a number.");
                     }
 
                     try {
-					options.minMigrationDistance =
+					options.maxMigrationDistance =
                                 Double.parseDouble(args[i + 1]);
                     } catch (NumberFormatException e) {
-					printUsageAndError("minMigrationDistance must be a positive number. ");
+					printUsageAndError("maxReaMigDistance must be a positive number. ");
                      }
 
                     i += 1;
                     break;
                     
-                case "-removeSegments":
+			case "-minTipDistance":
+				if (args.length <= i + 1) {
+					printUsageAndError("-minTipDistance must be followed by a number.");
+				}
+
+				try {
+					options.minTipDistance = Double.parseDouble(args[i + 1]);
+				} catch (NumberFormatException e) {
+					printUsageAndError("minTipDistance must be a positive number. ");
+				}
+
+				i += 1;
+				break;
+
+			case "-removeSegments":
                     if (args.length<=i+1) {
                         printUsageAndError("-removeSegments must be followed by at least one number.");
                     }

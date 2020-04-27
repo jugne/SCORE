@@ -72,16 +72,7 @@ public class NetworkLogFileState extends LogFileState {
 
         int idx = line.indexOf("=");
         String newickString = line.substring(idx+1);
-		System.out.println(newickString);
-
 		Network thisNetwork = new Network(newickString, taxonSet);
-//		thisNetwork.initByName();
-		System.out.println(thisNetwork.getExtendedNewick());
-
-//		networkInput.set(thisNetwork);
-
-//		network = thisNetwork;
-//		network.assignFromWithoutID(thisNetwork);
 		thisNetwork.assignTo(network);
 
         return currentSample;
