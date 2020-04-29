@@ -1,0 +1,46 @@
+<beast version="2.0"
+       namespace="beast.app.beauti
+                 :beast.core
+                 :beast.evolution.branchratemodel
+                 :beast.evolution.speciation
+                 :beast.evolution.tree.coalescent
+                 :beast.core.util
+                 :beast.core.parameter
+                 :beast.evolution.nuc
+                 :beast.evolution.operators
+                 :beast.evolution.sitemodel
+                 :beast.evolution.substitutionmodel
+                 :beast.evolution.likelihood
+                 :beast.evolution
+                 :beast.math.distributions">
+                 
+                 
+    <!-- tree priors -->
+    <mergewith point='treePriorTemplates'>
+        <subtemplate id='Constant' class='beast.mascot.dynamics.Constant' mainid='Constant.alltrees'
+          suppressInputs="beast.mascot.dynamics.Constant.types"
+          inlineInputs="score.distribution.SCORE.dynamics,
+					score.dynamics.ConstantReassortment.structuredCoalescentDynamics">
+            <![CDATA[
+            <stateNode id="migrationRateConstant.alltrees" spec="beast.core.parameter.RealParameter" value="0.2" estimate="true"/>
+            <stateNode id="popSizeConstant.alltrees" spec="beast.core.parameter.RealParameter" value="1.0" estimate="true"/>
+            
+            <typeTrait id="typeTraitSet.t:$(n)" spec="score.utils.InitializedTraitSet" traitname="type">
+                      <taxa spec="beast.evolution.alignment.TaxonSet" alignment="@$(n)"/>
+            </typeTrait>
+            
+            <structuredCoalescentDynamics spec="beast.mascot.dynamics.Constant" id="MascotConstant.alltrees"  dimension="-1">
+					<Ne idref="popSizeConstant.alltrees"/>
+					<backwardsMigration idref="migrationRateConstant.alltrees"/>
+        			<typeTrait idref="typeTraitSet.t:$(n)"/>
+			</structuredCoalescentDynamics>
+        ]]>
+
+<!--         <plate fragment="MascotConstantParameters" var="thisparam" range="popSize, migrationRate"/> -->
+                
+      </subtemplate>
+
+
+
+    </mergewith>
+</beast>
