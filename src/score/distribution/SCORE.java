@@ -15,14 +15,11 @@ import score.math.Euler2ndOrderBase;
 
 public class SCORE extends StructuredNetworkDistribution {
 
-    public Input<ConstantReassortment> dynamicsInput = new Input<>("dynamics", "Input of rates",
-	    Input.Validate.REQUIRED);
 	public Input<Double> epsilonInput = new Input<>("epsilon", "step size for the RK4 integration", 0.000001);
     public Input<Double> maxStepInput = new Input<>("maxStep", "max step for the RK4 integration",
 			0.1);
-
-	public Input<Integer> nRecordsInput = new Input<>("nRecords",
-			"maximum number of records to keep per interval for stochastic mapping", 100);
+	public Input<ConstantReassortment> dynamicsInput = new Input<>("dynamics", "Input of rates",
+			Input.Validate.REQUIRED);
 
     public int samples;
     public int nrSamples;
@@ -56,10 +53,10 @@ public class SCORE extends StructuredNetworkDistribution {
     public void initAndValidate() {
 	dynamics = dynamicsInput.get();
 	networkIntervals = networkIntervalsInput.get();
-	network = networkIn.get();
-	if (network == null) {
-	    network = networkIntervals.networkInput.get();
-	}
+		network = networkIntervals.networkInput.get();
+//	if (network == null) {
+//	    network = networkIntervals.networkInput.get();
+//	}
 	networkEventList = networkIntervals.getNetworkEventList();
 	nodeStateProbabilities = new DoubleMatrix[network.getInternalNodes().size()];
 	nrSamples = network.getLeafNodes().size();
@@ -357,7 +354,8 @@ public class SCORE extends StructuredNetworkDistribution {
 
 	for (int k = 0; k < types; k++) {
 	    Double typeProb = reassortmentRates[k] * linProbs[daughterIndex * types + k]
-		    * Math.pow(0.5, event.segsSortedLeft) * Math.pow(0.5, (event.segsToSort - event.segsSortedLeft))
+					* Math.pow(networkIntervals.getBinomialProb(), event.segsSortedLeft)
+					* Math.pow(1 - networkIntervals.getBinomialProb(), (event.segsToSort - event.segsSortedLeft))
 		    * 2.0;
 
 	    if (!Double.isNaN(typeProb)) {

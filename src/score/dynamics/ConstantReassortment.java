@@ -28,11 +28,12 @@ public class ConstantReassortment extends Dynamics implements Loggable {
     @Override
     public void initAndValidate() {
 
-	scDynamics = structuredCoalescentDynamics.get();
-	this.typeTraitInput = scDynamics.typeTraitInput;
+		scDynamics = structuredCoalescentDynamics.get();
+		this.typeTraitInput = scDynamics.typeTraitInput;
 		this.dimensionInput = scDynamics.dimensionInput;
-	if (dimensionInput.get() < 1)
-	    dimensionInput.set(getNrTypes());
+		this.fromBeautiInput = scDynamics.fromBeautiInput;
+		if (dimensionInput.get() < 1)
+			dimensionInput.set(getNrTypes());
 
 		super.initAndValidate();
     }

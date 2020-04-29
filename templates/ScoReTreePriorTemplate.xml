@@ -1,0 +1,297 @@
+<beast version="2.0"
+       namespace="beast.app.beauti
+                 :beast.core
+                 :beast.evolution.branchratemodel
+                 :beast.evolution.speciation
+                 :beast.evolution.tree.coalescent
+                 :beast.core.util
+                 :beast.core.parameter
+                 :beast.evolution.nuc
+                 :beast.evolution.operators
+                 :beast.evolution.sitemodel
+                 :beast.evolution.substitutionmodel
+                 :beast.evolution.likelihood
+                 :beast.evolution
+                 :beast.math.distributions">
+                 
+                 
+<!-- 	<mergewith point='misc'> -->
+<!-- 		<fragment id='MascotConstantParameters' spec="beast.app.beauti.Fragment"> -->
+<!--              <![CDATA[ -->
+<!--              <prior id='$(thisparam)ConstantPrior.t:$(n)' x='@$(thisparam)Constant.alltrees'>  -->
+<!--                 <distr spec="beast.math.distributions.Exponential" mean='1'/>  -->
+<!--               </prior>  -->
+<!--               <operator id='$(thisparam)ConstantScaler.t:$(n)' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter="@$(thisparam)Constant.alltrees"/> -->
+<!--               ]]>  -->
+
+<!-- 		<connect srcID='$(thisparam)Constant.alltrees' targetID='state' inputName='stateNode' -->
+<!--                       if='inposterior(SCoRePrior.alltrees) -->
+<!--                        and inposterior(SCoReDummy.t:$(n))  -->
+<!--                        and inposterior($(thisparam)Constant.alltrees)  -->
+<!--                        and inposterior(MascotConstant.alltrees)  -->
+<!--                        and $(thisparam)Constant.alltrees/estimate=true'/>  -->
+<!-- 		<connect srcID='$(thisparam)ConstantPrior.t:$(n)' targetID='prior' inputName='distribution' -->
+<!--                      if='inposterior(SCoRePrior.alltrees) -->
+<!--                      and inposterior(SCoReDummy.t:$(n)) -->
+<!--                       and inposterior($(thisparam)Constant.alltrees) -->
+<!--                       and inposterior(MascotConstant.alltrees) -->
+<!--                      and $(thisparam)Constant.alltrees/estimate=true'/> -->
+<!-- 		<connect srcID='$(thisparam)ConstantScaler.t:$(n)' targetID='mcmc' inputName='operator' -->
+<!-- 					if='inposterior(SCoRePrior.alltrees) -->
+<!--                     and inposterior(SCoReDummy.t:$(n)) -->
+<!--                     and inposterior($(thisparam)Constant.alltrees) -->
+<!--                     and inposterior(MascotConstant.alltrees) -->
+<!--                     and $(thisparam)Constant.alltrees/estimate=true'/> -->
+<!-- 		</fragment> -->
+<!-- 	</mergewith> -->
+
+    <mergewith point="treePriorTemplates">
+
+        <!-- Structured Coalescent with Reassortment -->
+        <subtemplate id="SCORE"
+					class="coalre.util.DummyTreeDistribution"
+					mainid="SCoReDummy.t:$(n)"
+					inlineInputs="score.distribution.SCORE.networkIntervals,
+					score.distribution.SCORE.dynamics,
+					score.dynamics.ConstantReassortment.structuredCoalescentDynamics"
+					suppressInputs="score.distribution.StructuredNetworkIntervals.network,
+                    score.dynamics.ConstantReassortment.typeTrait,
+                    score.dynamics.ConstantReassortment.types,
+                    score.dynamics.ConstantReassortment.dimension,
+                     score.dynamics.ConstantReassortment.fromBeauti,
+                    beast.mascot.dynamics.Constant.types">
+          			
+            <![CDATA[
+            <stateNode id="reassortmentRateConstant.alltrees" spec="beast.core.parameter.RealParameter" value="0.1" estimate="true"/>
+            <stateNode id="migrationRateConstant.alltrees" spec="beast.core.parameter.RealParameter" value="0.2" estimate="true"/>
+            <stateNode id="popSizeConstant.alltrees" spec="beast.core.parameter.RealParameter" value="1.0" estimate="true"/>
+		    <stateNode id="binomialProbConstant.alltrees" spec="beast.core.parameter.RealParameter" lower="0.0" upper="1.0" value="0.5" estimate="false"/>
+
+            <stateNode id="networkConstant.alltrees" spec="score.simulator.SimulateStructureCoalescentNetwork" ignoreMigrationNodes="true" nSegments="1"
+                        enableSegmentTreeUpdate="false" estimate="true">
+                <reassortmentRate spec="beast.core.parameter.RealParameter" value="0.0"/>
+                <migrationRate spec="beast.core.parameter.RealParameter" value="0.2"/>
+                <coalescentRate spec="beast.core.parameter.RealParameter" value="1.0"/>
+
+
+                 <typeTrait id="typeTraitSet.t:$(n)" spec="score.utils.InitializedTraitSet" traitname="type">
+                      <taxa spec="beast.evolution.alignment.TaxonSet" alignment="@$(n)"/>
+                 </typeTrait>
+            </stateNode>
+
+            <prior spec="coalre.util.DummyTreeDistribution" id="SCoReDummy.t:$(n)" tree="@Tree.t:$(n)"/>
+
+            <prior spec="score.distribution.SCORE" id="SCoRePrior.alltrees">
+                <networkIntervals id="networkIntervalsConstant.alltrees" spec="score.distribution.StructuredNetworkIntervals">
+                    <network idref="networkConstant.alltrees"/>
+                    <binomialProb idref="binomialProbConstant.alltrees"/>
+                </networkIntervals>
+                <dynamics spec="score.dynamics.ConstantReassortment" id="Constant.alltrees" dimension="-1">
+                	<structuredCoalescentDynamics spec="beast.mascot.dynamics.Constant" id="MascotConstant.alltrees"  dimension="-1">
+						<Ne idref="popSizeConstant.alltrees"/>
+						<backwardsMigration idref="migrationRateConstant.alltrees"/>
+        				<typeTrait idref="typeTraitSet.t:$(n)"/>
+					</structuredCoalescentDynamics>
+                	<reassortmentRates idref="reassortmentRateConstant.alltrees"/>
+              </dynamics>
+            </prior>
+
+            <prior id="popSizeCwRPrior.alltrees" x="@popSizeConstant.alltrees">
+                <distr spec="OneOnX"/>
+            </prior>
+
+            <prior id="reassortmentRateCwRPrior.alltrees" x="@reassortmentRateConstant.alltrees">
+                <distr spec="OneOnX"/>
+            </prior>
+            
+            <prior id="migrationRateCwRPrior.alltrees" x="@migrationRateConstant.alltrees">
+                <distr spec="OneOnX"/>
+            </prior>
+
+            <prior id="binomialProbCwRPrior.alltrees" x="@binomialProbConstant.alltrees">
+                <distr spec="beast.math.distributions.Uniform" lower="0" upper="1"/>
+            </prior>
+
+            <operator id="reassortmentRateCwRScale.alltrees" spec="ScaleOperator"
+                parameter="@reassortmentRateConstant.alltrees" scaleFactor="0.5" weight="1.0"/>
+                
+            <operator id="migrationRateCwRScale.alltrees" spec="ScaleOperator"
+                parameter="@migrationRateConstant.alltrees" scaleFactor="0.5" weight="1.0"/>
+
+            <operator id="popSizeCwRScale.alltrees" spec="ScaleOperator"
+                parameter="@popSizeConstant.alltrees" scaleFactor="0.5" weight="1.0"/>
+
+            <operator id="binomialProbCwRScale.alltrees" spec="ScaleOperator"
+                parameter="@binomialProbConstant.alltrees" scaleFactor="0.5" weight="1.0"/>
+
+
+            <operator id="addRemoveReassortmentConstant.alltrees" spec="coalre.operators.AddRemoveReassortment"
+                      network="@networkConstant.alltrees" alpha="1.0" weight="30.0"/>
+
+            <operator id="divertSegmentConstant.alltrees" spec="coalre.operators.DivertSegmentOperator"
+                      network="@networkConstant.alltrees" weight="5.0"/>
+
+            <operator id="uniformNetworkConstant.alltrees" spec="coalre.operators.UniformNetworkNodeHeightOperator"
+                      network="@networkConstant.alltrees" weight="5.0"/>
+
+            <operator id="networkWideExchangeConstant.alltrees" spec="coalre.operators.NetworkExchange"
+                      network="@networkConstant.alltrees" isNarrow="false" weight="5.0"/>
+
+            <operator id="networkNarrowExchangeConstant.alltrees" spec="coalre.operators.NetworkExchange"
+                      network="@networkConstant.alltrees" isNarrow="true" weight="15.0"/>
+
+            <operator id="subNetworkSlideConstant.alltrees" spec="coalre.operators.SubNetworkSlide"
+                      network="@networkConstant.alltrees" weight="30.0"/>
+
+            <operator id="resimulateAboveSegmentRootsConstant.alltrees" spec="score.operators.ResimulateAboveSegmentRoots"
+                      network="@networkConstant.alltrees" weight="5.0">
+              <Ne idref="popSizeConstant.alltrees"/>
+              <reassortmentRates idref="reassortmentRateConstant.alltrees"/>
+              <networkIntervals idref="networkIntervalsConstant.alltrees"/>
+            </operator>
+
+
+            <operator id="networkScaleConstant.alltrees" spec="coalre.operators.NetworkScaleOperator"
+                      network="@networkConstant.alltrees" weight="3.0"/>
+
+            <operator id="networkScaleRootConstant.alltrees" spec="coalre.operators.NetworkScaleOperator"
+                      network="@networkConstant.alltrees" scaleRootOnly="true" weight="3.0"/>
+
+            <operator id="networkUpDownConstant.alltrees" spec="coalre.operators.NetworkScaleOperator"
+                      network="@networkConstant.alltrees" weight="3.0"/>
+                      
+           <operator id="networkUpDownNeMihgrationConstant.alltrees" spec="coalre.operators.NetworkScaleOperator"
+                      network="@networkConstant.alltrees" weight="3.0"/>
+
+         	<logger id="mappedNetworkCwRLogger.alltrees"  spec="Logger" logEvery="1000" mode="tree" fileName="$(filebase).typed.network.trees">
+            	<log id="mappedNetworkCwR" spec="score.mapping.MappedNetwork" untypedNetwork="@networkConstant.alltrees">
+					<dynamics idref="Constant.alltrees" />
+				</log>
+        	</logger>
+        	
+        	<logger id="mappedNetworkCwRStatsLogger.alltrees" spec="Logger" logEvery="1000" fileName="$(filebase).typed.stats.log">
+            	<log spec="score.logger.TypedNetworkStatsLogger" network="@mappedNetworkCwR">
+            	</log>
+        	</logger> 
+
+            <log id="networkCwRStatsLogger.alltrees" spec="coalre.statistics.NetworkStatsLogger" network="@networkConstant.alltrees"/>
+            
+			<log id="rootStateCwRLogger" spec="score.logger.RootStateLogger" score="@SCoRePrior.alltrees" reassortmentDynamics="@Constant.alltrees"/>
+
+            <logger id="networkCwRLogger.alltrees" spec="Logger" logEvery="10000" mode="tree" fileName="$(filebase).network.trees">
+                <log idref="networkConstant.alltrees"/>
+            </logger>
+
+            ]]>
+            
+<!--             <plate fragment="MascotConstantParameters" var="thisparam" range="popSize, migrationRate"/> -->
+
+            <connect method="score.utils.BEAUtiConnector.customConnector"/>
+
+            <connect srcID="SCoReDummy.t:$(n)" targetID="prior" inputName="distribution"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+            <connect srcID="SCoRePrior.alltrees" targetID="prior" inputName="distribution"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+
+            <connect srcID="reassortmentRateCwRPrior.alltrees" targetID="prior" inputName="distribution"
+                     if="inposterior(SCoRePrior.alltrees) and reassortmentRateConstant.alltrees/estimate=true"/>
+            <connect srcID="migrationRateCwRPrior.alltrees" targetID="prior" inputName="distribution"
+                     if="inposterior(SCoRePrior.alltrees) and migrationRateConstant.alltrees/estimate=true"/>
+            <connect srcID="popSizeCwRPrior.alltrees" targetID="prior" inputName="distribution"
+                     if="inposterior(SCoRePrior.alltrees) and popSizeConstant.alltrees/estimate=true"/>
+            <connect srcID="binomialProbCwRPrior.alltrees" targetID="prior" inputName="distribution"
+                     if="inposterior(SCoRePrior.alltrees) and binomialProbConstant.alltrees/estimate=true"/>
+
+            <connect srcID="reassortmentRateConstant.alltrees" targetID="state" inputName="stateNode"
+                     if="inposterior(SCoRePrior.alltrees) and reassortmentRateConstant.alltrees/estimate=true"/>
+            <connect srcID="migrationRateConstant.alltrees" targetID="state" inputName="stateNode"
+                     if="inposterior(SCoRePrior.alltrees) and migrationRateConstant.alltrees/estimate=true"/>
+            <connect srcID="popSizeConstant.alltrees" targetID="state" inputName="stateNode"
+                     if="inposterior(SCoRePrior.alltrees) and popSizeConstant.alltrees/estimate=true"/>
+            <connect srcID="binomialProbConstant.alltrees" targetID="state" inputName="stateNode"
+                     if="inposterior(SCoRePrior.alltrees) and binomialProbConstant.alltrees/estimate=true"/>
+            <connect srcID="networkConstant.alltrees" targetID="state" inputName="stateNode"
+                     if="inposterior(SCoRePrior.alltrees)"/>
+
+            <connect srcID="reassortmentRateCwRScale.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and reassortmentRateConstant.alltrees/estimate=true"/>
+            <connect srcID="migrationRateCwRScale.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and migrationRateConstant.alltrees/estimate=true"/>
+            <connect srcID="popSizeCwRScale.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and popSizeConstant.alltrees/estimate=true"/>
+            <connect srcID="binomialProbCwRScale.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and binomialProbConstant.alltrees/estimate=true"/>
+            <connect srcID="reassortmentRateConstant.alltrees" targetID="networkUpDownConstant.alltrees" inputName="downParameter"
+                     if="inposterior(SCoRePrior.alltrees) and reassortmentRateConstant.alltrees/estimate=true"/>
+            <connect srcID="popSizeConstant.alltrees" targetID="networkUpDownConstant.alltrees" inputName="upParameter"
+                     if="inposterior(SCoRePrior.alltrees) and popSizeConstant.alltrees/estimate=true"/>                    
+            <connect srcID="migrationRateConstant.alltrees" targetID="networkUpDownNeMigrationConstant.alltrees" inputName="downParameter"
+                     if="inposterior(SCoRePrior.alltrees) and migrationRateConstant.alltrees/estimate=true"/>
+            <connect srcID="popSizeConstant.alltrees" targetID="networkUpDownNeMigrationConstant.alltrees" inputName="upParameter"
+                     if="inposterior(SCoRePrior.alltrees) and popSizeConstant.alltrees/estimate=true"/>
+
+            <connect srcID="addRemoveReassortmentConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="divertSegmentConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="uniformNetworkConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="networkWideExchangeConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="networkNarrowExchangeConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="subNetworkSlideConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="resimulateAboveSegmentRootsConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="networkScaleConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="networkScaleRootConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="networkUpDownConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="networkUpDownNeMigrationConstant.alltrees" targetID="mcmc" inputName="operator"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+
+            <connect srcID="Tree.t:$(n)" targetID="addRemoveReassortmentConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+            <connect srcID="Tree.t:$(n)" targetID="divertSegmentConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+            <connect srcID="Tree.t:$(n)" targetID="uniformNetworkConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+            <connect srcID="Tree.t:$(n)" targetID="networkWideExchangeConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+            <connect srcID="Tree.t:$(n)" targetID="networkNarrowExchangeConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+            <connect srcID="Tree.t:$(n)" targetID="subNetworkSlideConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+            <connect srcID="Tree.t:$(n)" targetID="resimulateAboveSegmentRootsConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+            <connect srcID="Tree.t:$(n)" targetID="networkScaleConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+            <connect srcID="Tree.t:$(n)" targetID="networkScaleRootConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+            <connect srcID="Tree.t:$(n)" targetID="networkUpDownConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+           	<connect srcID="Tree.t:$(n)" targetID="networkUpDownNeMigrationConstant.alltrees" inputName="segmentTree"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+
+            <connect srcID="reassortmentRateConstant.alltrees" targetID="tracelog" inputName="log"
+                     if="inposterior(SCoRePrior.alltrees) and reassortmentRateConstant.alltrees/estimate=true"/>
+            <connect srcID="migrationRateConstant.alltrees" targetID="tracelog" inputName="log"
+                     if="inposterior(SCoRePrior.alltrees) and migrationRateConstant.alltrees/estimate=true"/>
+            <connect srcID="popSizeConstant.alltrees" targetID="tracelog" inputName="log"
+                     if="inposterior(SCoRePrior.alltrees) and popSizeConstant.alltrees/estimate=true"/>
+            <connect srcID="binomialProbConstant.alltrees" targetID="tracelog" inputName="log"
+                     if="inposterior(SCoRePrior.alltrees) and binomialProbConstant.alltrees/estimate=true"/>
+            <connect srcID="networkCwRStatsLogger.alltrees" targetID="tracelog" inputName="log"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="rootStateCwRLogger" targetID="tracelog" inputName="log"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+
+            <connect srcID="networkCwRLogger.alltrees" targetID="mcmc" inputName="logger"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+        </subtemplate>
+
+    </mergewith>
+</beast>
