@@ -58,7 +58,7 @@
                     score.dynamics.ConstantReassortment.typeTrait,
                     score.dynamics.ConstantReassortment.types,
                     score.dynamics.ConstantReassortment.dimension,
-                     score.dynamics.ConstantReassortment.fromBeauti,
+                    score.dynamics.ConstantReassortment.fromBeauti,
                     beast.mascot.dynamics.Constant.types">
           			
             <![CDATA[
