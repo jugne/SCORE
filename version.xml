@@ -1,0 +1,7 @@
+<addon name="ScoRe" version="0.0.1">
+  <depends on="BEAST" atleast="2.5.0"/>
+  <addonapp class="score.networkAnnotator.StructuredNetworkSummarizer"
+            description="StructuredNetworkSummarizer"/>
+  <addonapp class="score.mapping.ReMapTool"
+            description="StructuredNetworkMapper"/>
+</addon>
