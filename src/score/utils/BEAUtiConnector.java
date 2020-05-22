@@ -40,7 +40,7 @@ public class BEAUtiConnector {
 
             System.out.println(pId);
 
-            DummyTreeDistribution dummy = (DummyTreeDistribution)doc.pluginmap.get("CoalescentWithReassortmentDummy.t:" + pId);
+			DummyTreeDistribution dummy = (DummyTreeDistribution) doc.pluginmap.get("SCoReDummy.t:" + pId);
 
             if (dummy == null || !dummy.getOutputs().contains(doc.pluginmap.get("prior")))
                 continue;
@@ -101,7 +101,7 @@ public class BEAUtiConnector {
 
         // Add clock rates to network up/down operator.
 
-        NetworkScaleOperator networkUpDown = (NetworkScaleOperator)doc.pluginmap.get("networkUpDownCwR.alltrees");
+		NetworkScaleOperator networkUpDown = (NetworkScaleOperator) doc.pluginmap.get("networkUpDownConstant.alltrees");
         if (networkUpDown != null) {
             List<RealParameter> paramsCurrent;
 
@@ -123,9 +123,9 @@ public class BEAUtiConnector {
 
         // Update network initializer:
 
-        if (doc.pluginmap.containsKey("networkCwR.alltrees")) {
+		if (doc.pluginmap.containsKey("networkConstant.alltrees")) {
 			SimulateStructureCoalescentNetwork network = (SimulateStructureCoalescentNetwork) doc.pluginmap
-					.get("networkCwR.alltrees");
+					.get("networkConstant.alltrees");
 
             // Update number of segments for initializer.
             network.nSegmentsInput.setValue(segTreeCount, network);
