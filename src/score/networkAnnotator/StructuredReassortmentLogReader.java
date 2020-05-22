@@ -150,24 +150,6 @@ public class StructuredReassortmentLogReader implements NetworkLogReader {
 		return sb.toString();
 	}
 
-//    /**
-//     * Retrieve list of loci from preamble or postamble.
-//     */
-//    private void extractLoci() {
-//        List<String> prepost = new ArrayList<>();
-//        prepost.addAll(preamble);
-//        prepost.addAll(postamble);
-//
-//        for (String line : prepost) {
-//            line = line.trim();
-//            if (line.startsWith("loci ") && line.endsWith(";")) {
-//                for (String locusEntry : line.substring(5,line.length()-1).split(" ")) {
-//                    String[] locusPair = locusEntry.split(":");
-//                    loci.add(new Locus(locusPair[0], Integer.parseInt(locusPair[1])));
-//                }
-//            }
-//        }
-//    }
 
 	/**
 	 * Rewind to the beginning of the file.
@@ -268,13 +250,6 @@ public class StructuredReassortmentLogReader implements NetworkLogReader {
 		}
 
 		ExtendedNetworkBuilder acg = new ExtendedNetworkBuilder();
-//        for (Locus locus : getLoci())
-//            acg.lociInput.setValue(locus, acg);
-//        try {
-//            acg.initAndValidate();
-//        } catch (Exception e) {
-//            throw new IllegalStateException(e.getMessage());
-//        }
 
 		return new Iterator<Network>() {
 
@@ -341,7 +316,6 @@ public class StructuredReassortmentLogReader implements NetworkLogReader {
 
 	@Override
 	public int getNetworkCount() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 }

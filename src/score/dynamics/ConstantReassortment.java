@@ -14,7 +14,11 @@ public class ConstantReassortment extends Dynamics implements Loggable {
 	    Validate.REQUIRED);
 
     public Input<Dynamics> structuredCoalescentDynamics = new Input<>("structuredCoalescentDynamics",
-	    "input of dynamics to use for structured coalescent. See MASCOT dynamics package.", Validate.REQUIRED);
+			"input of dynamics to use for structured coalescent. See MASCOT dynamics package.");
+
+	public Input<Dynamics> structuredCoalescentDynamicsBeuti = new Input<>("structuredCoalescent",
+			"input of dynamics to use for structured coalescent. See MASCOT dynamics package.", Validate.XOR,
+			structuredCoalescentDynamics);
 
     Dynamics scDynamics;
 
@@ -29,6 +33,8 @@ public class ConstantReassortment extends Dynamics implements Loggable {
     public void initAndValidate() {
 
 		scDynamics = structuredCoalescentDynamics.get();
+		if (scDynamics == null)
+			scDynamics = structuredCoalescentDynamicsBeuti.get();
 		this.typeTraitInput = scDynamics.typeTraitInput;
 		this.dimensionInput = scDynamics.dimensionInput;
 		this.fromBeautiInput = scDynamics.fromBeautiInput;

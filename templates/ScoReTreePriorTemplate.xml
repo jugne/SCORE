@@ -53,12 +53,15 @@
 					mainid="SCoReDummy.t:$(n)"
 					inlineInputs="score.distribution.SCORE.networkIntervals,
 					score.distribution.SCORE.dynamics,
-					score.dynamics.ConstantReassortment.structuredCoalescentDynamics"
+					score.dynamics.ConstantReassortment.structuredCoalescent"
 					suppressInputs="score.distribution.StructuredNetworkIntervals.network,
                     score.dynamics.ConstantReassortment.typeTrait,
                     score.dynamics.ConstantReassortment.types,
                     score.dynamics.ConstantReassortment.dimension,
                     score.dynamics.ConstantReassortment.fromBeauti,
+                    score.dynamics.ConstantReassortment.structuredCoalescent.fromBeauti,
+                    score.dynamics.ConstantReassortment.structuredCoalescent.dimension,
+                    score.dynamics.ConstantReassortment.structuredCoalescentDynamics,
                     beast.mascot.dynamics.Constant.types">
           			
             <![CDATA[
@@ -87,11 +90,11 @@
                     <binomialProb idref="binomialProbConstant.alltrees"/>
                 </networkIntervals>
                 <dynamics spec="score.dynamics.ConstantReassortment" id="Constant.alltrees" dimension="-1">
-                	<structuredCoalescentDynamics spec="beast.mascot.dynamics.Constant" id="MascotConstant.alltrees"  dimension="-1">
+                	<structuredCoalescent spec="beast.mascot.dynamics.Constant" id="MascotConstant.alltrees"  dimension="-1">
 						<Ne idref="popSizeConstant.alltrees"/>
 						<backwardsMigration idref="migrationRateConstant.alltrees"/>
         				<typeTrait idref="typeTraitSet.t:$(n)"/>
-					</structuredCoalescentDynamics>
+					</structuredCoalescent>
                 	<reassortmentRates idref="reassortmentRateConstant.alltrees"/>
               </dynamics>
             </prior>
@@ -290,6 +293,11 @@
                      if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
 
             <connect srcID="networkCwRLogger.alltrees" targetID="mcmc" inputName="logger"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+                     
+            <connect srcID="mappedNetworkCwRLogger.alltrees" targetID="mcmc" inputName="logger"
+                     if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="mappedNetworkCwRStatsLogger.alltrees" targetID="mcmc" inputName="logger"
                      if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
         </subtemplate>
 
