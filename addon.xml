@@ -1,5 +1,5 @@
  <packages>
-    <package name='CoalRe' version='0.0.1'
+    <package name='SCoRe' version='0.0.1'
            url="https://github.com/jugne/SCORE/releases/download/v0.0.1/ScoRe.v0.0.1.zip"
            description="Structured Coalescent with Reassortment"
            projectURL="https://github.com/jugne/SCORE/" >
