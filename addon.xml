@@ -5,6 +5,6 @@
            projectURL="https://github.com/jugne/SCORE/" >
         <depends on='BEAST' atleast='2.5.0' atmost="2.6.9"/>
 	<depends on='CoalRe' atleast='0.0.5'/>
-	<depends on='Mascot' atleast='2.1.1'/>
+	<depends on='Mascot' atleast='1.2.2'/>
     </package>
 </packages>
