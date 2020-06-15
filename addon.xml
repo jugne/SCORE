@@ -8,7 +8,7 @@
 	<depends on='Mascot' atleast='2.0.0'/>
     </package>
     <package name='Mascot' version='2.1.1'
-           url="https://github.com/nicfel/Mascot/releases/download/v2.1.1/Mascot.vv.zip"
+           url="https://github.com/nicfel/Mascot/releases/download/v2.1.1/Mascot.v2.1.1.zip"
            description="Marginal approximation of the structured coalescent"
            projectURL="https://github.com/nicfel/Mascot/" >
         <depends on='BEAST' atleast='2.5.0' atmost="2.6.9"/>
