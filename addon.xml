@@ -1,6 +1,6 @@
  <packages>
     <package name='SCoRe' version='0.1.0'
-           url="https://github.com/jugne/SCORE/releases/download/v0.0.1/ScoRe.v0.1.0.zip"
+           url="https://github.com/jugne/SCORE/releases/download/v0.1.0/ScoRe.v0.1.0.zip"
            description="Structured Coalescent with Reassortment"
            projectURL="https://github.com/jugne/SCORE/" >
         <depends on='BEAST' atleast='2.5.0' atmost="2.6.9"/>
