@@ -62,7 +62,9 @@
                     score.dynamics.ConstantReassortment.structuredCoalescent.fromBeauti,
                     score.dynamics.ConstantReassortment.structuredCoalescent.dimension,
                     score.dynamics.ConstantReassortment.structuredCoalescentDynamics,
-                    beast.mascot.dynamics.Constant.types">
+                    beast.mascot.dynamics.Constant.types,
+                    beast.mascot.dynamics.Constant.fromBeauti,
+                    beast.mascot.dynamics.Constant.forwardsMigration">
           			
             <![CDATA[
             <stateNode id="reassortmentRateConstant.alltrees" spec="beast.core.parameter.RealParameter" value="0.1" estimate="true"/>
@@ -90,7 +92,7 @@
                     <binomialProb idref="binomialProbConstant.alltrees"/>
                 </networkIntervals>
                 <dynamics spec="score.dynamics.ConstantReassortment" id="Constant.alltrees" dimension="-1">
-                	<structuredCoalescent spec="beast.mascot.dynamics.Constant" id="MascotConstant.alltrees"  dimension="-1">
+                	<structuredCoalescent spec="beast.mascot.dynamics.Constant" id="MascotConstant.alltrees"  dimension="-1" fromBeauti="true">
 						<Ne idref="popSizeConstant.alltrees"/>
 						<backwardsMigration idref="migrationRateConstant.alltrees"/>
         				<typeTrait idref="typeTraitSet.t:$(n)"/>
