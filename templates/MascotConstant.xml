@@ -37,6 +37,11 @@
         ]]>
 
 <!--         <plate fragment="MascotConstantParameters" var="thisparam" range="popSize, migrationRate"/> -->
+
+        <connect srcID='MascotConstant.alltrees' targetID='tracelog' inputName='log'
+                if='inposterior(SCoRePrior.alltrees)
+                and inposterior(networkConstant.alltrees)
+                and inposterior(MascotConstant.alltrees)'/>
                 
       </subtemplate>
 

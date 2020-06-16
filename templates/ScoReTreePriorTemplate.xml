@@ -179,6 +179,11 @@
             	</log>
         	</logger> 
 
+  			<log idref="Constant.alltrees"/>
+  			<log idref="MascotConstant.alltrees"/>
+ 			
+ 			
+ 			
             <log id="networkCwRStatsLogger.alltrees" spec="coalre.statistics.NetworkStatsLogger" network="@networkConstant.alltrees"/>
             
 			<log id="rootStateCwRLogger" spec="score.logger.RootStateLogger" score="@SCoRePrior.alltrees" reassortmentDynamics="@Constant.alltrees"/>
@@ -281,16 +286,14 @@
            	<connect srcID="Tree.t:$(n)" targetID="networkUpDownNeMigrationConstant.alltrees" inputName="segmentTree"
                      if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
 
-            <connect srcID="reassortmentRateConstant.alltrees" targetID="tracelog" inputName="log"
-                     if="inposterior(SCoRePrior.alltrees) and reassortmentRateConstant.alltrees/estimate=true"/>
-            <connect srcID="migrationRateConstant.alltrees" targetID="tracelog" inputName="log"
-                     if="inposterior(SCoRePrior.alltrees) and migrationRateConstant.alltrees/estimate=true"/>
-            <connect srcID="popSizeConstant.alltrees" targetID="tracelog" inputName="log"
-                     if="inposterior(SCoRePrior.alltrees) and popSizeConstant.alltrees/estimate=true"/>
             <connect srcID="binomialProbConstant.alltrees" targetID="tracelog" inputName="log"
                      if="inposterior(SCoRePrior.alltrees) and binomialProbConstant.alltrees/estimate=true"/>
             <connect srcID="networkCwRStatsLogger.alltrees" targetID="tracelog" inputName="log"
                      if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
+            <connect srcID="Constant.alltrees" targetID="tracelog" inputName="log"
+            		 if="inposterior(SCoRePrior.alltrees)"/>
+            <connect srcID="MascotConstant.alltrees" targetID="tracelog" inputName="log"
+            		 if="inposterior(SCoRePrior.alltrees)"/>
             <connect srcID="rootStateCwRLogger" targetID="tracelog" inputName="log"
                      if="inposterior(SCoRePrior.alltrees) and networkConstant.alltrees/estimate=true"/>
 
