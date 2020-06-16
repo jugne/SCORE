@@ -914,7 +914,6 @@ public class MappedNetwork extends Network {
 			reassortmentRates[i] = dynamics.getReassortmentRate(i);
 			indicators[i] = dynamics.getIndicators(i);
 	}
-		dynamics.setDynamicsKnown();
 		euler.setUpDynamics(coalescentRates, migrationRates, reassortmentRates, indicators, nextRateShift);
 	}
 
