@@ -58,7 +58,6 @@ import beast.core.util.Log;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
-import coalre.networkannotator.NetworkCladeSystem;
 import coalre.networkannotator.ReassortmentLogReader;
 
 /**
@@ -207,7 +206,7 @@ public class StructuredNetworkSummarizer extends SCoReAnnotator {
         for (Network network : logReader ) {
 			removeMigrationNodes(network);
         	pruneNetwork(network, options.removeSegments);
-    		bestCladeSystem.collectAttributes(network, attributeNames, true);
+        	bestCladeSystem.collectAttributes(network, attributeNames, true);
     	}
         
         // print the network to file
