@@ -47,12 +47,12 @@ import org.xml.sax.SAXException;
 
 import beast.core.parameter.RealParameter;
 import beast.core.util.Log;
-import coalre.network.Network;
-import feast.fileio.logfileiterator.LogFileIterator;
 import feast.fileio.logfileiterator.LogFileRealParameter;
 import feast.fileio.logfileiterator.TraceLogFileState;
 import feast.function.Concatenate;
 import score.logger.TypedNetworkStatsLogger;
+import score.networkAnnotator.ExtendedNetworkBuilder;
+import score.utils.LogFileIterator;
 import score.utils.NetworkLogFileState;
 
 /**
@@ -199,7 +199,7 @@ public class ReMapTool {
 		networkLogState.setAttribute("logFileName", options.networkFile.getName());
 
 		Element network = scoreXML.createElement("network");
-		network.setAttribute("spec", Network.class.getCanonicalName());
+		network.setAttribute("spec", ExtendedNetworkBuilder.class.getCanonicalName());
 		network.setAttribute("id", "network");
 		networkLogState.appendChild(network);
 
@@ -569,7 +569,7 @@ public class ReMapTool {
      */
 	public static void getCLIOptions(String[] args, ReMappOptions options) {
         int i=0;
-        while (args[i].startsWith("-")) {
+		while (args.length > i && args[i].startsWith("-")) {
             switch(args[i]) {
                 case "-help":
                     printUsageAndExit();
@@ -580,7 +580,7 @@ public class ReMapTool {
 					printUsageAndError("-xml must be followed by a xml file path.");
 
                     try {
-					options.xmlFile = new File(args[i]);
+					options.xmlFile = new File(args[i + 1]);
                     } catch (NumberFormatException e) {
 					printUsageAndError("Error parsing XML file.");
                     }
@@ -595,7 +595,7 @@ public class ReMapTool {
                     }
 
                     try {
-					options.networkFile = new File(args[i]);
+					options.networkFile = new File(args[i + 1]);
                     } catch (NumberFormatException e) {
 					printUsageAndError("Error parsing network file.");
 				}
@@ -609,7 +609,7 @@ public class ReMapTool {
 				}
 
 				try {
-					options.logFile = new File(args[i]);
+					options.logFile = new File(args[i + 1]);
 				} catch (NumberFormatException e) {
 					printUsageAndError("Error parsing log file.");
 				}
@@ -623,7 +623,7 @@ public class ReMapTool {
                     }
 
 				try {
-					options.outFile = new File(args[i]);
+					options.outFile = new File(args[i + 1]);
 				} catch (NumberFormatException e) {
 					printUsageAndError("Error parsing output file path.");
 				}

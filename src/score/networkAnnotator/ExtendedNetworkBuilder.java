@@ -13,6 +13,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import beast.evolution.alignment.TaxonSet;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
@@ -27,6 +28,16 @@ import coalre.network.parser.NetworkParser;
  * @date 12 May 2020
  */
 public class ExtendedNetworkBuilder extends Network {
+
+	public ExtendedNetworkBuilder() {
+	}
+
+	public ExtendedNetworkBuilder(String newickString, TaxonSet taxonSet) {
+		this.fromExtendedNewick(newickString);
+
+		for (NetworkNode leafNode : getLeafNodes())
+			leafNode.setTaxonIndex(taxonSet.getTaxonIndex(leafNode.getTaxonLabel()));
+	}
 
 	@Override
 	public void fromExtendedNewick(String newickStr) {

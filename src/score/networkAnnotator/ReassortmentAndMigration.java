@@ -57,7 +57,6 @@ import beast.core.util.Log;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
-import coalre.networkannotator.ReassortmentLogReader;
 
 
 /**
@@ -87,6 +86,8 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 	List<Double> migToTipLengths;
 	Double lengthForward;
 	Double lengthBackward;
+	private boolean firstNet;
+	Set<String> typeKeys;
 
     private static class NetworkAnnotatorOptions {
         File inFile;
@@ -117,7 +118,7 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
         System.out.println(options + "\n");
 
         // Initialise reader
-        ReassortmentLogReader logReader = new ReassortmentLogReader(options.inFile,
+		StructuredReassortmentLogReader logReader = new StructuredReassortmentLogReader(options.inFile,
                 options.burninPercentage);
 
         System.out.println(logReader.getNetworkCount() + " Networks in file.");
@@ -134,6 +135,8 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 
 			ps.print("n_reassortment" + "\t" +
 					"n_migration" + "\t" +
+					"n_migration_fit" + "\t" +
+					"n_migration_unfit" + "\t" +
 					"n_reassortment_total_fit" + "\t" +
 					"n_reassortment_total_unfit" + "\t" +
 					"n_reassortment_window" + "\t" +
@@ -153,13 +156,15 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 
 			// + "\t" + "mig_tip_lengths" + "\t"
 //					+ "mig_tip_heights");
-			ps.print("\n");
+//			ps.print("\n");
+			firstNet = true;
 			for (Network network : logReader) {
 	        	pruneNetwork(network, options.removeSegments);
 				computeTrunkReassortmentLeaveDist(network, options.minTipDistance);
 				computeReassortmentAndMigration(network, ps, options.maxMigrationDistance);
 	        	
 	        	ps.print("\n");
+				firstNet = false;
 	        }
 	        ps.close();
         }
@@ -303,9 +308,12 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 				.filter(e -> !e.isRootEdge())
 				.collect(Collectors.toList());
 
+		HashMap<String, Double> typesToLength = new HashMap<>();
 		double fullLength = 0.0;
-		for (NetworkEdge edge : allEdges)
+		for (NetworkEdge edge : allEdges) {
 			fullLength += edge.getLength();
+			typesToLength.merge(edge.childNode.getTypeLabel(), edge.getLength(), Double::sum);
+		}
 
 		// Fit and unfit edges separation
 
@@ -313,31 +321,77 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 		List<NetworkNode> reaNodesFit = new ArrayList<NetworkNode>();
 		List<NetworkNode> reaNodesFitInWindow = new ArrayList<NetworkNode>(); // on window
 		List<NetworkNode> reaNodesFitOffWindow = new ArrayList<NetworkNode>(); // off window
+		List<NetworkNode> migNodesFit = new ArrayList<NetworkNode>();
 		// Off fit edges
 		List<NetworkNode> reaNodesUnfit = new ArrayList<NetworkNode>();
 		List<NetworkNode> reaNodesUnfitInWindow = new ArrayList<NetworkNode>();
 		List<NetworkNode> reaNodesUnfitOffWindow = new ArrayList<NetworkNode>();
-
-		reaNodesFit = allFitNodes.stream()
-				.filter(e -> e.isReassortment())
-				.collect(Collectors.toList());
-		reaNodesFitInWindow = reaNodesFit.stream()
-				.filter(n -> reaNodesInWindowSet.contains(n))
-				.collect(Collectors.toList());
-		reaNodesFitOffWindow = reaNodesFit.stream()
-				.filter(n -> !reaNodesInWindowSet.contains(n))
-				.collect(Collectors.toList());
-
-		reaNodesUnfit = allUnfitNodes.stream()
-				.filter(e -> e.isReassortment())
-				.collect(Collectors.toList());
-		reaNodesUnfitInWindow = reaNodesUnfit.stream()
-				.filter(n -> reaNodesInWindowSet.contains(n))
-				.collect(Collectors.toList());
-		reaNodesUnfitOffWindow = reaNodesUnfit.stream()
-				.filter(n -> !reaNodesInWindowSet.contains(n))
-				.collect(Collectors.toList());
+		List<NetworkNode> migNodesUnfit = new ArrayList<NetworkNode>();
 		
+		// for loops should speed up the multiple streams on the same list below
+		for (NetworkNode n : allFitNodes) {
+			if (n.isReassortment()) {
+				reaNodesFit.add(n);
+			} else if(isMigrationNode(n)) {
+				migNodesFit.add(n);
+			}
+		}
+		
+		for (NetworkNode n : reaNodesFit) {
+			if (reaNodesInWindowSet.contains(n)) {
+				reaNodesFitInWindow.add(n);
+			} else {
+				reaNodesFitOffWindow.add(n);
+			}
+		}
+
+		for (NetworkNode n : allUnfitNodes) {
+			if (n.isReassortment()) {
+				reaNodesUnfit.add(n);
+			} else if (isMigrationNode(n)) {
+				migNodesUnfit.add(n);
+			}
+		}
+
+		for (NetworkNode n : reaNodesUnfit) {
+			if (reaNodesInWindowSet.contains(n)) {
+				reaNodesUnfitInWindow.add(n);
+			} else {
+				reaNodesUnfitOffWindow.add(n);
+			}
+		}
+
+
+//		reaNodesFit = allFitNodes.stream()
+//				.filter(e -> e.isReassortment())
+//				.collect(Collectors.toList());
+		
+		
+//		reaNodesFitInWindow = reaNodesFit.stream()
+//				.filter(n -> reaNodesInWindowSet.contains(n))
+//				.collect(Collectors.toList());
+//		reaNodesFitOffWindow = reaNodesFit.stream()
+//				.filter(n -> !reaNodesInWindowSet.contains(n))
+//				.collect(Collectors.toList());
+
+//		migNodesFit = allFitNodes.stream()
+//				.filter(e -> isMigrationNode(e))
+//				.collect(Collectors.toList());
+
+//		reaNodesUnfit = allUnfitNodes.stream()
+//				.filter(e -> e.isReassortment())
+//				.collect(Collectors.toList());
+//		reaNodesUnfitInWindow = reaNodesUnfit.stream()
+//				.filter(n -> reaNodesInWindowSet.contains(n))
+//				.collect(Collectors.toList());
+//		reaNodesUnfitOffWindow = reaNodesUnfit.stream()
+//				.filter(n -> !reaNodesInWindowSet.contains(n))
+//				.collect(Collectors.toList());
+		
+//		migNodesUnfit = allUnfitNodes.stream()
+//				.filter(e -> isMigrationNode(e))
+//				.collect(Collectors.toList());
+
 		// calculate the length of the trunk
 		double fitOnWindowLength = 0.0;
 		double unfitOnWindowLength = 0.0;
@@ -347,6 +401,8 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 			else
 				unfitOnWindowLength += edgeLengthMap.get(edge);
 		}
+
+		
 
 		double fitOffWindowLength = 0.0;
 		double unfitOffWindowLength = 0.0;
@@ -363,10 +419,19 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 		totalUnfitLength = fullLength - totalFitLength;
 		unfitOffWindowLength = totalUnfitLength - unfitOnWindowLength;
 		
-		
+		if (firstNet) {
+			ps.print("\t");
+			for (String key : typesToLength.keySet()) {
+				ps.print("network_length_" + key + "\t");
+			}
+			typeKeys = typesToLength.keySet();
+		}
 
-		ps.print(reaNodes.size() + "\t" +
+		ps.print("\n");
+		String s = reaNodes.size() + "\t" +
 				migNodes.size() + "\t" +
+				migNodesFit.size() + "\t" +
+				migNodesUnfit.size() + "\t" +
 				reaNodesFit.size() + "\t" +
 				reaNodesUnfit.size() + "\t" +
 				reaNodesInWindowSet.size() + "\t" +
@@ -382,7 +447,17 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 				fitOnWindowLength + "\t" +
 				unfitOnWindowLength + "\t" +
 				fitOffWindowLength + "\t" +
-				unfitOffWindowLength);
+				unfitOffWindowLength + "\t";
+
+		int l = 1;
+		for (String key : typeKeys) {
+			s += typesToLength.get(key);
+			if (l < typeKeys.size())
+				s += "\t";
+			l++;
+		}
+
+		ps.print(s);
 
 		// + "\t" + Arrays.toString(migToTipLengths.toArray()) + "\t"
 //				+ Arrays.toString(migToTipHeight.toArray()));
@@ -1065,9 +1140,7 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
     }
 
     public static String helpMessage =
-            "TrunkReassortment - counts how many reassortment events happened on trunk and non-trunk nodes.\n"
-                    + "\n"
-                    + "Usage: appstore ACGAnnotator [-help | [options] logFile [outputFile]\n"
+			"Reassortment and migration analyzer - analyses reassortment and migration relation.\n"
                     + "\n"
                     + "Option                   Description\n"
                     + "--------------------------------------------------------------\n"

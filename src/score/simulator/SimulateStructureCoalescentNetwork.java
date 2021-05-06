@@ -36,7 +36,7 @@ public class SimulateStructureCoalescentNetwork extends Network {
 //	    "Population model to use.", Validate.REQUIRED);
 
     public Input<RealParameter> coalescentRatesInput = new Input<>("coalescentRate",
-	    "Rate of migration for each state (per lineage per unit time)", Validate.REQUIRED);
+			"Rate of coalescence for each state (per lineage per unit time)", Validate.REQUIRED);
 
     public Input<Integer> dimensionInput = new Input<>("dimension",
 	    "the number of different states." + " if -1, it will use the number of different types ", -1);

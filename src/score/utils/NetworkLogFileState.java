@@ -1,11 +1,15 @@
 package score.utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import beast.core.Input;
+import beast.core.StateNode;
 import beast.evolution.alignment.TaxonSet;
 import coalre.network.Network;
 import feast.fileio.logfileiterator.LogFileState;
+import score.networkAnnotator.ExtendedNetworkBuilder;
 
 public class NetworkLogFileState extends LogFileState {
 
@@ -72,7 +76,7 @@ public class NetworkLogFileState extends LogFileState {
 
         int idx = line.indexOf("=");
         String newickString = line.substring(idx+1);
-		Network thisNetwork = new Network(newickString, taxonSet);
+		ExtendedNetworkBuilder thisNetwork = new ExtendedNetworkBuilder(newickString, taxonSet);
 		thisNetwork.assignTo(network);
 
         return currentSample;
@@ -107,5 +111,15 @@ public class NetworkLogFileState extends LogFileState {
 
         return true;
     }
+
+	List<StateNode> stateNodes = new ArrayList<>();
+
+	@Override
+	public List<StateNode> getStateNodes() {
+		if (stateNodes.isEmpty())
+			stateNodes.add(network);
+
+		return stateNodes;
+	}
 
 }
