@@ -73,6 +73,8 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 
 	List<NetworkNode> allUnfitNodes;
 	List<Double> leaveDistance;
+	HashMap<NetworkNode, Double> unfitNodesleaveDistanceMap;
+	HashMap<NetworkNode, Double> fitNodesleaveDistanceMap;
     
 	List<NetworkNode> reaAfterList;
 	List<NetworkNode> reaBeforeList;
@@ -161,7 +163,7 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 			for (Network network : logReader) {
 	        	pruneNetwork(network, options.removeSegments);
 				computeTrunkReassortmentLeaveDist(network, options.minTipDistance);
-				computeReassortmentAndMigration(network, ps, options.maxMigrationDistance);
+				computeReassortmentAndMigration(network, ps, options.maxMigrationDistance, options.minTipDistance);
 	        	
 	        	ps.print("\n");
 				firstNet = false;
@@ -202,6 +204,8 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 		allFitNodes = new ArrayList<>();
 		allUnfitNodes = new ArrayList<>();
 		leaveDistance = new ArrayList<>();
+		unfitNodesleaveDistanceMap = new HashMap<>();
+		fitNodesleaveDistanceMap = new HashMap<NetworkNode, Double>();
 
 		if (zeroHeightEdges.size() == 0)
 			throw new IllegalArgumentException("no leaf node with 0 height found");
@@ -211,13 +215,16 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 			getAllAncestralEdgesLeaveDist(zeroEdge.childNode, dist, minTipDistance);
 		}
 
+		ArrayList<NetworkNode> allFitNodeCopy = new ArrayList<>(allFitNodes);
 		// drop every node in allTrunkNodes that is less far away from a leave than some
 		// threshold
 		for (int i = allFitNodes.size() - 1; i >= 0; i--) {
 			if (leaveDistance.get(i) < minTipDistance) {
-				allUnfitNodes.add(allFitNodes.get(i));
-				allFitNodes.remove(i);
-			}
+				allUnfitNodes.add(allFitNodeCopy.get(i));
+				unfitNodesleaveDistanceMap.put(allFitNodeCopy.get(i), leaveDistance.get(i));
+				allFitNodes.remove(allFitNodeCopy.get(i));
+			} else
+				fitNodesleaveDistanceMap.put(allFitNodeCopy.get(i), leaveDistance.get(i));
 		}
 
 		if (network.getNodes().size() != (allUnfitNodes.size() + allFitNodes.size()))
@@ -246,7 +253,8 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 	}
         
 
-	private void computeReassortmentAndMigration(Network network, PrintStream ps, double maxMigrationDistance)
+	private void computeReassortmentAndMigration(Network network, PrintStream ps, double maxMigrationDistance,
+			double minTipDistance)
 			throws Exception {
 		// get all reassortment nodes of the network
 
@@ -300,19 +308,23 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 		
 		// Total edge length within the windows above migration nodes
 		double totalLengthWindow = 0.0;
-		for (double l : edgeLengthMap.values())
-			totalLengthWindow += l;
+		for (NetworkEdge e : edgeLengthMap.keySet()) {
+			if (e.hasSegments.cardinality() > 1)
+				totalLengthWindow += edgeLengthMap.get(e);
+		}
 
-		// get the length of the network
+		// get the total length of the network edges with > 1 segment
 		List<NetworkEdge> allEdges = network.getEdges().stream()
-				.filter(e -> !e.isRootEdge())
+				.filter(e -> !e.isRootEdge() && e.hasSegments.cardinality() > 1)
 				.collect(Collectors.toList());
 
 		HashMap<String, Double> typesToLength = new HashMap<>();
 		double fullLength = 0.0;
 		for (NetworkEdge edge : allEdges) {
-			fullLength += edge.getLength();
-			typesToLength.merge(edge.childNode.getTypeLabel(), edge.getLength(), Double::sum);
+			if (edge.hasSegments.cardinality() > 1) {
+				fullLength += edge.getLength();
+				typesToLength.merge(edge.childNode.getTypeLabel(), edge.getLength(), Double::sum);
+			}
 		}
 
 		// Fit and unfit edges separation
@@ -396,10 +408,29 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 		double fitOnWindowLength = 0.0;
 		double unfitOnWindowLength = 0.0;
 		for (NetworkEdge edge : edgeLengthMap.keySet()) {
-			if (allFitNodes.contains(edge.childNode))
-				fitOnWindowLength += edgeLengthMap.get(edge);
-			else
-				unfitOnWindowLength += edgeLengthMap.get(edge);
+			if (edge.hasSegments.cardinality() > 1) {
+				if (allFitNodes.contains(edge.childNode))
+					fitOnWindowLength += edgeLengthMap.get(edge);
+				else if (allFitNodes.contains(edge.parentNode)) { // does not contain child, but contains parent
+					NetworkNode child = edge.childNode;
+					NetworkNode parent = edge.parentNode;
+					// h2
+					double edgeLength = parent.getHeight() - child.getHeight();
+					// tr2 fit thresh when looking from parent node downwards to tips
+					double fitThreshold = edgeLength - (minTipDistance - unfitNodesleaveDistanceMap.get(child));
+					// tr
+					double windowThreshold = edgeLength - edgeLengthMap.get(edge);
+					if (fitThreshold > windowThreshold) {
+						if (fitThreshold - windowThreshold < 0)
+							throw new Exception();
+						fitOnWindowLength += fitThreshold - windowThreshold;
+						unfitOnWindowLength += edgeLengthMap.get(edge) - (fitThreshold - windowThreshold);
+					} else {
+						unfitOnWindowLength += edgeLengthMap.get(edge);
+					}
+				} else
+					unfitOnWindowLength += edgeLengthMap.get(edge);
+			}
 		}
 
 		
@@ -410,8 +441,16 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 		double totalUnfitLength = 0.0;
 		for (NetworkNode node : allFitNodes) {
 			for (NetworkEdge edge : node.getParentEdges())
-				if (!edge.isRootEdge())
+				if (!edge.isRootEdge() && edge.hasSegments.cardinality() > 1)
 					totalFitLength += edge.getLength();
+			for (NetworkEdge childEdge : node.getChildEdges()) {
+				if (!allFitNodes.contains(childEdge.childNode) && childEdge.hasSegments.cardinality() > 1) {
+					double fitThreshold = node.getHeight() - childEdge.childNode.getHeight()
+							- (minTipDistance - unfitNodesleaveDistanceMap.get(childEdge.childNode));
+					if (fitThreshold > 0)
+						totalFitLength += fitThreshold;
+				}
+			}
 		}
 		
 		fitOffWindowLength = totalFitLength - fitOnWindowLength;
@@ -754,9 +793,14 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 					length += threshold - offset;
 					if (!edgeLengthMap.containsKey(leftParentdEdge)
 							|| (edgeLengthMap.containsKey(leftParentdEdge)
-									&& edgeLengthMap.get(leftParentdEdge) < threshold - offset))
+									&& edgeLengthMap.get(leftParentdEdge) < threshold - offset)) {
 						edgeLengthMap.put(leftParentdEdge, threshold - offset); // add only the edge length up until the
-																			// window ends
+						// window ends
+//						if (allFitNodes.contains(node))
+//							fitEdgeLengthMap.put(leftParentdEdge, threshold - offset);
+//						else if(allFitNodes.contains(left))
+					}
+
 				}
 
 //					throw new Exception("offset greater than the threshold!!");
@@ -895,8 +939,15 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 	}
 
 	private boolean isMigrationNode(NetworkNode node) {
-		if (!node.isLeaf() && node.getChildCount() == 1 && node.getParentCount() == 1)
+		if (!node.isLeaf() && node.getChildCount() == 1
+				&& node.getParentCount() == 1) {
+			if (!node.getParentEdges().get(0).isRootEdge()
+					&& node.getTypeLabel().equalsIgnoreCase(node.getChildEdges().get(0).childNode.getTypeLabel()))
+				throw new Error();
 			return true;
+		}
+//				&& !node.getParentEdges().get(0).isRootEdge() && !node.getTypeLabel().equalsIgnoreCase(node.getParentEdges().get(0).parentNode.getTypeLabel()))
+
 		else
 			return false;
 	}
@@ -930,6 +981,13 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 			}
 		}
 	}
+
+//    private double findDownStreamMigHeight(NetworkNode subroot) {
+//    	if (!isMigrationNode(subroot))
+//    		for (NetworkEdge child : subroot.getChildEdges()) {
+//    			double h1 = findDownStreamMigHeight(NetworkNode subroot)
+//    		}
+//    }
 
         
     /**
@@ -1177,6 +1235,7 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
         System.exit(1);
     }
 
+
     /**
      * Retrieve TrunkReassortment options from command line.
      *
@@ -1271,6 +1330,7 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
         if (i+1<args.length)
             options.outFile = new File(args[i+1]);
     }
+
 
     /**
      * Main method for ACGAnnotator.  Sets up GUI if needed then
