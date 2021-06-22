@@ -1,6 +1,6 @@
  <packages>
     <package name='SCoRe' version='0.2.0'
-           url="https://github.com/jugne/SCORE/blob/master/release/SCoRe.v0.2.0.zip"
+           url="https://raw.githubusercontent.com/jugne/SCORE/master/release/SCoRe.v0.2.0.zip"
            description="Structured Coalescent with Reassortment"
            projectURL="https://github.com/jugne/SCORE/" >
         <depends on='BEAST' atleast='2.5.0' atmost="2.6.9"/>
@@ -9,3 +9,7 @@
 	<depends on='feast' atleast='7.5.0'/>
     </package>
 </packages>
+https://github.com/CompEvol/packages/tree/main/BDSKY
+https://raw.githubusercontent.com/CompEvol/packages/main/BDSKY/BDSKY.v1.4.6.zip
+https://github.com/jugne/SCORE/blob/master/release/SCoRe.v0.2.0.zip?raw=true
+https://github.com/jugne/SCORE/blob/master/release/SCoRe.v0.2.0.zip
