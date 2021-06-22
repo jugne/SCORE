@@ -3,9 +3,15 @@
            url="https://raw.githubusercontent.com/jugne/SCORE/master/release/SCoRe.v0.2.0.zip"
            description="Structured Coalescent with Reassortment"
            projectURL="https://github.com/jugne/SCORE/" >
-        <depends on='BEAST' atleast='2.5.0' atmost="2.6.9"/>
+        <depends on='beast2' atleast='2.5.0' atmost="2.6.9"/>
 	<depends on='CoalRe' atleast='0.0.5'/>
 	<depends on='Mascot' atleast='2.0.0'/>
 	<depends on='feast' atleast='7.5.0'/>
+    </package>
+    <package name="Mascot" version="2.1.2"
+	   url="https://raw.githubusercontent.com/CompEvol/packages/main/Mascot/Mascot.v2.1.2.zip"
+	   description="Marginal approximation of the structured coalescent"
+	   projectURL="https://taming-the-beast.org/tutorials/Mascot-Tutorial/">
+		<depends on="beast2" atleast="2.5.0" atmost='2.6.9'/>
     </package>
 </packages>
