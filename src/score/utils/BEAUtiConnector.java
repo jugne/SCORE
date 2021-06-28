@@ -14,6 +14,7 @@ import beast.evolution.likelihood.GenericTreeLikelihood;
 import beast.evolution.operators.UpDownOperator;
 import beast.evolution.tree.TraitSet;
 import beast.evolution.tree.Tree;
+import coalre.network.SegmentTreeInitializer;
 import coalre.operators.NetworkScaleOperator;
 import coalre.util.DummyTreeDistribution;
 import score.simulator.SimulateStructureCoalescentNetwork;
@@ -49,6 +50,19 @@ public class BEAUtiConnector {
 
             GenericTreeLikelihood likelihood = (GenericTreeLikelihood) p;
             Tree segmentTree = (Tree) likelihood.treeInput.get();
+
+			// Tell each segment tree initializer which segment index it's
+			// initializing. (Better way to do this?)
+			SegmentTreeInitializer segmentTreeInitializer = (SegmentTreeInitializer) doc.pluginmap
+					.get("segmentTreeInitializerCwR.t:" + pId);
+			segmentTreeInitializer.segmentIndexInput.setValue(segTreeCount - 1, segmentTreeInitializer);
+
+			// Ensure segment tree initializers come first in list:
+			// (This is a hack to ensure that the RandomTree initializers
+			// are the ones removed by
+			// StateNodeInitializerListInputEditor.customConnector().)
+			mcmc.initialisersInput.get().remove(segmentTreeInitializer);
+			mcmc.initialisersInput.get().add(0, segmentTreeInitializer);
 
             // Remove segment trees from standard up/down operators.
 

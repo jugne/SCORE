@@ -84,6 +84,11 @@
                  </typeTrait>
             </stateNode>
 
+			<init id="segmentTreeInitializerCwR.t:$(n)" spec="coalre.network.SegmentTreeInitializer"
+                  network="@networkConstant.alltrees">
+                  <segmentTree idref="Tree.t:$(n)"/>
+            </init>
+            
             <prior spec="coalre.util.DummyTreeDistribution" id="SCoReDummy.t:$(n)" tree="@Tree.t:$(n)"/>
 
             <prior spec="score.distribution.SCORE" id="SCoRePrior.alltrees">
@@ -196,6 +201,9 @@
             
 <!--             <plate fragment="MascotConstantParameters" var="thisparam" range="popSize, migrationRate"/> -->
 
+			<connect srcID="segmentTreeInitializerCwR.t:$(n)" targetID="mcmc" inputName="init"
+                     if="inposterior(SCoReDummy.t:$(n)) and Tree.t:$(n)/estimate=true"/>
+			
             <connect method="score.utils.BEAUtiConnector.customConnector"/>
 
             <connect srcID="SCoReDummy.t:$(n)" targetID="prior" inputName="distribution"
