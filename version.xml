@@ -1,4 +1,4 @@
-<addon name="SCoRe" version="0.2.0">
+<addon name="SCoRe" version="0.2.1">
   <depends on="BEAST" atleast="2.5.0"/>
   <depends on="Mascot" atleast="2.1.1"/>
   <depends on="CoalRe" atleast="0.0.5"/>
