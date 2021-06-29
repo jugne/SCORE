@@ -1,0 +1,508 @@
+<project default="build" basedir=".">
+
+    <!-- Source, JUnit test code and jar library locations. -->
+    <property name="src" location="src"/>
+    <property name="test" location="test"/>
+    <property name="lib" location="lib"/>
+
+    <!-- Location to check for local copy of beast2 repository -->
+    <property name="beastDir" location="../beast2"/>
+	
+	<!-- Location to check for local copy of CoalRe repository -->
+	<property name="CoalReDir" location="../CoalRe"/>
+	
+	<!-- Location to check for local copy of feast repository -->
+	<property name="feastDir" location="../feast"/>
+	
+	<!-- Location to check for local copy of Mascot repository -->
+	<property name="mascotDir" location="../Mascot"/>
+	
+	<!-- Location to check for local copy of CoupledMCMC repository -->
+	<property name="coupledMcmcDir" location="../CoupledMCMC"/>
+
+    <!-- BEAST 2 currently uses Java 1.8 -->
+    <property name="sourceVersion" value="1.8"/>
+    <property name="targetVersion" value="1.8"/>
+
+    <!-- Directories necessary for all BEAST 2 packages -->
+    <property name="doc" location="doc"/>
+    <property name="examples" location="examples"/>
+    <property name="templates" location="templates"/>
+
+    <!-- BEAST branch and version to build against
+         (only different for version tags because of
+         a Github peculiarity) -->
+    <property name="beast-branch" value="master"/>
+    <property name="beast-version" value="master"/>
+
+    <!-- Names of temporary build/test directories -->
+    <property name="build" location="build"/>
+    <property name="build-lib" location="build-lib"/>
+    <property name="build-test" location="build-test"/>
+    <property name="test-reports" location="test-reports"/>
+    <property name="dist" location="dist"/>
+    <property name="pack" location="${dist}/package"/>
+
+    <!-- Prepare for compilation -->
+    <target name="init">
+
+        <available file="version.xml" property="versionAvailable"/>
+        <fail unless="versionAvailable">
+            ** Required file version.xml does not exist. **
+            If this is a new project, run "ant skeleton" from
+            the command line to create the files required for
+            your BEAST 2 package.
+        </fail>
+
+        <!-- Read package name and version from xml file -->
+        <xmlproperty file="version.xml" prefix="fromVersionFile" />
+        <property name="projName" value="${fromVersionFile.addon(name)}" />
+        <property name="projVersion" value="${fromVersionFile.addon(version)}" />
+
+        <mkdir dir="${build}"/>
+        <mkdir dir="${build-lib}"/>
+        <mkdir dir="${dist}"/>
+
+        <copy todir="${build-lib}" failonerror="false" quiet="true">
+            <fileset dir="${lib}" includes="*.jar"/>
+        </copy>
+    </target>
+
+    <!-- Get beast -->
+
+    <target name="find-beast" depends="init">
+        <available file="${beastDir}" property="localBeastAvailable"/>
+    </target>
+
+    <target name="build-remote-beast" depends="find-beast" unless="localBeastAvailable">
+        <echo>No local copy of the beast2 source found at ${beastDir}.</echo>
+        <echo>Compiling against version ${beast-version} from GitHub.</echo>
+
+        <property name="build-beast" location="build-beast"/>
+        <mkdir dir="${build-beast}"/>
+
+        <get src="https://github.com/CompEvol/beast2/archive/${beast-branch}.zip" dest="${build-beast}/beast.zip"/>
+        <unzip src="${build-beast}/beast.zip" dest="${build-beast}"/>
+        <mkdir dir="${build-beast}/beast2-${beast-version}/build"/>
+        <javac target="${targetVersion}" source="${sourceVersion}"
+            srcdir="${build-beast}/beast2-${beast-version}/src"
+            destdir="${build-beast}/beast2-${beast-version}/build" includeantruntime="false">
+            <classpath>
+                <pathelement path="${classpath}"/>
+                <fileset dir="${build-beast}/beast2-${beast-version}/lib" includes="*.jar"/>
+            </classpath>
+        </javac>
+        <jar jarfile="${build-lib}/beast2.jar" basedir="${build-beast}/beast2-${beast-version}/build" />
+        <copy todir="${build-lib}">
+            <fileset dir="${build-beast}/beast2-${beast-version}/lib" includes="*.jar"/>
+        </copy>
+
+        <delete dir="${build-beast}" />
+    </target>
+
+    <target name="build-local-beast" depends="find-beast" if="localBeastAvailable">
+        <echo>Compiling against beast2 source found at ${beastDir}.</echo>
+
+        <property name="build-beast" location="build-beast"/>
+        <mkdir dir="${build-beast}"/>
+
+        <javac target="${targetVersion}" source="${sourceVersion}"
+            srcdir="${beastDir}/src"
+            destdir="${build-beast}" includeantruntime="false">
+            <classpath>
+                <pathelement path="${classpath}"/>
+                <fileset dir="${beastDir}/lib" includes="*.jar"/>
+            </classpath>
+        </javac>
+        <jar jarfile="${build-lib}/beast2.jar" basedir="${build-beast}" />
+        <copy todir="${build-lib}">
+            <fileset dir="${beastDir}/lib" includes="*.jar"/>
+        </copy>
+
+        <delete dir="${build-beast}" />
+    </target>
+
+    <target name="build-beast" depends="build-local-beast,build-remote-beast"/>
+	
+    <!-- Get CoalRe -->
+
+    <target name="find-coalre" depends="init">
+        <available file="${CoalReDir}" property="localCoalReAvailable"/>
+    </target>
+
+    <target name="build-remote-coalre" depends="find-coalre" unless="localCoalReAvailable">
+        <echo>No local copy of the CoalRe source found at ${CoalReDir}.</echo>
+        <echo>Compiling against version ${beast-version} from GitHub.</echo>
+
+        <property name="build-coalre" location="build-coalre"/>
+        <mkdir dir="${build-coalre}"/>
+
+        <get src="https://github.com/nicfel/CoalRe/archive/master.zip" dest="${build-coalre}/coalre.zip"/>
+        <unzip src="${build-coalre}/coalre.zip" dest="${build-coalre}"/>
+        <mkdir dir="${build-coalre}/CoalRe-master/build"/>
+        <javac target="${targetVersion}" source="${sourceVersion}"
+            srcdir="${build-coalre}/CoalRe-master/src"
+            destdir="${build-coalre}/CoalRe-master/build" includeantruntime="false">
+            <classpath>
+                <pathelement path="${classpath}"/>
+                <fileset dir="${build-coalre}/CoalRe-master/lib" includes="*.jar"/>
+                <fileset dir="${build-lib}" includes="*.jar"/>
+            </classpath>
+        </javac>
+        <jar jarfile="${build-lib}/coalre.jar" basedir="${build-coalre}/CoalRe-master/build" />
+        <copy todir="${build-lib}">
+            <fileset dir="${build-coalre}/CoalRe-master/lib" includes="*.jar"/>
+        </copy>
+
+        <delete dir="${build-coalre}" />
+    </target>
+
+    <target name="build-local-coalre" depends="find-coalre" if="localCoalReAvailable">
+        <echo>Compiling against local Mascot source found at ${CoalReDir}.</echo>
+
+        <property name="build-coalre" location="build-coalre"/>
+        <mkdir dir="${build-coalre}"/>
+
+        <javac target="${targetVersion}" source="${sourceVersion}"
+            srcdir="${CoalReDir}/src"
+            destdir="${build-coalre}" includeantruntime="false">
+            <classpath>
+                <pathelement path="${classpath}"/>
+                <fileset dir="${CoalReDir}/lib" includes="*.jar"/>
+                <fileset dir="${build-lib}" includes="*.jar"/>
+            </classpath>
+        </javac>
+        <jar jarfile="${build-lib}/coalre.jar" basedir="${build-coalre}" />
+        <copy todir="${build-lib}">
+            <fileset dir="${CoalReDir}/lib" includes="*.jar"/>
+        </copy>
+
+        <delete dir="${build-coalre}" />
+    </target>
+
+    <target name="build-coalre" depends="build-local-coalre,build-remote-coalre"/>
+	
+	<!-- Get Mascot -->
+
+	    <target name="find-mascot" depends="init">
+	        <available file="${mascotDir}" property="localBeastLabsAvailable"/>
+	    </target>
+
+	    <target name="build-remote-mascot" depends="find-mascot" unless="localBeastLabsAvailable">
+	        <echo>No local copy of the Mascot source found at ${mascotDir}.</echo>
+	        <echo>Compiling against version ${beast-version} from GitHub.</echo>
+
+	        <property name="build-mascot" location="build-mascot"/>
+	        <mkdir dir="${build-mascot}"/>
+
+	        <get src="https://github.com/nicfel/Mascot/archive/master.zip" dest="${build-mascot}/mascot.zip"/>
+	        <unzip src="${build-mascot}/mascot.zip" dest="${build-mascot}"/>
+	        <mkdir dir="${build-mascot}/Mascot-master/build"/>
+	        <javac target="${targetVersion}" source="${sourceVersion}"
+	            srcdir="${build-mascot}/Mascot-master/src"
+	            destdir="${build-mascot}/Mascot-master/build" includeantruntime="false">
+	            <classpath>
+	                <pathelement path="${classpath}"/>
+	                <fileset dir="${build-mascot}/Mascot-master/lib" includes="*.jar"/>
+	                <fileset dir="${build-lib}" includes="*.jar"/>
+	            </classpath>
+	        </javac>
+	        <jar jarfile="${build-lib}/mascot.jar" basedir="${build-mascot}/Mascot-master/build" />
+	        <copy todir="${build-lib}">
+	            <fileset dir="${build-mascot}/Mascot-master/lib" includes="*.jar"/>
+	        </copy>
+
+	        <delete dir="${build-mascot}" />
+	    </target>
+
+	    <target name="build-local-mascot" depends="find-mascot" if="localBeastLabsAvailable">
+	        <echo>Compiling against local Mascot source found at ${mascotDir}.</echo>
+
+	        <property name="build-mascot" location="build-mascot"/>
+	        <mkdir dir="${build-mascot}"/>
+
+	        <javac target="${targetVersion}" source="${sourceVersion}"
+	            srcdir="${mascotDir}/src"
+	            destdir="${build-mascot}" includeantruntime="false">
+	            <classpath>
+	                <pathelement path="${classpath}"/>
+	                <fileset dir="${mascotDir}/lib" includes="*.jar"/>
+	                <fileset dir="${build-lib}" includes="*.jar"/>
+	            </classpath>
+	        </javac>
+	        <jar jarfile="${build-lib}/mascot.jar" basedir="${build-mascot}" />
+	        <copy todir="${build-lib}">
+	            <fileset dir="${mascotDir}/lib" includes="*.jar"/>
+	        </copy>
+
+	        <delete dir="${build-mascot}" />
+	    </target>
+
+	    <target name="build-mascot" depends="build-local-mascot,build-remote-mascot"/>
+	    
+	    
+	    	<!-- Get feast -->
+
+	    <target name="find-feast" depends="init">
+	        <available file="${feastDir}" property="localBeastLabsAvailable"/>
+	    </target>
+
+	    <target name="build-remote-feast" depends="find-feast" unless="localBeastLabsAvailable">
+	        <echo>No local copy of the feast source found at ${feastDir}.</echo>
+	        <echo>Compiling against version ${beast-version} from GitHub.</echo>
+
+	        <property name="build-feast" location="build-feast"/>
+	        <mkdir dir="${build-feast}"/>
+
+	        <get src="https://github.com/tgvaughan/feast/releases/download/v7.8.0/feast.v7.8.0.zip" dest="${build-feast}/feast.zip"/>
+	        <unzip src="${build-feast}/feast.zip" dest="${build-feast}"/>
+	        <mkdir dir="${build-feast}/feast-master/build"/>
+	        <javac target="${targetVersion}" source="${sourceVersion}"
+	            srcdir="${build-feast}/feast-master/src"
+	            destdir="${build-feast}/feast-master/build" includeantruntime="false">
+	            <classpath>
+	                <pathelement path="${classpath}"/>
+	                <fileset dir="${build-feast}/feast-master/lib" includes="*.jar"/>
+	                <fileset dir="${build-lib}" includes="*.jar"/>
+	            </classpath>
+	        </javac>
+	        <jar jarfile="${build-lib}/feast.jar" basedir="${build-feast}/feast-master/build" />
+	        <copy todir="${build-lib}">
+	            <fileset dir="${build-feast}/feast-master/lib" includes="*.jar"/>
+	        </copy>
+
+	        <delete dir="${build-feast}" />
+	    </target>
+
+	    <target name="build-local-feast" depends="find-feast" if="localBeastLabsAvailable">
+	        <echo>Compiling against local feast source found at ${feastDir}.</echo>
+
+	        <property name="build-feast" location="build-feast"/>
+	        <mkdir dir="${build-feast}"/>
+
+	        <javac target="${targetVersion}" source="${sourceVersion}"
+	            srcdir="${feastDir}/src"
+	            destdir="${build-feast}" includeantruntime="false">
+	            <classpath>
+	                <pathelement path="${classpath}"/>
+	                <fileset dir="${feastDir}/lib" includes="*.jar"/>
+	                <fileset dir="${build-lib}" includes="*.jar"/>
+	            </classpath>
+	        </javac>
+	        <jar jarfile="${build-lib}/feast.jar" basedir="${build-feast}" />
+	        <copy todir="${build-lib}">
+	            <fileset dir="${feastDir}/lib" includes="*.jar"/>
+	        </copy>
+
+	        <delete dir="${build-feast}" />
+	    </target>
+
+	    <target name="build-feast" depends="build-local-feast,build-remote-feast"/>
+	
+
+    <!-- Compile -->
+    <target name="compile" depends="build-beast,build-coalre,build-mascot,build-feast">
+        <javac target="${targetVersion}" source="${sourceVersion}" srcdir="${src}" destdir="${build}" includeantruntime="false">
+            <classpath>
+                <pathelement path="${classpath}"/>
+                <fileset dir="${build-lib}" includes="*.jar"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="copy-resources" depends="compile">
+        <copy todir="${build}">
+            <fileset dir="${src}"
+                     includes="**/*.png" />
+        </copy>
+    </target>
+
+    <!-- Prepare for unit test compilation -->
+    <target name="init-test" depends="init">
+        <mkdir dir="${build-test}"/>
+        <mkdir dir="${test-reports}"/>
+    </target>
+
+
+    <!-- Compile unit tests -->
+    <target name="compile-test" depends="init-test,compile,copy-resources">
+        <javac target="${targetVersion}" source="${sourceVersion}" srcdir="${test}" destdir="${build-test}" includeantruntime="false">
+            <classpath>
+                <pathelement path="${classpath}"/>
+                <pathelement path="${build}" />
+                <fileset dir="${build-lib}" includes="*.jar"/>
+            </classpath>
+        </javac>
+    </target>
+
+
+    <!-- Run unit tests -->
+    <target name="test" depends="compile-test">
+        <junit printsummary="yes" failureproperty="testFailed" showoutput="true">
+            <classpath>
+                <pathelement path="${classpath}"/>
+                <pathelement path="${build}" />
+                <pathelement path="${build-test}" />
+                <fileset dir="${build-lib}" includes="*.jar"/>
+            </classpath>
+            <batchtest fork="yes" todir="${test-reports}">
+                <fileset dir="${test}">
+                    <include name="**/*Test.java"/>
+                </fileset>
+                <formatter type="plain"/>
+                <!--formatter type="plain" usefile="false"/--> <!-- to screen -->
+            </batchtest>
+        </junit>
+
+        <fail if="testFailed" status="1" message="Unit test failed."/>
+    </target>
+
+
+    <!-- Create BEAST 2 package -->
+    <target name="build" depends="compile,copy-resources">
+        <property name="fullName" value="${projName}.v${projVersion}"/>
+
+        <mkdir dir="${pack}"/>
+        <mkdir dir="${pack}/examples"/>
+        <mkdir dir="${pack}/templates"/>
+        <mkdir dir="${pack}/lib"/>
+        <mkdir dir="${pack}/doc"/>
+
+        <jar jarfile="${pack}/${fullName}.src.jar" basedir="${src}" />
+
+        <mkdir dir="${lib}" />
+        <copy todir="${pack}/lib">
+            <fileset dir="${lib}" includes="*.jar" />
+        </copy>
+        <jar jarfile="${pack}/lib/${fullName}.jar" basedir="${build}" />
+
+        <copy file="README.md" tofile="${pack}/README" failonerror="false" quiet="true" />
+        <copy file="README.md" tofile="${pack}/README" failonerror="false" quiet="true" />
+        <copy file="COPYING" todir="${pack}" />
+        <copy todir="${pack}">
+            <fileset dir="${lib}" includes="LICENSE*" />
+        </copy>
+
+        <mkdir dir="${examples}" />
+        <copy todir="${pack}/examples">
+            <fileset dir="${examples}" includes="**/*.xml" />
+            <fileset dir="${examples}" includes="**/*.fasta" />
+        </copy>
+
+        <mkdir dir="${templates}" />
+        <copy todir="${pack}/templates">
+            <fileset dir="${templates}" includes="*.xml" />
+        </copy>
+
+        <mkdir dir="${doc}" />
+        <copy todir="${pack}/doc">
+            <fileset dir="${doc}" includes="*.tex,*.doc,*.lyx,*.txt"/>
+        </copy>
+
+        <copy file="version.xml" todir="${pack}" />
+
+        <zip destfile="${dist}/${fullName}.zip" basedir="${pack}" />
+
+        <delete dir="${pack}"/>
+
+        <echo/>
+        <echo/>
+        <echo>** Package ${dist}/${fullName}.zip created successfuly! **</echo>
+    </target>
+
+
+    <!-- Revert to pristine state. -->
+    <target name="clean">
+        <delete dir="${build}" />
+        <delete dir="${build-lib}" />
+        <delete dir="${dist}" />
+        <delete dir="${build-test}" />
+        <delete dir="${test-reports}" />
+    </target>
+
+
+    <!-- Create skeleton package layout in current directory -->
+    <target name="skeleton">
+
+        <fail>
+            <condition>
+                <or>
+                    <resourcecount when="gt" count="1">
+                        <fileset dir="${basedir}"/>
+                    </resourcecount>
+                    <resourcecount when="gt" count="1">
+                        <dirset dir="${basedir}"/>
+                    </resourcecount>
+                </or>
+            </condition>
+
+            ** This directory contains files besides the build script. **
+            You should run "ant skeleton" in a directory containing only the build script.
+        </fail>
+
+        <echo>===============================</echo>
+        <echo>Create skeleton BEAST 2 package</echo>
+        <echo>===============================</echo>
+        <echo/>
+        <echo>First, we need some information...</echo>
+        <echo/>
+
+        <basename property="defaultProjName" file="${basedir}"/>
+
+        <input addproperty="projName" defaultvalue="${defaultProjName}">Enter package name</input>
+        <input addproperty="license" defaultvalue="gpl3" validargs="gpl3,lgpl3,lgpl2.1,apache2">Select open source software license</input>
+        <input addproperty="projVersion" defaultvalue="1.0.0">Enter package version</input>
+        <input addproperty="beastVersionReq" defaultvalue="2.4.0">Enter minimum required BEAST 2 version</input>
+
+        <echo>Assembling files and directory structure...</echo>
+
+        <echo file="version.xml">&lt;addon name="${projName}" version="${projVersion}"&gt;
+            &lt;depends on="BEAST" atleast="${beastVersionReq}"/&gt;
+
+            &lt;!-- Add other dependencies as necessary. --&gt;
+            &lt;/addon&gt;
+        </echo>
+
+        <echo file="README.md" message="README for my package.${line.separator}"/>
+
+        <condition property="licenseURL" value="https://www.gnu.org/licenses/gpl-3.0.txt">
+            <equals arg1="${license}" arg2="gpl3"/>
+        </condition>
+        <condition property="licenseURL" value="https://www.gnu.org/licenses/lgpl-3.0.txt">
+            <equals arg1="${license}" arg2="lgpl3"/>
+        </condition>
+        <condition property="licenseURL" value="https://www.gnu.org/licenses/lgpl-2.1.txt">
+            <equals arg1="${license}" arg2="lgpl2.1"/>
+        </condition>
+        <condition property="licenseURL" value="http://www.apache.org/licenses/LICENSE-2.0.txt">
+            <equals arg1="${license}" arg2="apache2"/>
+        </condition>
+
+        <get src="${licenseURL}" dest="COPYING"/>
+
+        <mkdir dir="${src}"/>
+        <mkdir dir="${test}"/>
+        <mkdir dir="${lib}"/>
+        <mkdir dir="${examples}"/>
+        <mkdir dir="${templates}"/>
+        <mkdir dir="${doc}"/>
+
+        <echo/>
+        <echo>Done.</echo>
+        <echo/>
+        <echo>The directory structure is as follows:</echo>
+        <echo>${src} - your java source goes here</echo>
+        <echo>${test} - your junit tests go here (You _are_ going to write, those, aren't you!)</echo>
+        <echo>${doc} - your documentation goes here</echo>
+        <echo>${examples} - your example XML scripts go here</echo>
+        <echo>${templates} - your BEAUti templates go here</echo>
+        <echo/>
+        <echo>To build your package, just type "ant" at the command line.</echo>
+        <echo/>
+        <echo>To run unit tests, type "ant test".</echo>
+        <echo/>
+        <echo>That's it!  Happy coding!</echo>
+
+    </target>
+
+</project>
