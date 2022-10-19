@@ -181,8 +181,6 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 	    }
 	}
 
-	if (ignoreMigrationNodes.get())
-	    removeMigrationNodes();
     }
 
     /**
@@ -247,11 +245,9 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
 			// how many lineages are in this state
 			final int k_ = extantLineages.get(i).size();
-			int k_psudoType;
+			int k_psudoType = 0;
 			if (!psudoTypeFlag) {
 				k_psudoType = extantLineages.get(i + 1).size(); // Get the # of lineages in type i'
-			} else {
-				k_psudoType = extantLineages.get(i - 1).size(); // Get the # of lineages in type i
 			}
 
 
@@ -277,6 +273,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 				minReassort = timeToNextReass;
 				typeIndexReassortment = i;
 				}
+
 
 				if (!psudoTypeFlag) {
 					for (int j = 1; j < uniqueTypes.size() * 2; j+=2) { // one can only migrate to pseudotype
@@ -365,9 +362,11 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 		Pair<NetworkEdge, Double> lineage1;
 		if (randomNumber < extantLineages.get(stateIdCoal).size()) {
 			lineage1 = extantLineages.get(stateIdCoal).get(randomNumber);
-			lineage1PseudoTypeFlag = false;
 		} else {
 			lineage1 = extantLineages.get(stateIdCoal + 1).get(randomNumber - extantLineages.get(stateIdCoal).size());
+		}
+
+		if (lineage1.getValue1() > -1) {
 			lineage1PseudoTypeFlag = true;
 		}
 
@@ -378,13 +377,15 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 			randomNumber2 = Randomizer.nextInt(extantLineages.get(stateIdCoal).size() + extantLineages.get(stateIdCoal + 1).size());
 			if(randomNumber2 < extantLineages.get(stateIdCoal).size()) {
 				lineage2 = extantLineages.get(stateIdCoal).get(randomNumber2);
-				linege2PseudoTypeFlag = false;
 			} else {
 				lineage2 = extantLineages.get(stateIdCoal + 1).get(randomNumber2 - extantLineages.get(stateIdCoal).size());
-				linege2PseudoTypeFlag = true;
 			}
 
 		} while (lineage1.equals(lineage2));
+
+		if (lineage2.getValue1() > -1) {
+			linege2PseudoTypeFlag = true;
+		}
 
 		// Create coalescent node
 		final NetworkNode coalescentNode = new NetworkNode();
@@ -482,13 +483,12 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
 		migrationPoint.addChildEdge(lineage.getValue0());
 
-		migrationPoint.setTypeIndex(stateIdMigrationTo);
-		migrationPoint.setTypeLabel(uniqueTypes.get(stateIdMigrationTo));
+		int typeIndex = (stateIdMigrationTo - 1) / 2;
+		migrationPoint.setTypeIndex(typeIndex);
+		migrationPoint.setTypeLabel(uniqueTypes.get(typeIndex));
 
-		Pair<NetworkEdge, Double> newParentEdgePair = Pair.with(newParentEdge, lineage.getValue1());
+		Pair<NetworkEdge, Double> newParentEdgePair = Pair.with(newParentEdge, migrationTime + timeWindow);
 		extantLineages.get(stateIdMigrationFrom).remove(lineage);
-		newParentEdgePair.setAt1(migrationTime + timeWindow);
-
 		extantLineages.get(stateIdMigrationTo).add(newParentEdgePair);
     }
 
@@ -510,41 +510,4 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
 	}
 
-    private void removeMigrationNodes() {
-
-	List<NetworkNode> migrationNodes = this.getNodes().stream().filter(n -> n.getParentCount() == 1)
-		.filter(n -> n.getChildCount() == 1).sorted(Comparator.comparing(NetworkNode::getHeight))
-		.collect(Collectors.toList());
-
-	Collections.reverse(migrationNodes);
-
-	for (NetworkNode m : migrationNodes) {
-	    NetworkEdge parentEdge = m.getParentEdges().get(0);
-	    NetworkEdge childEdge = m.getChildEdges().get(0);
-
-	    NetworkNode newChildNode = null;
-//			while (newChildNode == null) {
-	    if (childEdge.childNode.getChildCount() > 1 || childEdge.childNode.getParentCount() > 1
-		    || childEdge.childNode.isLeaf()) {
-		newChildNode = childEdge.childNode;
-		m.removeChildEdge(childEdge);
-		m.removeParentEdge(parentEdge);
-		newChildNode.addParentEdge(parentEdge);
-		newChildNode.removeParentEdge(childEdge);
-
-	    } else {
-
-		childEdge = childEdge.childNode.getChildEdges().get(0);
-		m.removeChildEdge(childEdge.parentNode.getParentEdges().get(0));
-		m.removeParentEdge(parentEdge);
-		childEdge.parentNode.removeParentEdge(childEdge.parentNode.getParentEdges().get(0));
-		childEdge.parentNode.addParentEdge(parentEdge);
-		m = childEdge.parentNode;
-		parentEdge = m.getParentEdges().get(0);
-	    }
-//			}
-
-	}
-
-    }
 }
