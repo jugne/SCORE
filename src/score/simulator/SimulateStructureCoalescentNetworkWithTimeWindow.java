@@ -232,7 +232,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
 	    int typeIndexCoal = -1, typeIndexReassortment = -1, typeIndexMigrationFrom = -1, typeIndexMigrationTo = -1;
 
-	    int c = 0;
+	    int c = 0; int d = 0;
 	    for (int i = 0; i < uniqueTypes.size() * 2; i++) {
 			boolean psudoTypeFlag = false;
 			Integer pseudo_id = null;
@@ -292,10 +292,10 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 				} else {
 					for (int j = 1; j < uniqueTypes.size() * 2; j+=2) {
 						if (i != j) {
-							final double timeToNextMigration = Randomizer.nextExponential(k_ * migrationRates.getArrayValue(c));
-							c++;
+							final double timeToNextMigration = Randomizer.nextExponential(k_ * migrationRates.getArrayValue(d));
+							d++;
 							if (migrationType == MigrationType.symmetric)
-								c %= migrationRates.getDimension();
+								d %= migrationRates.getDimension();
 							if (timeToNextMigration < minMigration) {
 								minMigration = timeToNextMigration;
 								typeIndexMigrationFrom = i;
@@ -495,16 +495,21 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 	// clear up those lineages whose time window has passed
 	private void clearTimeWindow(HashMap<Integer, List<Pair>> extantLineages, double typeNumber, double currentTime) {
 		for(int i = 1; i < typeNumber * 2; i += 2){
-			int size = extantLineages.get(i).size();
-			for(int j = 0; j < size; j++) {
+			int size_i = extantLineages.get(i).size();
+			List<Pair> toBeDeleted = new ArrayList<Pair>();
+
+			for(int j = 0; j < size_i; j++) {
 				Pair<NetworkEdge, Double> lineage = extantLineages.get(i).get(j);
 				final double timeWindow = lineage.getValue1();
 				if (currentTime > timeWindow && timeWindow != -1){
 					Pair<NetworkEdge, Double> lineageNew = Pair.with(lineage.getValue0(), -1.0);
-					extantLineages.get(i).remove(lineage);
+					// extantLineages.get(i).remove(lineage);
+					toBeDeleted.add(lineage);
 					extantLineages.get(i - 1).add(lineageNew);
 				}
 			}
+
+			extantLineages.get(i).removeAll(toBeDeleted);
 
 		}
 
