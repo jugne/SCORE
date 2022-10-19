@@ -22,9 +22,9 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
     public Input<RealParameter> reassortmentRatesInput = new Input<>("reassortmentRate",
 	    "Rate of reassortment for each state (per lineage per unit time)", Validate.REQUIRED);
 
-	public Input<Double> scalarInput = new Input<>("scalar", "scalar fro reassortment rate", Validate.REQUIRED);
+	public Input<RealParameter> scalarInput = new Input<>("scalar", "scalar for reassortment rate", Validate.REQUIRED);
 
-	public Input<Double> timeWindowInput = new Input<>("timeWindow", "length of time window after migration event", Validate.REQUIRED);
+	public Input<Double> timeWindowInput = new Input<>("timeWindow", "length of time window after migration event (backwards in time)", Validate.REQUIRED);
 
     // array of migration rates for each state
     public Input<RealParameter> migrationRatesInput = new Input<>("migrationRate",
@@ -66,7 +66,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
     private RealParameter reassortmentRates;
 
-	private double scalar;
+	private RealParameter scalar;
 	private double timeWindow;
 
     private RealParameter migrationRates;
@@ -237,10 +237,12 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 	    int c = 0;
 	    for (int i = 0; i < uniqueTypes.size() * 2; i++) {
 			boolean psudoTypeFlag = false;
+			Integer pseudo_id = null;
 			if (i % 2 == 0) {
 				psudoTypeFlag = false;
 			} else {
 				psudoTypeFlag = true;
+				pseudo_id = (i-1)/2;
 			}
 
 			// how many lineages are in this state
@@ -268,7 +270,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 				if (!psudoTypeFlag) {
 					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(i)); // type i, use normal reassortment rate
 				} else {
-					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(i - 1) * scalar); // type i', use scaled reassortment rate
+					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(pseudo_id) * scalar.getArrayValue(pseudo_id)); // type i', use scaled reassortment rate
 				}
 
 				if (timeToNextReass < minReassort) {
@@ -382,7 +384,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 				linege2PseudoTypeFlag = true;
 			}
 
-		} while (lineage1 == lineage2);
+		} while (lineage1.equals(lineage2));
 
 		// Create coalescent node
 		final NetworkNode coalescentNode = new NetworkNode();
