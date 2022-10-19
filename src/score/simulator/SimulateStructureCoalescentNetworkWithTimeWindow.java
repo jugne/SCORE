@@ -22,7 +22,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
     public Input<RealParameter> reassortmentRatesInput = new Input<>("reassortmentRate",
 	    "Rate of reassortment for each state (per lineage per unit time)", Validate.REQUIRED);
 
-	public Input<RealParameter> scalarInput = new Input<>("scalar", "scalar for reassortment rate", Validate.REQUIRED);
+	public Input<RealParameter> scalerInput = new Input<>("scaler", "scalar for reassortment rate", Validate.REQUIRED);
 
 	public Input<Double> timeWindowInput = new Input<>("timeWindow", "length of time window after migration event (backwards in time)", Validate.REQUIRED);
 
@@ -66,7 +66,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
     private RealParameter reassortmentRates;
 
-	private RealParameter scalar;
+	private RealParameter scaler;
 	private double timeWindow;
 
     private RealParameter migrationRates;
@@ -96,7 +96,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
 //	populationFunction = populationFunctionInput.get();
 	reassortmentRates = reassortmentRatesInput.get();
-	scalar = scalarInput.get();
+	scaler = scalerInput.get();
 	timeWindow = timeWindowInput.get();
 	migrationRates = migrationRatesInput.get();
 	coalescentRates = coalescentRatesInput.get();
@@ -254,7 +254,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 			if ((k_ + k_psudoType) >= 2 && !psudoTypeFlag) { // !psudoTypeFlag is added here to prevent sampling coalescent twice (one for type i and one for type i')
 				// coalescent event for event i as a whole (including type i and type i')
 				final double timeToNextCoal = Randomizer
-					.nextExponential(0.5 * (k_ + k_psudoType) * ((k_ + k_psudoType) - 1) * coalescentRates.getArrayValue(i));
+					.nextExponential(0.5 * (k_ + k_psudoType) * ((k_ + k_psudoType) - 1) * coalescentRates.getArrayValue(i/2));
 				if (timeToNextCoal < minCoal) {
 				minCoal = timeToNextCoal;
 				typeIndexCoal = i;
@@ -264,9 +264,9 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 			if (k_ >= 1) {
 				double timeToNextReass;
 				if (!psudoTypeFlag) {
-					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(i)); // type i, use normal reassortment rate
+					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(i/2)); // type i, use normal reassortment rate
 				} else {
-					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(pseudo_id) * scalar.getArrayValue(pseudo_id)); // type i', use scaled reassortment rate
+					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(pseudo_id) * scaler.getArrayValue(pseudo_id)); // type i', use scaled reassortment rate
 				}
 
 				if (timeToNextReass < minReassort) {
