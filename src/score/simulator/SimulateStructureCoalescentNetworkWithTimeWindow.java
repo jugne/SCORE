@@ -72,7 +72,6 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
     private RealParameter migrationRates;
 //    private PopulationFunction populationFunction;
     private RealParameter coalescentRates;
-    private RealParameter Ne;
     private final HashMap<String, Integer> typeNameToIndex = new HashMap<>();
 	public final HashMap<Integer, String> typeIndexToName = new HashMap<>();
 
@@ -86,8 +85,12 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
     private int nSegments;
 
+	double minChangeTime;
+
     @Override
     public void initAndValidate() {
+
+		minChangeTime = Double.POSITIVE_INFINITY;
 
 	if (nSegmentsInput.get() != null)
 	    nSegments = nSegmentsInput.get();
@@ -135,7 +138,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 	if (reassortmentRates.getDimension() != uniqueTypes.size())
 		reassortmentRates.setDimension(uniqueTypes.size());
 
-		final int migDim = dimensionInput.get() != -1 ? dimensionInput.get() * (dimensionInput.get() - 1)
+	final int migDim = dimensionInput.get() != -1 ? dimensionInput.get() * (dimensionInput.get() - 1)
 		: uniqueTypes.size() * (uniqueTypes.size() - 1);
 
 
@@ -158,9 +161,9 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 	    sampleNode.setTaxonIndex(taxonIndex);
 
 	    if (leafAgeTraitSet != null)
-		sampleNode.setHeight(leafAgeTraitSet.getValue(taxonName));
+			sampleNode.setHeight(leafAgeTraitSet.getValue(taxonName));
 	    else
-		sampleNode.setHeight(0.0);
+			sampleNode.setHeight(0.0);
 
 	    final String typeName = typeTraitSet.getStringValue(taxonName);
 	    sampleNode.setTypeLabel(typeName);
@@ -196,8 +199,8 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 	// extant lineages have to be sorted by state id
 	// #####################################
 
-	final HashMap<Integer, List<Pair>> extantLineages = new HashMap<Integer, List<Pair>>(
-		uniqueTypes.size() * 2);
+	final HashMap<Integer, List<Pair>> extantLineages = new HashMap<>(
+			uniqueTypes.size() * 2);
 
 	for (int i = 0; i < uniqueTypes.size() * 2; i++) {
 	    extantLineages.put(i, new ArrayList<>());
@@ -234,7 +237,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
 	    int c = 0; int d = 0;
 	    for (int i = 0; i < uniqueTypes.size() * 2; i++) {
-			boolean psudoTypeFlag = false;
+			boolean psudoTypeFlag;
 			Integer pseudo_id = null;
 			if (i % 2 == 0) {
 				psudoTypeFlag = false;
@@ -245,80 +248,107 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
 			// how many lineages are in this state
 			final int k_ = extantLineages.get(i).size();
-			int k_psudoType = 0;
+			int k_pseudoType = 0;
 			if (!psudoTypeFlag) {
-				k_psudoType = extantLineages.get(i + 1).size(); // Get the # of lineages in type i'
+				k_pseudoType = extantLineages.get(i + 1).size(); // Get the # of lineages in type i'
 			}
 
 
-			if ((k_ + k_psudoType) >= 2 && !psudoTypeFlag) { // !psudoTypeFlag is added here to prevent sampling coalescent twice (one for type i and one for type i')
+			if ((k_ + k_pseudoType) >= 2 && !psudoTypeFlag) { // !psudoTypeFlag is added here to prevent sampling coalescent twice (one for type i and one for type i')
 				// coalescent event for event i as a whole (including type i and type i')
 				final double timeToNextCoal = Randomizer
-					.nextExponential(0.5 * (k_ + k_psudoType) * ((k_ + k_psudoType) - 1) * coalescentRates.getArrayValue(i/2));
+					.nextExponential(0.5 * (k_ + k_pseudoType) * ((k_ + k_pseudoType) - 1) * coalescentRates.getArrayValue(i/2));
 				if (timeToNextCoal < minCoal) {
 				minCoal = timeToNextCoal;
 				typeIndexCoal = i;
 				}
 			}
 
-			if (k_ >= 1) {
+			if ((k_ + k_pseudoType) >= 1 && !psudoTypeFlag) {
+				boolean pseudo;
 				double timeToNextReass;
-				if (!psudoTypeFlag) {
-					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(i/2)); // type i, use normal reassortment rate
-				} else {
-					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(pseudo_id) * scaler.getArrayValue(pseudo_id)); // type i', use scaled reassortment rate
-				}
+				double r = k_ * reassortmentRates.getArrayValue(i / 2);
+				double r_pseudo = k_pseudoType * reassortmentRates.getArrayValue(i / 2) * scaler.getArrayValue(i / 2);
+				timeToNextReass = Randomizer.nextExponential(r + r_pseudo); // type i, use normal reassortment rate
+
 
 				if (timeToNextReass < minReassort) {
-				minReassort = timeToNextReass;
-				typeIndexReassortment = i;
+					minReassort = timeToNextReass;
+
+					double u = Randomizer.nextDouble() * (r + r_pseudo);
+					typeIndexReassortment = u < r ? i : (i + 1);
+//					if (u < r) {
+//						typeIndexReassortment = i;
+//					} else {
+//						typeIndexReassortment = pseudo_id;
+//					}
 				}
 
 
-				if (!psudoTypeFlag) {
-					for (int j = 1; j < uniqueTypes.size() * 2; j+=2) { // one can only migrate to pseudotype
-						if (i != (j-1)) {
-							final double timeToNextMigration = Randomizer.nextExponential(k_ * migrationRates.getArrayValue(c));
-							c++;
-							if (migrationType == MigrationType.symmetric)
-								c %= migrationRates.getDimension();
-							if (timeToNextMigration < minMigration) {
-								minMigration = timeToNextMigration;
-								typeIndexMigrationFrom = i;
-								typeIndexMigrationTo = j;
-							}
+
+//
+//
+//				if (!psudoTypeFlag) {
+//					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(i/2)); // type i, use normal reassortment rate
+//				} else {
+//					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(pseudo_id) * scaler.getArrayValue(pseudo_id)); // type i', use scaled reassortment rate
+//				}
+//
+//				if (timeToNextReass < minReassort) {
+//				minReassort = timeToNextReass;
+//				typeIndexReassortment = i;
+//				}
+
+
+				for (int j = 1; j < uniqueTypes.size()*2; j+=2) { // one can only migrate to pseudotype
+					if (i != (j - 1)) {
+						final double timeToNextMigration = Randomizer.nextExponential((k_ + k_pseudoType) * migrationRates.getArrayValue(c));
+
+						if (timeToNextMigration < minMigration) {
+							minMigration = timeToNextMigration;
+							double u = Randomizer.nextDouble() * ((k_ + k_pseudoType) * migrationRates.getArrayValue(c));
+							typeIndexMigrationFrom = u < k_*migrationRates.getArrayValue(c) ? i : (i+1);
+							typeIndexMigrationTo = j;
 						}
-					}
-				} else {
-					for (int j = 1; j < uniqueTypes.size() * 2; j+=2) {
-						if (i != j) {
-							final double timeToNextMigration = Randomizer.nextExponential(k_ * migrationRates.getArrayValue(d));
-							d++;
-							if (migrationType == MigrationType.symmetric)
-								d %= migrationRates.getDimension();
-							if (timeToNextMigration < minMigration) {
-								minMigration = timeToNextMigration;
-								typeIndexMigrationFrom = i;
-								typeIndexMigrationTo = j;
-							}
-						}
+						c++;
+						if (migrationType == MigrationType.symmetric)
+							c %= migrationRates.getDimension();
 					}
 				}
+				//				} else {
+//					for (int j = 1; j < uniqueTypes.size() * 2; j+=2) {
+//						if (i != j) {
+//							final double timeToNextMigration = Randomizer.nextExponential(k_ * migrationRates.getArrayValue(d));
+//							d++;
+//							if (migrationType == MigrationType.symmetric)
+//								d %= migrationRates.getDimension();
+//							if (timeToNextMigration < minMigration) {
+//								minMigration = timeToNextMigration;
+//								typeIndexMigrationFrom = i;
+//								typeIndexMigrationTo = j;
+//							}
+//						}
+//					}
+//				}
 			}
 		}
+
+
 
 	    // next event time
 	    double timeUntilNextEvent = Math.min(minCoal, minReassort);
 	    timeUntilNextEvent = Math.min(timeUntilNextEvent, minMigration);
-	    if (timeUntilNextEvent < timeUntilNextSample) {
+		timeUntilNextEvent = Math.min(timeUntilNextEvent, minChangeTime);
+
+
+		if (timeUntilNextEvent < timeUntilNextSample) {
 			currentTime += timeUntilNextEvent;
 			if (timeUntilNextEvent == minCoal)
 				coalesce(currentTime, extantLineages, typeIndexCoal);
 			else if (timeUntilNextEvent == minReassort)
 				reassort(currentTime, extantLineages, typeIndexReassortment);
-			else
+			else if (timeUntilNextEvent == minMigration)
 				migrate(currentTime, extantLineages, typeIndexMigrationFrom, typeIndexMigrationTo, timeWindow);
-
 	    } else {
 			currentTime += timeUntilNextSample;
 			sample(remainingSampleNodes, extantLineages);
@@ -488,12 +518,15 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 		migrationPoint.setTypeLabel(uniqueTypes.get(typeIndex));
 
 		Pair<NetworkEdge, Double> newParentEdgePair = Pair.with(newParentEdge, migrationTime + timeWindow);
+/*		if (minChangeTime>(migrationTime + timeWindow))
+			minChangeTime = migrationTime + timeWindow;*/
 		extantLineages.get(stateIdMigrationFrom).remove(lineage);
 		extantLineages.get(stateIdMigrationTo).add(newParentEdgePair);
     }
 
 	// clear up those lineages whose time window has passed
 	private void clearTimeWindow(HashMap<Integer, List<Pair>> extantLineages, double typeNumber, double currentTime) {
+		Double minWindow = Double.POSITIVE_INFINITY;
 		for(int i = 1; i < typeNumber * 2; i += 2){
 			int size_i = extantLineages.get(i).size();
 			List<Pair> toBeDeleted = new ArrayList<Pair>();
@@ -501,17 +534,19 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 			for(int j = 0; j < size_i; j++) {
 				Pair<NetworkEdge, Double> lineage = extantLineages.get(i).get(j);
 				final double timeWindow = lineage.getValue1();
-				if (currentTime > timeWindow && timeWindow != -1){
+				if (currentTime >= timeWindow && timeWindow != -1){
 					Pair<NetworkEdge, Double> lineageNew = Pair.with(lineage.getValue0(), -1.0);
 					// extantLineages.get(i).remove(lineage);
 					toBeDeleted.add(lineage);
 					extantLineages.get(i - 1).add(lineageNew);
+				} else if (timeWindow != -1 && (timeWindow-currentTime)<minWindow){
+					minWindow = timeWindow-currentTime;
 				}
 			}
 
 			extantLineages.get(i).removeAll(toBeDeleted);
-
 		}
+		minChangeTime = minWindow;
 
 	}
 
