@@ -238,12 +238,10 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 	    int c = 0; int d = 0;
 	    for (int i = 0; i < uniqueTypes.size() * 2; i++) {
 			boolean psudoTypeFlag;
-			Integer pseudo_id = null;
 			if (i % 2 == 0) {
 				psudoTypeFlag = false;
 			} else {
 				psudoTypeFlag = true;
-				pseudo_id = (i-1)/2;
 			}
 
 			// how many lineages are in this state
@@ -265,7 +263,6 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 			}
 
 			if ((k_ + k_pseudoType) >= 1 && !psudoTypeFlag) {
-				boolean pseudo;
 				double timeToNextReass;
 				double r = k_ * reassortmentRates.getArrayValue(i / 2);
 				double r_pseudo = k_pseudoType * reassortmentRates.getArrayValue(i / 2) * scaler.getArrayValue(i / 2);
@@ -277,27 +274,7 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 
 					double u = Randomizer.nextDouble() * (r + r_pseudo);
 					typeIndexReassortment = u < r ? i : (i + 1);
-//					if (u < r) {
-//						typeIndexReassortment = i;
-//					} else {
-//						typeIndexReassortment = pseudo_id;
-//					}
 				}
-
-
-
-//
-//
-//				if (!psudoTypeFlag) {
-//					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(i/2)); // type i, use normal reassortment rate
-//				} else {
-//					timeToNextReass = Randomizer.nextExponential(k_ * reassortmentRates.getArrayValue(pseudo_id) * scaler.getArrayValue(pseudo_id)); // type i', use scaled reassortment rate
-//				}
-//
-//				if (timeToNextReass < minReassort) {
-//				minReassort = timeToNextReass;
-//				typeIndexReassortment = i;
-//				}
 
 
 				for (int j = 1; j < uniqueTypes.size()*2; j+=2) { // one can only migrate to pseudotype
@@ -315,21 +292,6 @@ public class SimulateStructureCoalescentNetworkWithTimeWindow extends Network {
 							c %= migrationRates.getDimension();
 					}
 				}
-				//				} else {
-//					for (int j = 1; j < uniqueTypes.size() * 2; j+=2) {
-//						if (i != j) {
-//							final double timeToNextMigration = Randomizer.nextExponential(k_ * migrationRates.getArrayValue(d));
-//							d++;
-//							if (migrationType == MigrationType.symmetric)
-//								d %= migrationRates.getDimension();
-//							if (timeToNextMigration < minMigration) {
-//								minMigration = timeToNextMigration;
-//								typeIndexMigrationFrom = i;
-//								typeIndexMigrationTo = j;
-//							}
-//						}
-//					}
-//				}
 			}
 		}
 
