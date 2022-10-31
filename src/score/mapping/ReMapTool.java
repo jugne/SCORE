@@ -85,12 +85,15 @@ public class ReMapTool {
 
 		BufferedReader reader = new BufferedReader(new FileReader(options.logFile));
 		String header = reader.readLine();
+		while (header.charAt(0) == '#'){
+			header = reader.readLine();
+		}
 		reader.close();
 
 		String[] headerSplit = header.split("\\t");
 		Pattern migPattern = Pattern.compile("b_migrationRate.*");
 		Pattern reaPattern = Pattern.compile("reassortmentRate.*");
-		Pattern NePattern = Pattern.compile("popSize.t.*");
+		Pattern NePattern = Pattern.compile("popSize.*");
 
 		// get header strings for all logger types
 		List<String> migrationFromTo = new ArrayList<>();
