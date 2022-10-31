@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  * @author Ugne Stolz <ugne.stolz@protonmail.com>
  * @date 20 Apr 2020
  */
-public class ReassortmentAndMigration2 extends SCoReAnnotator {
+public class ReassortmentAndMigration extends SCoReAnnotator {
 
 	List<NetworkNode> allFitNodes;
 
@@ -90,7 +90,7 @@ public class ReassortmentAndMigration2 extends SCoReAnnotator {
 		}
 	}
 
-	public ReassortmentAndMigration2(NetworkAnnotatorOptions options) throws Exception {
+	public ReassortmentAndMigration(NetworkAnnotatorOptions options) throws Exception {
 
 		// Display options:
 		System.out.println(options + "\n");
@@ -155,7 +155,6 @@ public class ReassortmentAndMigration2 extends SCoReAnnotator {
 	 * more than minTipDistance away from that node
 	 *
 	 * @param network
-	 * @param ps
 	 * @param minTipDistance
 	 */
 	private void computeTrunkReassortmentLeaveDist(Network network, double minTipDistance) {
@@ -1345,7 +1344,7 @@ public class ReassortmentAndMigration2 extends SCoReAnnotator {
 
 		// Run ACGAnnotator
 		try {
-			new ReassortmentAndMigration2(options);
+			new ReassortmentAndMigration(options);
 
 		} catch (Exception e) {
 			if (args.length == 0) {
