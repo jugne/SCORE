@@ -159,15 +159,6 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 	 */
 	private void computeTrunkReassortmentLeaveDist(Network network, double minTipDistance) {
 
-		// get the length of the network
-//		List<NetworkEdge> allEdges = network.getEdges().stream()
-//				.filter(e -> !e.isRootEdge())
-//				.collect(Collectors.toList());
-
-//		double fullLength = 0.0;
-//		for (NetworkEdge edge : allEdges)
-//			fullLength += edge.getLength();
-
 		// compute which nodes are on the trunk of the network defined as any connection
 		// between
 		// the root and the most recent sampled individual. To do so, get all zero
@@ -204,27 +195,6 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 
 		if (network.getNodes().size() != (allUnfitNodes.size() + allFitNodes.size()))
 			System.out.println("False");
-
-		// calculate how many reassortment events are on the trunk and how many aren't
-//		int onTrunk = allFitNodes.stream()
-//				.filter(e -> e.isReassortment())
-//				.collect(Collectors.toList()).size();
-//
-//		int offTrunk = allEdges.stream()
-//				.filter(e -> !e.isRootEdge())
-//				.filter(e -> e.parentNode.isReassortment())
-//				.collect(Collectors.toList()).size() - onTrunk;
-//
-//		// calculate the length of the trunk
-//		double trunkLength = 0.0;
-//		for (NetworkNode node : allFitNodes) {
-//			for (NetworkEdge edge : node.getParentEdges())
-//				if (!edge.isRootEdge())
-//					trunkLength += edge.getLength();
-//		}
-
-//		ps.print(onTrunk + "\t" + offTrunk + "\t" + trunkLength + "\t" + (fullLength - trunkLength));
-
 	}
 
 
@@ -273,24 +243,10 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 			migToTipHeight.add(node.getHeight() - closesDescendantTip(node).getHeight());
 		}
 
-		// Colect reassortment nodes within the windows above migration nodes.
-		// Create a set to avoid double counting.
-		Set<NetworkNode> reaNodesInWindowSet = new HashSet<NetworkNode>();
-		for (NetworkEdge edge : edgeLengthMap.keySet()) {
-			if (edge.childNode.isReassortment())
-				reaNodesInWindowSet.add(edge.childNode);
-		}
-
-		// Total edge length within the windows above migration nodes
-		double totalLengthWindow = 0.0;
-		for (NetworkEdge e : edgeLengthMap.keySet()) {
-			if (e.hasSegments.cardinality() > 1)
-				totalLengthWindow += edgeLengthMap.get(e);
-		}
 
 		// get the total length of the network edges with > 1 segment
 		List<NetworkEdge> allEdges = network.getEdges().stream()
-				.filter(e -> !e.isRootEdge() && e.hasSegments.cardinality() > 1)
+				.filter(e -> !e.isRootEdge())
 				.collect(Collectors.toList());
 
 		HashMap<String, Double> typesToLength = new HashMap<>();
@@ -299,6 +255,43 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 			if (edge.hasSegments.cardinality() > 1) {
 				fullLength += edge.getLength();
 				typesToLength.merge(edge.childNode.getTypeLabel(), edge.getLength(), Double::sum);
+			}
+		}
+
+		// Colect reassortment nodes within the windows above migration nodes.
+		// Create a set to avoid double counting.
+		Set<NetworkNode> reaNodesInWindowSet = new HashSet<NetworkNode>();
+		// Total edge length within the windows above migration nodes
+		double totalLengthWindow = 0.0;
+		HashMap<String, Double> typesLengthWindow = new HashMap<>();
+		HashMap<String, Set<NetworkNode>> typedReaNodesInWindowSet = new HashMap<>();
+		for (String key : typesToLength.keySet()){
+			typedReaNodesInWindowSet.put(key,new HashSet<NetworkNode>());
+		}
+		for (NetworkEdge edge : edgeLengthMap.keySet()) {
+			if (edge.childNode.isReassortment()){
+				reaNodesInWindowSet.add(edge.childNode);
+				Set<NetworkNode> tmp = typedReaNodesInWindowSet.get(edge.childNode.getTypeLabel());
+				tmp.add(edge.childNode);
+				typedReaNodesInWindowSet.put(edge.childNode.getTypeLabel(), tmp);
+			}
+
+			if (edge.hasSegments.cardinality() > 1){
+				totalLengthWindow += edgeLengthMap.get(edge);
+				typesLengthWindow.merge(edge.childNode.getTypeLabel(), edgeLengthMap.get(edge), Double::sum);
+			}
+
+		}
+
+		HashMap<String, Set<NetworkNode>> typedReaNodesSet = new HashMap<>();
+		for (String key : typesToLength.keySet()){
+			typedReaNodesSet.put(key,new HashSet<NetworkNode>());
+		}
+		for (NetworkEdge edge : allEdges) {
+			if (edge.childNode.isReassortment()){
+				Set<NetworkNode> tmp = typedReaNodesSet.get(edge.childNode.getTypeLabel());
+				tmp.add(edge.childNode);
+				typedReaNodesSet.put(edge.childNode.getTypeLabel(), tmp);
 			}
 		}
 
@@ -348,36 +341,6 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 			}
 		}
 
-
-//		reaNodesFit = allFitNodes.stream()
-//				.filter(e -> e.isReassortment())
-//				.collect(Collectors.toList());
-
-
-//		reaNodesFitInWindow = reaNodesFit.stream()
-//				.filter(n -> reaNodesInWindowSet.contains(n))
-//				.collect(Collectors.toList());
-//		reaNodesFitOffWindow = reaNodesFit.stream()
-//				.filter(n -> !reaNodesInWindowSet.contains(n))
-//				.collect(Collectors.toList());
-
-//		migNodesFit = allFitNodes.stream()
-//				.filter(e -> isMigrationNode(e))
-//				.collect(Collectors.toList());
-
-//		reaNodesUnfit = allUnfitNodes.stream()
-//				.filter(e -> e.isReassortment())
-//				.collect(Collectors.toList());
-//		reaNodesUnfitInWindow = reaNodesUnfit.stream()
-//				.filter(n -> reaNodesInWindowSet.contains(n))
-//				.collect(Collectors.toList());
-//		reaNodesUnfitOffWindow = reaNodesUnfit.stream()
-//				.filter(n -> !reaNodesInWindowSet.contains(n))
-//				.collect(Collectors.toList());
-
-//		migNodesUnfit = allUnfitNodes.stream()
-//				.filter(e -> isMigrationNode(e))
-//				.collect(Collectors.toList());
 
 		// calculate the length of the trunk
 		double fitOnWindowLength = 0.0;
@@ -438,6 +401,15 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 			for (String key : typesToLength.keySet()) {
 				ps.print("network_length_" + key + "\t");
 			}
+			for (String key : typesToLength.keySet()) {
+				ps.print("network_length_window_" + key + "\t");
+			}
+			for (String key : typesToLength.keySet()) {
+				ps.print("n_reassortment_" + key + "\t");
+			}
+			for (String key : typesToLength.keySet()) {
+				ps.print("n_reassortment_window_" + key + "\t");
+			}
 			typeKeys = typesToLength.keySet();
 		}
 
@@ -470,11 +442,32 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 				s += "\t";
 			l++;
 		}
+		s+="\t";
+		l = 1;
+		for (String key : typeKeys) {
+			s += typesLengthWindow.get(key);
+			if (l < typeKeys.size())
+				s += "\t";
+			l++;
+		}
+		s+="\t";
+		l = 1;
+		for (String key : typeKeys) {
+			s += typedReaNodesSet.get(key).size();
+			if (l < typeKeys.size())
+				s += "\t";
+			l++;
+		}
+		s+="\t";
+		l = 1;
+		for (String key : typeKeys) {
+			s += typedReaNodesInWindowSet.get(key).size();
+			if (l < typeKeys.size())
+				s += "\t";
+			l++;
+		}
 
 		ps.print(s);
-
-		// + "\t" + Arrays.toString(migToTipLengths.toArray()) + "\t"
-//				+ Arrays.toString(migToTipHeight.toArray()));
 	}
 
 	private NetworkNode findDownStreamReas(NetworkNode node) {
