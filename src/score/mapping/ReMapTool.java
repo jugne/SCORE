@@ -67,6 +67,8 @@ public class ReMapTool {
 		File logFile;
 		File networkFile;
 		File outFile;
+		Integer dimension;
+		Boolean rejection;
 
         @Override
         public String toString() {
@@ -74,7 +76,9 @@ public class ReMapTool {
 					"SCoRe XML file: " + xmlFile + "\n" +
 					"Network file: " + networkFile + "\n" +
 					"Log file: " + logFile + "\n" +
-					"Output file: " + outFile;
+					"Output file: " + outFile +"\n" +
+					"Parameters dimension: " + dimension +"\n"+
+					"Rejection mapping: " + rejection;
         }
     }
 
@@ -118,6 +122,23 @@ public class ReMapTool {
 			throw new Exception("Reassortment not found in log file.");
 		if (Ne.size() == 0)
 			throw new Exception("PopSize not found in log file.");
+
+		if (Ne.size()>options.dimension){
+			List<String> Ne_ = new ArrayList<>();
+			for (int i=0; i< options.dimension; i++){
+				Ne_.add(Ne.get(i));
+			}
+			Ne = Ne_;
+		}
+
+		if (reassortment.size()>options.dimension){
+			List<String> reassortment_ = new ArrayList<>();
+			for (int i=0; i< options.dimension; i++){
+				reassortment_.add(Ne.get(i));
+			}
+			reassortment = reassortment_;
+		}
+
 
 		if (Ne.size() != reassortment.size())
 			throw new Exception("PopSize and Reassortment rate have different dimensions.");
@@ -225,6 +246,8 @@ public class ReMapTool {
 		netLog.setAttribute("spec", MappedNetwork.class.getCanonicalName());
 		netLog.setAttribute("untypedNetwork", "@network");
 		netLog.setAttribute("dimension", Integer.toString(migLogFileEntries.size()));
+		if (options.rejection !=null)
+			netLog.setAttribute("rejection", options.rejection.toString());
 		netLog.setAttribute("mapOnInit", "false");
 		netLog.setAttribute("id", "mappedNet");
 
@@ -633,6 +656,32 @@ public class ReMapTool {
 
                     i += 1;
                     break;
+			case "-dim":
+					if (args.length<=i+1) {
+						printUsageAndError("-out must be followed by an output file path.");
+					}
+
+					try {
+						options.dimension = new Integer(args[i + 1]);
+					} catch (NumberFormatException e) {
+						printUsageAndError("Error parsing output file path.");
+					}
+
+					i += 1;
+					break;
+			case "-reject":
+					if (args.length<=i+1) {
+						printUsageAndError("-out must be followed by an output file path.");
+					}
+
+					try {
+						options.rejection = new Boolean(args[i + 1]);
+					} catch (NumberFormatException e) {
+						printUsageAndError("Error parsing output file path.");
+					}
+
+					i += 1;
+					break;
 
 
                 default:
