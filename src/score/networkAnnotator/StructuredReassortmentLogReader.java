@@ -316,7 +316,7 @@ public class StructuredReassortmentLogReader implements NetworkLogReader {
 
 	@Override
 	public int getNetworkCount() {
-		return 0;
+		return nNetworks;
 	}
 }
 

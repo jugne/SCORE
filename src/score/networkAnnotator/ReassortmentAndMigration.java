@@ -61,7 +61,6 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 
 	List<Double> reaToTipLengths;
 
-	List<Double> migToTipLengths;
 	Double lengthForward;
 	Double lengthBackward;
 	private boolean firstNet;
@@ -219,12 +218,10 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 		migrationBackwardList = new ArrayList<>();
 		migrationUnasignedList = new ArrayList<>();
 		reaToTipLengths = new ArrayList<>();
-		migToTipLengths = new ArrayList<>();
 		reaAfterList = new ArrayList<NetworkNode>();
 		reaBeforeList = new ArrayList<NetworkNode>();
 		lengthBackward = 0.0;
 		lengthForward = 0.0;
-		List<Double> migToTipHeight = new ArrayList<Double>();
 		List<NetworkNode> reaCounts = new ArrayList<NetworkNode>();
 		Double length = 0.0;
 
@@ -239,8 +236,6 @@ public class ReassortmentAndMigration extends SCoReAnnotator {
 
 		for (NetworkNode node : migNodes) {
 			reaCounts.addAll(reaNodesBefore(node, 0.0, maxMigrationDistance, length, edgeLengthMap));
-			migToTipLengths.add(lengthToTip(node));
-			migToTipHeight.add(node.getHeight() - closesDescendantTip(node).getHeight());
 		}
 
 
