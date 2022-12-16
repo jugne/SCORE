@@ -3,10 +3,10 @@ package score.distribution;
 import java.util.List;
 import java.util.Random;
 
-import beast.core.Distribution;
-import beast.core.Input;
-import beast.core.Input.Validate;
-import beast.core.State;
+import beast.base.inference.Distribution;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.inference.State;
 
 public class StructuredNetworkDistribution extends Distribution {
 //	public Input<Network> networkIn = new Input<>("network", "nework over which to calculate a prior or likelihood");

@@ -50,7 +50,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 import javax.swing.border.EtchedBorder;
 
-import beast.core.util.Log;
+import beast.base.core.Log;
 import coalre.network.Network;
 import coalre.network.NetworkNode;
 import coalre.networkannotator.ReassortmentLogReader;

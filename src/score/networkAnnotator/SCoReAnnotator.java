@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import beast.util.Randomizer;
+import beast.base.util.Randomizer;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;

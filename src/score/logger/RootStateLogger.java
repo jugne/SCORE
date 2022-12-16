@@ -4,11 +4,11 @@ import java.io.PrintStream;
 
 import org.jblas.DoubleMatrix;
 
-import beast.core.CalculationNode;
-import beast.core.Description;
-import beast.core.Input;
-import beast.core.Loggable;
-import beast.mascot.dynamics.Dynamics;
+import beast.base.inference.CalculationNode;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
+import mascot.dynamics.Dynamics;
 import score.distribution.SCORE;
 
 @Description("logs the state of the root, i.e. the probability the root being in "+ 
@@ -31,8 +31,9 @@ public class RootStateLogger extends CalculationNode implements Loggable {
 
 	}
 
+
 	@Override
-	public void log(int sample, PrintStream out) {
+	public void log(long sample, PrintStream out) {
 		DoubleMatrix RootStates = scoreInput.get().getRootTypes();
 		states = RootStates.length;
 		for (int i = 0 ; i < states; i++){

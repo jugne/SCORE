@@ -6,13 +6,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import beast.core.BEASTInterface;
-import beast.core.BEASTObject;
-import beast.core.Input;
-import beast.core.Logger;
-import beast.core.Runnable;
-import beast.core.State;
-import beast.core.StateNode;
+import beast.base.core.BEASTInterface;
+import beast.base.core.BEASTObject;
+import beast.base.core.Input;
+import beast.base.inference.Logger;
+import beast.base.inference.Runnable;
+import beast.base.inference.State;
+import beast.base.inference.StateNode;
 import feast.fileio.logfileiterator.DummyPosterior;
 import feast.fileio.logfileiterator.LogFileState;
 

@@ -16,13 +16,13 @@
  */
 package score.beuti;
 
-import beast.app.beauti.BeautiDoc;
-import beast.app.beauti.GuessPatternDialog;
-import beast.app.draw.InputEditor;
-import beast.core.BEASTInterface;
-import beast.core.Input;
-import beast.evolution.alignment.TaxonSet;
-import beast.evolution.tree.TraitSet;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.GuessPatternDialog;
+import beastfx.app.inputeditor.InputEditor;
+import beast.base.core.BEASTInterface;
+import beast.base.core.Input;
+import beast.base.evolution.alignment.TaxonSet;
+import beast.base.evolution.tree.TraitSet;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.logging.Level;

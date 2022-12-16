@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.jblas.DoubleMatrix;
 
-import beast.core.Input;
+import beast.base.core.Input;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;

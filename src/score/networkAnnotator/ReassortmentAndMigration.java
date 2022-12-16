@@ -17,7 +17,7 @@
 
 package score.networkAnnotator;
 
-import beast.core.util.Log;
+import beast.base.core.Log;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;

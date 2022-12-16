@@ -8,7 +8,7 @@ import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
 import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
 
-import beast.core.Description;
+import beast.base.core.Description;
 
 
 @Description("")

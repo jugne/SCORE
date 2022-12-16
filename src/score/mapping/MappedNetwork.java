@@ -9,12 +9,12 @@ import java.util.List;
 
 import org.jblas.DoubleMatrix;
 
-import beast.core.Function;
-import beast.core.Input;
-import beast.core.Input.Validate;
-import beast.core.parameter.RealParameter;
-import beast.evolution.tree.TraitSet;
-import beast.util.Randomizer;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.evolution.tree.TraitSet;
+import beast.base.util.Randomizer;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
@@ -89,7 +89,7 @@ public class MappedNetwork extends Network {
 
 	StructuredNetworkIntervals intervals = new StructuredNetworkIntervals();
 	public ConstantReassortment dynamics;
-	public beast.mascot.dynamics.Constant constantStructuredCoalescentDynamics;
+	public mascot.dynamics.Constant constantStructuredCoalescentDynamics;
 
 	private Network untypedNetwork;
 	private List<StructuredNetworkEvent> eventList;
@@ -997,7 +997,7 @@ public class MappedNetwork extends Network {
 		RealParameter Ne = new RealParameter(doubleToDouble(NeInput.get().getDoubleValues()));
 		Ne.setDimension(dimensionInput.get());
 
-		constantStructuredCoalescentDynamics = new beast.mascot.dynamics.Constant();
+		constantStructuredCoalescentDynamics = new mascot.dynamics.Constant();
 		constantStructuredCoalescentDynamics.initByName("Ne",
 				Ne,
 				"backwardsMigration", backwardsMigration,

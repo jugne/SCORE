@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import beast.core.Input;
-import beast.core.StateNode;
-import beast.evolution.alignment.TaxonSet;
+import beast.base.core.Input;
+import beast.base.inference.StateNode;
+import beast.base.evolution.alignment.TaxonSet;
 import coalre.network.Network;
 import feast.fileio.logfileiterator.LogFileState;
 import score.networkAnnotator.ExtendedNetworkBuilder;

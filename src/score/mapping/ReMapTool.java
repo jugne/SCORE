@@ -45,8 +45,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import beast.core.parameter.RealParameter;
-import beast.core.util.Log;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.core.Log;
 import feast.fileio.logfileiterator.LogFileRealParameter;
 import feast.fileio.logfileiterator.TraceLogFileState;
 import feast.function.Concatenate;

@@ -3,10 +3,10 @@ package score.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import beast.core.Description;
-import beast.core.Function;
-import beast.core.Input;
-import beast.core.parameter.RealParameter;
+import beast.base.core.Description;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import beast.base.inference.parameter.RealParameter;
 import feast.function.Concatenate;
 
 @Description("A Function whose elements are the result of concatenating the elements of the input Functions.")

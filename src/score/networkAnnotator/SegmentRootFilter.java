@@ -33,9 +33,9 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 import javax.swing.border.EtchedBorder;
 
-import beast.core.util.Log;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
+import beast.base.core.Log;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;

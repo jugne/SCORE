@@ -6,9 +6,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import beast.core.BEASTObject;
-import beast.core.Input;
-import beast.core.Loggable;
+import beast.base.core.BEASTObject;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;
 import score.dynamics.ConstantReassortment;

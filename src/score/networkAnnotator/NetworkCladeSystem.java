@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import beast.math.statistic.DiscreteStatistics;
+import beast.base.util.DiscreteStatistics;
 import coalre.network.Network;
 import coalre.network.NetworkEdge;
 import coalre.network.NetworkNode;

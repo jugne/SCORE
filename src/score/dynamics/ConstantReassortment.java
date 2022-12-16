@@ -2,11 +2,11 @@ package score.dynamics;
 
 import java.io.PrintStream;
 
-import beast.core.Input;
-import beast.core.Input.Validate;
-import beast.core.Loggable;
-import beast.core.parameter.RealParameter;
-import beast.mascot.dynamics.Dynamics;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.core.Loggable;
+import beast.base.inference.parameter.RealParameter;
+import mascot.dynamics.Dynamics;
 
 public class ConstantReassortment extends Dynamics implements Loggable {
 

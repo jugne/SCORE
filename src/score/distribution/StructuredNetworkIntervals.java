@@ -7,10 +7,10 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.math3.util.Precision;
 
-import beast.core.CalculationNode;
-import beast.core.Function;
-import beast.core.Input;
-import beast.core.Input.Validate;
+import beast.base.inference.CalculationNode;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
 import coalre.network.Network;
 
 /**
