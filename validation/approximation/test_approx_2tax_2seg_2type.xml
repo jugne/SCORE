@@ -1,14 +1,14 @@
 <beast version="2.0"
        namespace="beast.pkgmgmt:beast.base.core:beast.base.inference
                  :beast.core.util
-                 :beast.core.parameter
-                 :beast.evolution.alignment
-                 :beast.evolution.likelihood
-                 :beast.evolution.tree
-                 :beast.evolution.tree.coalescent
-                 :beast.evolution.sitemodel
-                 :beast.evolution.substitutionmodel
-                 :beast.evolution.operators
+                 :beast.base.inference.parameter
+                 :beast.base.evolution.alignment
+                 :beast.base.evolution.likelihood
+                 :beast.base.evolution.tree
+                 :beast.base.evolution.tree.coalescent
+                 :beast.base.evolution.sitemodel
+                 :beast.base.evolution.substitutionmodel
+                 :beast.base.evolution.operators
                  :beast.math.distributions
                  :feast.simulation
                  :coalre.network
@@ -19,11 +19,11 @@
 		 :beast.mascotextended.structuredcoalescentnetwork.distribution
 		 :beast.mascotextended.structuredcoalescentnetwork.simulator
 		 :beast.mascotextended.structuredcoalescentnetwork.math
-		 :structuredCoalescentNetwork.distribution
-		 :structuredCoalescentNetwork.simulator
-		 :structuredCoalescentNetwork.math
-		 :structuredCoalescentNetwork.dynamics
-		 :beast.mascot.dynamics">
+		 :score.distribution
+		 :score.simulator
+		 :score.math
+		 :score.dynamics
+		 :mascot.dynamics">
 
 
 
@@ -50,10 +50,10 @@
         </state>
 
 
-        <distribution id="coalDensity" spec="SCORE" network="@network">
+        <distribution id="coalDensity" spec="SCORE">
             <networkIntervals spec="StructuredNetworkIntervals" id="StructuredNetworkIntervals" network="@network"/>
-            <dynamics id="constantReassort" spec="structuredCoalescentNetwork.dynamics.ConstantReassortment" dimension="2">
-		<structuredCoalescentDynamics id="structuredCoalescentDynamics" spec="beast.mascot.dynamics.Constant" dimension="2" fromBeauti="false">
+            <dynamics id="constantReassort" spec="score.dynamics.ConstantReassortment" dimension="2">
+		<structuredCoalescentDynamics id="structuredCoalescentDynamics" spec="mascot.dynamics.Constant" dimension="2" fromBeauti="false">
 				<Ne spec="RealParameter" id="Ne" dimension="2" value="1.0"/>
 				<backwardsMigration spec="RealParameter" id="backwardsMigration" dimension="2" value="0.5"/>
         			<typeTrait spec="TraitSet" traitname="type" id="typeTrait">
@@ -81,10 +81,10 @@
 
 	<operator id="SubNetworkSlide" spec="SubNetworkSlide" network="@network" weight="1.0"/>
 
-        <operator id="NetworkScale" spec="NetworkScaleOperator"
+        <operator id="NetworkScale" spec="NetworkScaleOperator" scaleFactor="0.75"
                   network="@network" weight="1.0"/>
 
-        <operator id="NetworkScaleRootOnly" spec="NetworkScaleOperator"
+        <operator id="NetworkScaleRootOnly" spec="NetworkScaleOperator" scaleFactor="0.75"
                   network="@network" scaleRootOnly="true" weight="1.0"/>
 
 	<operator spec="NetworkExchange" network="@network" isNarrow="true" weight="1.0"/>
