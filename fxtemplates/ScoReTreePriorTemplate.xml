@@ -19,7 +19,7 @@
 <!-- 		<fragment id='MascotConstantParameters' spec="beast.app.beauti.Fragment"> -->
 <!--              <![CDATA[ -->
 <!--              <prior id='$(thisparam)ConstantPrior.t:$(n)' x='@$(thisparam)Constant.alltrees'>  -->
-<!--                 <distr spec="beast.math.distributions.Exponential" mean='1'/>  -->
+<!--                 <distr spec="beast.base.inference.distribution.Exponential" mean='1'/>  -->
 <!--               </prior>  -->
 <!--               <operator id='$(thisparam)ConstantScaler.t:$(n)' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter="@$(thisparam)Constant.alltrees"/> -->
 <!--               ]]>  -->
@@ -67,20 +67,20 @@
                     beast.mascot.dynamics.Constant.forwardsMigration">
           			
             <![CDATA[
-            <stateNode id="reassortmentRateConstant.alltrees" spec="beast.core.parameter.RealParameter" value="0.1" estimate="true"/>
-            <stateNode id="migrationRateConstant.alltrees" spec="beast.core.parameter.RealParameter" value="0.2" estimate="true"/>
-            <stateNode id="popSizeConstant.alltrees" spec="beast.core.parameter.RealParameter" value="1.0" estimate="true"/>
-		    <stateNode id="binomialProbConstant.alltrees" spec="beast.core.parameter.RealParameter" lower="0.0" upper="1.0" value="0.5" estimate="false"/>
+            <stateNode id="reassortmentRateConstant.alltrees" spec="beast.base.inference.parameter.RealParameter" value="0.1" estimate="true"/>
+            <stateNode id="migrationRateConstant.alltrees" spec="beast.base.inference.parameter.RealParameter" value="0.2" estimate="true"/>
+            <stateNode id="popSizeConstant.alltrees" spec="beast.base.inference.parameter.RealParameter" value="1.0" estimate="true"/>
+		    <stateNode id="binomialProbConstant.alltrees" spec="beast.base.inference.parameter.RealParameter" lower="0.0" upper="1.0" value="0.5" estimate="false"/>
 
             <stateNode id="networkConstant.alltrees" spec="score.simulator.SimulateStructureCoalescentNetwork" ignoreMigrationNodes="true" nSegments="1"
                         enableSegmentTreeUpdate="false" estimate="true">
-                <reassortmentRate spec="beast.core.parameter.RealParameter" value="0.0"/>
-                <migrationRate spec="beast.core.parameter.RealParameter" value="0.2"/>
-                <coalescentRate spec="beast.core.parameter.RealParameter" value="1.0"/>
+                <reassortmentRate spec="beast.base.inference.parameter.RealParameter" value="0.0"/>
+                <migrationRate spec="beast.base.inference.parameter.RealParameter" value="0.2"/>
+                <coalescentRate spec="beast.base.inference.parameter.RealParameter" value="1.0"/>
 
 
                  <typeTrait id="typeTraitSet.t:$(n)" spec="score.utils.InitializedTraitSet" traitname="type">
-                      <taxa spec="beast.evolution.alignment.TaxonSet" alignment="@$(n)"/>
+                      <taxa spec="beast.base.evolution.alignment.TaxonSet" alignment="@$(n)"/>
                  </typeTrait>
             </stateNode>
 
@@ -119,7 +119,7 @@
             </prior>
 
             <prior id="binomialProbCwRPrior.alltrees" x="@binomialProbConstant.alltrees">
-                <distr spec="beast.math.distributions.Uniform" lower="0" upper="1"/>
+                <distr spec="beast.base.inference.distribution.Uniform" lower="0" upper="1"/>
             </prior>
 
             <operator id="reassortmentRateCwRScale.alltrees" spec="ScaleOperator"

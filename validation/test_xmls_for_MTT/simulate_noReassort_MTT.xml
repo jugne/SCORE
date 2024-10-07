@@ -1,6 +1,6 @@
-<beast version='2.0' namespace='beast.evolution.alignment:beast.core:beast.core.parameter:beast.evolution.tree:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood:beast.evolution.migrationmodel:beast.math.distributions:multitypetree.distributions:multitypetree.operators:multitypetree.util'>
+<beast version='2.0' namespace='beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.pkgmgmt:beast.base.core:beast.base.inference.parameter:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution.migrationmodel:beast.base.math.distributions:multitypetree.distributions:multitypetree.operators:multitypetree.util'>
 
-   <alignment spec="beast.evolution.alignment.Alignment" id="alignment"
+   <alignment spec="beast.base.evolution.alignment.Alignment" id="alignment"
 	      dataType="nucleotide">
 
     <sequence taxon='t1' value='???'/>
@@ -57,18 +57,18 @@ t5=0">
 
     Parameter priors 
    <input spec='CompoundDistribution' id='parameterPriors'>
-     <distribution spec='beast.math.distributions.Prior' x="@mutationRate">
+     <distribution spec='beast.base.inference.distribution.Prior' x="@mutationRate">
        <distr spec='LogNormalDistributionModel' M="0.0" S="4.0"/>
      </distribution>
 
-     <distribution spec='beast.math.distributions.Prior' x="@hky.kappa">
+     <distribution spec='beast.base.inference.distribution.Prior' x="@hky.kappa">
        <distr spec='LogNormalDistributionModel' M="0.0" S="4.0"/>
      </distribution>
 
-     <distribution spec='beast.math.distributions.Prior' x="@rateMatrix">
+     <distribution spec='beast.base.inference.distribution.Prior' x="@rateMatrix">
        <distr spec='LogNormalDistributionModel' M="0.0" S="4.0"/>
      </distribution>
-     <distribution spec='beast.math.distributions.Prior' x="@popSizes">
+     <distribution spec='beast.base.inference.distribution.Prior' x="@popSizes">
        <distr spec="LogNormalDistributionModel"  M="0.0" S="4.0"/>
      </distribution>
    </input>
@@ -127,16 +127,16 @@ t5=0">
  	      weight="10" multiTypeTree="@tree"
  	      migrationModel="@migModel" alpha="0.2"/>
 
-     <operator spec="NodeRetype" id="NR"
+     <operator spec="msbd.evolution.operator.NodeRetype" id="NR"
  	      weight="10" multiTypeTree="@tree"
  	      migrationModel="@migModel"/>
 
-     <operator spec="NodeShiftRetype" id="NSR1"
+     <operator spec="msbd.evolution.operator.NodeShiftRetype" id="NSR1"
                weight="10" multiTypeTree="@tree"
                rootScaleFactor="0.8"
 	       migrationModel="@migModel" rootOnly="true"/>
 
-     <operator spec="NodeShiftRetype" id="NSR2"
+     <operator spec="msbd.evolution.operator.NodeShiftRetype" id="NSR2"
                weight="10" multiTypeTree="@tree"
                migrationModel="@migModel" noRoot="true"/>
 

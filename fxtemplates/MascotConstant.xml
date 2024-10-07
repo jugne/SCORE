@@ -22,11 +22,11 @@
           inlineInputs="score.distribution.SCORE.dynamics,
 					score.dynamics.ConstantReassortment.structuredCoalescent">
             <![CDATA[
-            <stateNode id="migrationRateConstant.alltrees" spec="beast.core.parameter.RealParameter" value="0.2" estimate="true"/>
-            <stateNode id="popSizeConstant.alltrees" spec="beast.core.parameter.RealParameter" value="1.0" estimate="true"/>
+            <stateNode id="migrationRateConstant.alltrees" spec="beast.base.inference.parameter.RealParameter" value="0.2" estimate="true"/>
+            <stateNode id="popSizeConstant.alltrees" spec="beast.base.inference.parameter.RealParameter" value="1.0" estimate="true"/>
             
             <typeTrait id="typeTraitSet.t:$(n)" spec="score.utils.InitializedTraitSet" traitname="type">
-                      <taxa spec="beast.evolution.alignment.TaxonSet" alignment="@$(n)"/>
+                      <taxa spec="beast.base.evolution.alignment.TaxonSet" alignment="@$(n)"/>
             </typeTrait>
             
             <structuredCoalescent spec="beast.mascot.dynamics.Constant" id="MascotConstant.alltrees"  dimension="-1">

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package score.beuti;
+package score.app.beauti;
 
 import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.inputeditor.GuessPatternDialog;

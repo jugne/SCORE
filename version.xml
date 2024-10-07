@@ -1,10 +1,36 @@
 <addon name="SCoRe" version="0.2.1">
-  <depends on="BEAST" atleast="2.5.0"/>
+  <depends on='BEAST.base' atleast='2.7.0'/>
+  <depends on='BEAST.app' atleast='2.7.0'/>
   <depends on="Mascot" atleast="2.1.1"/>
   <depends on="CoalRe" atleast="0.0.5"/>
-   <depends on="feast" atleast="7.5.0"/>
-  <addonapp class="score.networkAnnotator.StructuredNetworkSummarizer"
-            description="StructuredNetworkSummarizer"/>
-  <addonapp class="score.mapping.ReMapTool"
+  <depends on="feast" atleast="7.5.0"/>
+
+  <service type="beast.base.core.BEASTInterface">
+    <provider classname="score.distribution.ExactStructuredCoalescentNetwork"/>
+    <provider classname="score.distribution.SCORE"/>
+    <provider classname="score.distribution.StructuredNetworkDistribution"/>
+    <provider classname="score.distribution.StructuredNetworkIntervals"/>
+    <provider classname="score.dynamics.ConstantReassortment"/>
+    <provider classname="score.logger.RootStateLogger"/>
+    <provider classname="score.logger.TypedNetworkStatsLogger"/>
+    <provider classname="score.mapping.MappedNetwork"/>
+    <provider classname="score.networkAnnotator.ExtendedNetworkBuilder"/>
+    <provider classname="score.operators.ResimulateAboveSegmentRoots"/>
+    <provider classname="score.simulator.SimulateForcedCorrelation"/>
+    <provider classname="score.simulator.SimulateNetworkGivenRates"/>
+    <provider classname="score.simulator.SimulateStructureCoalescentNetwork"/>
+    <provider classname="score.utils.ConcatenateExtended"/>
+    <provider classname="score.utils.InitializedTraitSet"/>
+    <provider classname="score.utils.LogFileIterator"/>
+    <provider classname="score.utils.NetworkLogFileState"/>
+  </service>
+
+  <service type="beastfx.app.inputeditor.InputEditor">
+    <provider classname="score.app.beauti.TypeTraitSetInputEditor"/>
+  </service>
+
+  <packageapp class="score.networkAnnotator.StructuredNetworkSummarizer"
+  description="StructuredNetworkSummarizer"/>
+  <packageapp class="score.mapping.ReMapTool"
             description="StructuredNetworkMapper"/>
 </addon>
