@@ -62,7 +62,7 @@ public class NetworkLogFileState extends LogFileState {
     }
 
     @Override
-    public int updateToNextEntry() {
+    public long updateToNextEntry() {
 
         String line = readNexusLine();
 
