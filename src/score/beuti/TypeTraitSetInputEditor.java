@@ -24,24 +24,10 @@ import beast.base.core.Input;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.TraitSet;
 import javafx.collections.ObservableList;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-import beastfx.app.inputeditor.BeautiDoc;
-import beastfx.app.inputeditor.GuessPatternDialog;
-import beastfx.app.inputeditor.InputEditor;
 import beastfx.app.util.FXUtils;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -57,9 +43,10 @@ import javafx.scene.layout.VBox;
 public class TypeTraitSetInputEditor extends InputEditor.Base {
 
 //    TypeTraitTableModel tableModel;
-    private ObservableList<Location> data;
+    private ObservableList<Location> locations;
     TraitSet traitSet;
     TaxonSet taxonSet;
+    TableView<Location> m_table;
 
     public TypeTraitSetInputEditor(BeautiDoc doc) {
         super(doc);
@@ -73,16 +60,26 @@ public class TypeTraitSetInputEditor extends InputEditor.Base {
 
     @Override
     public void init(Input<?> input, BEASTInterface plugin, int itemNr, ExpandOption bExpandOption, boolean bAddButtons) {
-    	
 
+        locations = FXCollections.observableArrayList();
         traitSet = (TraitSet)input.get();
         taxonSet = traitSet.taxaInput.get();
-        TableView<Location> table = new TableView<>();
+        m_table = new TableView<>();
+        m_table.setEditable(true);
+        m_table.setPrefWidth(1024);
+        m_table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        m_table.setItems(locations);
+
         TableColumn<Location, String> column1 = new TableColumn<>("Name");
         column1.setCellValueFactory(new PropertyValueFactory<>("name"));
+        column1.setPrefWidth(500);
+        column1.setEditable(false);
+
         TableColumn<Location, String> column2 =new TableColumn<>("Location");
         column2.setCellValueFactory(new PropertyValueFactory<>("location"));
+        column2.setPrefWidth(500);
         column2.setEditable(true);
+        column2.setCellValueFactory(new PropertyValueFactory<>("location"));
         column2.setCellFactory(TextFieldTableCell.forTableColumn());
         column2.setOnEditCommit(
                 t -> t.getTableView().getItems().
@@ -90,9 +87,10 @@ public class TypeTraitSetInputEditor extends InputEditor.Base {
                         setLocation(t.getNewValue())
                 //TODO set traitSet
         );
-        table.getColumns().addAll(column1, column2);
-        data = FXCollections.observableArrayList();
-        table.setItems(data);
+        m_table.getColumns().add(column1);
+        m_table.getColumns().add(column2);
+        traitSetToLocations();
+
 
         Button guessButton = new Button("Guess");
         guessButton.setOnAction(e -> {
@@ -129,11 +127,7 @@ public class TypeTraitSetInputEditor extends InputEditor.Base {
             } catch (Exception ex) {
                 System.err.println("Error setting type trait.");
             }
-            for (String taxon : traitSet.taxaInput.get().getTaxaNames()) {
-                String loc = traitSet.getStringValue(taxon);
-                data.add(new Location(taxon, loc));
-            }
-            refreshPanel();
+            traitSetToLocations();
         });
 
         Button clearButton = new Button("Clear");
@@ -149,12 +143,8 @@ public class TypeTraitSetInputEditor extends InputEditor.Base {
                 traitSet.initAndValidate();
             } catch (Exception ex) {
                 System.err.println("Error clearing type trait.");
-            }for (String taxon : traitSet.taxaInput.get().getTaxaNames()) {
-                String loc = traitSet.getStringValue(taxon);
-                data.add(new Location(taxon, loc));
             }
-
-            refreshPanel();
+            traitSetToLocations();
         });
 
         VBox boxVert = FXUtils.newVBox();
@@ -163,14 +153,45 @@ public class TypeTraitSetInputEditor extends InputEditor.Base {
         boxHoriz.getChildren().add(clearButton);
 
         boxVert.getChildren().add(boxHoriz);
-        boxVert.getChildren().add(new ScrollPane(table));
+        boxVert.getChildren().add(m_table);
 
+        this.pane = FXUtils.newHBox();
+        getChildren().add(pane);
         pane.getChildren().add(boxVert);
+    }
+
+    private void saveTraitSet() {
+        StringBuilder traitStringBuilder = new StringBuilder();
+        for (Location loc : locations) {
+            if (traitStringBuilder.length()>0) traitStringBuilder.append(",");
+
+            String location = loc.getLocation();
+            String taxon = loc.getName();
+            traitStringBuilder.append(taxon).append("=").append(location);
+        }
+        traitSet.traitsInput.setValue(traitStringBuilder.toString(), traitSet);
+        try {
+            traitSet.initAndValidate();
+        } catch (Exception ex) {
+            System.err.println("Error setting type trait.");
+        }
+    }
+
+    private void traitSetToLocations() {
+        locations.clear();
+        // add data
+        for (String taxonName : taxonSet.asStringList()) {
+            String loc = traitSet.getStringValue(taxonName);
+            locations.add(new Location(taxonName, loc));
+        }
+
+        m_table.refresh();
+        refreshPanel();
     }
     /**
      * Table model
      */
-    class Location {
+    public class Location {
         String name;
         String location;
         public Location(String name, String location) {
@@ -188,82 +209,7 @@ public class TypeTraitSetInputEditor extends InputEditor.Base {
         }
         public void setLocation(String location) {
             this.location = location;
+            saveTraitSet();
         }
     }
-/**
-    
-    class TypeTraitTableModel extends AbstractTableModel {
-
-        TraitSet typeTraitSet;
-
-        public TypeTraitTableModel(TraitSet typeTraitSet) {
-            this.typeTraitSet = typeTraitSet;
-        }
-
-        @Override
-        public int getRowCount() {
-            return typeTraitSet.taxaInput.get().getTaxonCount();
-        }
-
-        @Override
-        public int getColumnCount() {
-            return 2;
-        }
-
-        @Override
-        public Object getValueAt(int rowIndex, int columnIndex) {
-            if (columnIndex<0 || columnIndex>=getRowCount())
-                return null;
-
-            switch(columnIndex) {
-                case 0:
-                    // Taxon name:
-                    return typeTraitSet.taxaInput.get().getTaxonId(rowIndex);
-                case 1:
-                    // Type:
-                    return typeTraitSet.getStringValue(rowIndex);
-                default:
-                    return null;
-            }
-        }
-
-        @Override
-        public boolean isCellEditable(int rowIndex, int columnIndex) {
-            return columnIndex == 1;
-        }
-
-        @Override
-        public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-            String taxon = taxonSet.getTaxonId(rowIndex);
-            String traitString = traitSet.traitsInput.get();
-            int startIdx = traitString.indexOf(taxon + "=");
-            int endIdx = traitString.indexOf(",", startIdx);
-
-            String newTraitString = traitString.substring(0, startIdx);
-            newTraitString += taxon + "=" + (String)aValue;
-            if (endIdx>=0)
-                newTraitString += traitString.substring(endIdx);
-
-            traitSet.traitsInput.setValue(newTraitString, traitSet);
-            try {
-                traitSet.initAndValidate();
-            } catch (Exception ex) {
-                System.err.println("Error setting type trait value.");
-            }
-
-            fireTableCellUpdated(rowIndex, columnIndex);
-        }
-
-        @Override
-        public String getColumnName(int column) {
-            switch(column) {
-                case 0:
-                    return "Name";
-                case 1:
-                    return "Location";
-                default:
-                    return null;
-            }
-        }
-    }*/
 }
